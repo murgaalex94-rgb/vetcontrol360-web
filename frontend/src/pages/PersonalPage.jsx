@@ -1,14 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import * as XLSX from 'xlsx';
-
-var empleadosRaw = [
-  { nombre: 'Dr. Juan Pérez', cargo: 'Veterinario', email: 'juan.perez@vetcontrol.com', telefono: '+51 999 123 456', estado: 'Activo', fechaIngreso: '2024-01-15' },
-  { nombre: 'María López', cargo: 'Asistente', email: 'maria.lopez@vetcontrol.com', telefono: '+51 999 234 567', estado: 'Activo', fechaIngreso: '2024-03-10' },
-  { nombre: 'Dr. Carlos García', cargo: 'Veterinario', email: 'carlos.garcia@vetcontrol.com', telefono: '+51 999 345 678', estado: 'Activo', fechaIngreso: '2023-11-20' },
-  { nombre: 'Ana Martínez', cargo: 'Administrativo', email: 'ana.martinez@vetcontrol.com', telefono: '+51 999 456 789', estado: 'Inactivo', fechaIngreso: '2025-06-01' },
-  { nombre: 'Luis Hernández', cargo: 'Asistente', email: 'luis.hernandez@vetcontrol.com', telefono: '+51 999 567 890', estado: 'Activo', fechaIngreso: '2024-08-12' },
-  { nombre: 'Dra. Sofía Ramírez', cargo: 'Veterinario', email: 'sofia.ramirez@vetcontrol.com', telefono: '+51 999 678 901', estado: 'Inactivo', fechaIngreso: '2025-02-25' },
-];
 
 function generarCodigoPersonal(index) {
   var year = new Date().getFullYear();
@@ -220,22 +211,122 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
   );
 }
 
+function ModalEditarPersonal({ empleado, onClose, onGuardar }) {
+  var [form, setForm] = useState({
+    nombre: empleado.nombre || '',
+    telefono: empleado.telefono || '',
+    email: empleado.email || '',
+    cargo: empleado.cargo || 'Veterinario',
+    estado: empleado.estado || 'Activo',
+  });
+  var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]';
+  var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1';
+
+  function handleChange(e) {
+    setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
+  }
+
+  function handleSubmit() {
+    onGuardar(empleado.id, form);
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Editar Empleado</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className={labelClass}>Nombre Completo</label>
+            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={inputClass} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Teléfono</label>
+              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Email</label>
+              <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Cargo / Rol</label>
+              <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
+                <option value="Veterinario">Veterinario</option>
+                <option value="Asistente">Asistente</option>
+                <option value="Administrativo">Administrativo</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Estado</label>
+              <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={handleSubmit} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalEliminarPersonal({ empleado, onClose, onConfirmar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-sm mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="p-6 text-center">
+          <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+            <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0] mb-1">¿Eliminar empleado?</h3>
+          <p className="text-sm text-gray-500 dark:text-[#909090]">¿Estás seguro de que deseas eliminar a <span className="font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.nombre}</span>? Esta acción no se puede deshacer.</p>
+        </div>
+        <div className="flex gap-3 p-6 pt-0">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={function () { onConfirmar(empleado.id); onClose(); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors cursor-pointer">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PersonalPage() {
   var [busqueda, setBusqueda] = useState('');
   var [filtroRol, setFiltroRol] = useState('Todos');
   var [filtroEstado, setFiltroEstado] = useState('Todos');
   var [pagina, setPagina] = useState(1);
-  var [showModal, setShowModal] = useState(false);
+  var [showModalNuevo, setShowModalNuevo] = useState(false);
   var [showModalDetalles, setShowModalDetalles] = useState(null);
+  var [showModalEditar, setShowModalEditar] = useState(null);
+  var [showModalEliminar, setShowModalEliminar] = useState(null);
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaIngresoDesde: '', fechaIngresoHasta: '', edadDesde: '', edadHasta: '', estado: 'Todos' });
-  var porPagina = 5;
-
-  var empleados = useMemo(function () {
-    return empleadosRaw.map(function (emp, i) {
+  var [empleados, setEmpleados] = useState(function () {
+    var raw = [
+      { nombre: 'Dr. Juan Pérez', cargo: 'Veterinario', email: 'juan.perez@vetcontrol.com', telefono: '+51 999 123 456', estado: 'Activo', fechaIngreso: '2024-01-15' },
+      { nombre: 'María López', cargo: 'Asistente', email: 'maria.lopez@vetcontrol.com', telefono: '+51 999 234 567', estado: 'Activo', fechaIngreso: '2024-03-10' },
+      { nombre: 'Dr. Carlos García', cargo: 'Veterinario', email: 'carlos.garcia@vetcontrol.com', telefono: '+51 999 345 678', estado: 'Activo', fechaIngreso: '2023-11-20' },
+      { nombre: 'Ana Martínez', cargo: 'Administrativo', email: 'ana.martinez@vetcontrol.com', telefono: '+51 999 456 789', estado: 'Inactivo', fechaIngreso: '2025-06-01' },
+      { nombre: 'Luis Hernández', cargo: 'Asistente', email: 'luis.hernandez@vetcontrol.com', telefono: '+51 999 567 890', estado: 'Activo', fechaIngreso: '2024-08-12' },
+      { nombre: 'Dra. Sofía Ramírez', cargo: 'Veterinario', email: 'sofia.ramirez@vetcontrol.com', telefono: '+51 999 678 901', estado: 'Inactivo', fechaIngreso: '2025-02-25' },
+    ];
+    return raw.map(function (emp, i) {
       return Object.assign({}, emp, { id: i + 1, codigo: generarCodigoPersonal(i) });
     });
-  }, []);
+  });
+  var porPagina = 5;
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
@@ -260,6 +351,16 @@ function PersonalPage() {
   var totalVeterinarios = empleados.filter(function (e) { return e.cargo === 'Veterinario'; }).length;
   var totalAsistentes = empleados.filter(function (e) { return e.cargo === 'Asistente'; }).length;
   var totalAdmin = empleados.filter(function (e) { return e.cargo === 'Administrativo'; }).length;
+
+  function handleGuardarEmpleado(id, datos) {
+    setEmpleados(empleados.map(function (e) {
+      return e.id === id ? Object.assign({}, e, datos) : e;
+    }));
+  }
+
+  function handleEliminarEmpleado(id) {
+    setEmpleados(empleados.filter(function (e) { return e.id !== id; }));
+  }
 
   function exportarExcel() {
     var datos = filtrados.map(function (e) {
@@ -286,7 +387,7 @@ function PersonalPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Gestión de Personal</h1>
           <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Administra el equipo de trabajo de la clínica</p>
         </div>
-        <button onClick={function () { setShowModal(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+        <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
           Nuevo Personal
         </button>
@@ -407,10 +508,10 @@ function PersonalPage() {
                           <button onClick={function () { setShowModalDetalles(emp); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver Detalles">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                           </button>
-                          <button className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Editar">
+                          <button onClick={function () { setShowModalEditar(emp); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Editar">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
                           </button>
-                          <button className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer" title="Eliminar">
+                          <button onClick={function () { setShowModalEliminar(emp); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer" title="Eliminar">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                           </button>
                         </div>
@@ -434,8 +535,10 @@ function PersonalPage() {
         </div>
       </div>
 
-      {showModal && <NuevoPersonalModal onClose={function () { setShowModal(false); }} />}
+      {showModalNuevo && <NuevoPersonalModal onClose={function () { setShowModalNuevo(false); }} />}
       {showModalDetalles && <ModalDetallesPersonal empleado={showModalDetalles} onClose={function () { setShowModalDetalles(null); }} />}
+      {showModalEditar && <ModalEditarPersonal empleado={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarEmpleado} />}
+      {showModalEliminar && <ModalEliminarPersonal empleado={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminarEmpleado} />}
       <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
