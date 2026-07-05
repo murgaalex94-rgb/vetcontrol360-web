@@ -5,6 +5,12 @@ import * as XLSX from 'xlsx';
 
 var ITEMS_PER_PAGE = 5;
 
+function generarCodigoMascota(id) {
+  var year = new Date().getFullYear();
+  var num = String(id).padStart(4, '0');
+  return 'MAS-' + year + '-' + num;
+}
+
 function calcularEdad(fechaNac) {
   if (!fechaNac) return '';
   const nac = new Date(fechaNac);
@@ -16,6 +22,16 @@ function calcularEdad(fechaNac) {
   const m = meses < 0 ? meses + 12 : meses;
   if (m > 0) return `${m} mes${m !== 1 ? 'es' : ''}`;
   return 'Recién nacido';
+}
+
+function calcularEdadNumero(fechaNac) {
+  if (!fechaNac) return 0;
+  const nac = new Date(fechaNac);
+  const hoy = new Date();
+  let años = hoy.getFullYear() - nac.getFullYear();
+  const meses = hoy.getMonth() - nac.getMonth();
+  if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) años--;
+  return Math.max(0, años);
 }
 
 function ModalDetalles({ mascota, onClose }) {
@@ -317,6 +333,7 @@ function Mascotas() {
   var [showModalEliminar, setShowModalEliminar] = useState(null);
   var [search, setSearch] = useState('');
   var [especieFilter, setEspecieFilter] = useState('');
+  var [estadoFilter, setEstadoFilter] = useState('');
   var [page, setPage] = useState(1);
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', especie: 'Todos', raza: '', estado: 'Todos' });
@@ -355,13 +372,14 @@ function Mascotas() {
     var q = search.toLowerCase();
     var matchSearch = !q || m.nombre?.toLowerCase().includes(q) || (m.especie && m.especie.toLowerCase().includes(q)) || (m.raza && m.raza.toLowerCase().includes(q));
     var matchEspecie = !especieFilter || m.especie === especieFilter;
-    return matchSearch && matchEspecie;
+    var matchEstado = !estadoFilter || m.estado === estadoFilter;
+    return matchSearch && matchEspecie && matchEstado;
   });
 
   var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
   var paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  useEffect(function () { setPage(1); }, [search, especieFilter, filtrosAvanzados]);
+  useEffect(function () { setPage(1); }, [search, especieFilter, estadoFilter, filtrosAvanzados]);
 
   async function handleGuardarMascota(id, datos) {
     try {
@@ -404,10 +422,11 @@ function Mascotas() {
   function exportarExcel() {
     var datos = paginated.map(function (m) {
       return {
-        ID: String(m.id).padStart(4, '0'),
+        ID: generarCodigoMascota(m.id),
         Nombre: m.nombre,
         Especie: m.especie || '',
         Raza: m.raza || '',
+        Edad: calcularEdadNumero(m.fechaNacimiento) || '',
         Dueno: m.cliente?.nombre || '',
         Estado: m.estado || 'Activo',
       };
@@ -492,6 +511,11 @@ function Mascotas() {
               <option value="">Todas las especies</option>
               {especies.map(function (esp) { return <option key={esp} value={esp}>{esp}</option>; })}
             </select>
+            <select value={estadoFilter} onChange={function (e) { setEstadoFilter(e.target.value); }} className="rounded-lg border border-gray-300 dark:border-[#404040] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0]">
+              <option value="">Todos los estados</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
             <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
               Filtro Avanzado
@@ -519,7 +543,9 @@ function Mascotas() {
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Nombre</th>
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Especie</th>
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Raza</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center">Edad</th>
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Dueño</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center">Estado</th>
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -527,11 +553,15 @@ function Mascotas() {
                   {paginated.map(function (m) {
                     return (
                       <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                        <td className="px-4 py-3 text-xs font-mono font-semibold text-[#5F7B65]">{String(m.id).padStart(4, '0')}</td>
+                        <td className="px-4 py-3 text-xs font-mono font-semibold text-[#5F7B65]">{generarCodigoMascota(m.id)}</td>
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-[#E0E0E0]">{m.nombre}</td>
                         <td className="px-4 py-3 text-gray-600 dark:text-[#A0A0A0]">{m.especie || '-'}</td>
                         <td className="px-4 py-3 text-gray-600 dark:text-[#A0A0A0]">{m.raza || '-'}</td>
+                        <td className="px-4 py-3 text-center font-medium text-gray-700 dark:text-[#D0D0D0]">{calcularEdadNumero(m.fechaNacimiento) || '-'}</td>
                         <td className="px-4 py-3 text-gray-600 dark:text-[#A0A0A0]">{m.cliente?.nombre || '-'}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (m.estado === 'Activo' || !m.estado ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300')}>{m.estado || 'Activo'}</span>
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={function () { setShowModalDetalles(m); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver Detalles">
