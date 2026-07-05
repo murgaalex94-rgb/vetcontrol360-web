@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import * as XLSX from 'xlsx';
@@ -47,7 +47,11 @@ function ModalDetalles({ mascota, onClose }) {
         <div className="p-6 space-y-4">
           <div className="bg-gray-50 dark:bg-[#2C2C2C] rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <div className="h-14 w-14 flex items-center justify-center rounded-full bg-[#5F7B65] text-white text-lg font-bold shrink-0">{mascota.nombre?.charAt(0)?.toUpperCase() || '?'}</div>
+              {mascota.fotoUrl ? (
+                <img src={mascota.fotoUrl} alt={mascota.nombre} className="h-14 w-14 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="h-14 w-14 flex items-center justify-center rounded-full bg-[#5F7B65] text-white text-lg font-bold shrink-0">{mascota.nombre?.charAt(0)?.toUpperCase() || '?'}</div>
+              )}
               <div>
                 <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{mascota.nombre}</p>
                 <p className="text-sm text-gray-500 dark:text-[#909090]">{mascota.especie || '-'} · {mascota.raza || '-'}</p>
@@ -94,14 +98,29 @@ function ModalEditar({ mascota, clientes, onClose, onGuardar }) {
     esterilizado: mascota.esterilizado === true ? 'si' : mascota.esterilizado === false ? 'no' : '',
     estado: mascota.estado || 'Activo',
     notas: mascota.notas || '',
-    clienteId: mascota.cliente?.id || ''
+    clienteId: mascota.cliente?.id || '',
+    fotoUrl: mascota.fotoUrl || ''
   });
+  var [fotoPreview, setFotoPreview] = useState(mascota.fotoUrl || '');
+  var fileInputRef = useRef(null);
   var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]';
   var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1';
   var selectClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]';
 
   function handleChange(e) {
     setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
+  }
+
+  function handleFoto(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('La imagen no debe superar los 5MB'); return; }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      setFotoPreview(ev.target.result);
+      setForm(Object.assign({}, form, { fotoUrl: ev.target.result }));
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleSubmit() {
@@ -119,6 +138,23 @@ function ModalEditar({ mascota, clientes, onClose, onGuardar }) {
           </button>
         </div>
         <div className="p-6 space-y-4">
+          <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-[#333] mb-2">
+            <input type="file" ref={fileInputRef} accept="image/jpeg,image/png,image/webp" onChange={handleFoto} className="hidden" />
+            <div onClick={function () { fileInputRef.current?.click(); }} className="relative cursor-pointer group shrink-0">
+              {fotoPreview ? (
+                <img src={fotoPreview} alt="Foto" className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 dark:border-[#404040]" />
+              ) : (
+                <div className="h-16 w-16 flex items-center justify-center rounded-full bg-[#5F7B65] text-white text-lg font-bold">{mascota.nombre?.charAt(0)?.toUpperCase() || '?'}</div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg>
+              </div>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 dark:text-[#E0E0E0]">{mascota.nombre}</p>
+              <p className="text-xs text-gray-500 dark:text-[#909090]">Haz clic en la foto para cambiarla</p>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div><label className={labelClass}>Nombre *</label><input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={inputClass} /></div>
             <div><label className={labelClass}>Especie *</label>
@@ -398,6 +434,7 @@ function Mascotas() {
         estado: datos.estado || 'Activo',
         notas: datos.notas || null,
         cliente: datos.clienteId ? { id: Number(datos.clienteId) } : null,
+        fotoUrl: datos.fotoUrl || null,
       };
       var res = await API.put('/mascotas/' + id, body);
       setMascotas(mascotas.map(function (m) {

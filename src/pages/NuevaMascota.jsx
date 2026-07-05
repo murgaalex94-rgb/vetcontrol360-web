@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
@@ -33,6 +33,9 @@ function NuevaMascota() {
   const [error, setError] = useState('');
   const [exito, setExito] = useState(false);
 
+  const [fotoPreview, setFotoPreview] = useState('');
+  const fileInputRef = useRef(null);
+
   const [form, setForm] = useState({
     nombre: '',
     especie: '',
@@ -47,6 +50,7 @@ function NuevaMascota() {
     esterilizado: '',
     notas: '',
     clienteId: '',
+    fotoUrl: '',
   });
 
   useEffect(() => {
@@ -55,6 +59,31 @@ function NuevaMascota() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleFoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('La imagen no debe superar los 5MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setFotoPreview(ev.target.result);
+      setForm({ ...form, fotoUrl: ev.target.result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('La imagen no debe superar los 5MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setFotoPreview(ev.target.result);
+      setForm({ ...form, fotoUrl: ev.target.result });
+    };
+    reader.readAsDataURL(file);
   };
 
   const especiesDisponibles = Object.keys(razasPorEspecie);
@@ -86,6 +115,7 @@ function NuevaMascota() {
         notas: form.notas,
         cliente: cliente ? { id: cliente.id } : null,
         estado: 'Activo',
+        fotoUrl: form.fotoUrl || null,
       });
       setExito(true);
       setTimeout(() => navigate('/mascotas'), 1500);
@@ -323,14 +353,31 @@ function NuevaMascota() {
           <div className="space-y-6">
             <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-[#D0D0D0] mb-4">Foto de la Mascota</h3>
-              <div className="border-2 border-dashed border-gray-300 dark:border-[#404040] rounded-xl p-8 text-center hover:border-emerald-400 transition-colors cursor-pointer">
-                <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-[#808080] mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
-                </svg>
-                <p className="text-sm text-gray-500 mb-1">Arrastra y suelta o</p>
-                <p className="text-sm text-emerald-600 font-medium">Seleccionar archivo</p>
-                <p className="text-xs text-gray-400 mt-2">JPG, PNG o WEBP (máx. 5MB)</p>
+              <input type="file" ref={fileInputRef} accept="image/jpeg,image/png,image/webp" onChange={handleFoto} className="hidden" />
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-300 dark:border-[#404040] rounded-xl p-6 text-center hover:border-emerald-400 transition-colors cursor-pointer"
+              >
+                {fotoPreview ? (
+                  <div className="relative">
+                    <img src={fotoPreview} alt="Preview" className="mx-auto max-h-40 rounded-lg object-cover" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setFotoPreview(''); setForm({ ...form, fotoUrl: '' }); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors cursor-pointer">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-[#808080] mb-3" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+                    </svg>
+                    <p className="text-sm text-gray-500 mb-1">Arrastra y suelta o</p>
+                    <p className="text-sm text-emerald-600 font-medium">Seleccionar archivo</p>
+                    <p className="text-xs text-gray-400 mt-2">JPG, PNG o WEBP (máx. 5MB)</p>
+                  </>
+                )}
               </div>
             </div>
 
