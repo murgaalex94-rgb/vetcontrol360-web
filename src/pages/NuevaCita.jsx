@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const clientes = [
   { id: 1, nombre: 'Juan Pérez García', telefono: '987 654 321' },
@@ -77,8 +78,8 @@ function NuevaCita() {
   const consultSel = consultorios.find((c) => c.id === Number(form.consultorioId));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex-none flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/agenda')} className="p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition-colors cursor-pointer">
             <svg className="w-5 h-5 text-gray-600 dark:text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -140,9 +141,9 @@ function NuevaCita() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-base font-bold text-gray-800 mb-5 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">2</span>
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+            <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold">2</span>
               Detalles de la Cita
             </h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -160,8 +161,7 @@ function NuevaCita() {
                 )}
               </div>
               <div>
-                <label className={labelClass}>Fecha *</label>
-                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} />
+                <MaterialDatePicker value={form.fecha} onChange={function (val) { handleChange({ target: { name: 'fecha', value: val } }); }} label="Fecha *" placeholder="DD/MM/YYYY" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
