@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import * as XLSX from 'xlsx';
 import API from '../services/axiosConfig';
 
 var ITEMS_PER_PAGE = 8;
@@ -69,44 +70,90 @@ function ModalDetalles({ vacuna, onClose }) {
   );
 }
 
-function ModalFiltros({ open, onClose, filtros, setFiltros, onAplicar }) {
-  var [dueño, setDueño] = useState(filtros.dueño || '');
-  var [vacuna, setVacuna] = useState(filtros.vacuna || '');
-  var [estado, setEstado] = useState(filtros.estado || '');
+function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
+  var [desde, setDesde] = useState(filtrosActuales.fechaDesde || '');
+  var [hasta, setHasta] = useState(filtrosActuales.fechaHasta || '');
+  var [tipoVacuna, setTipoVacuna] = useState(filtrosActuales.tipoVacuna || 'Todos');
+  var [estado, setEstado] = useState(filtrosActuales.estado || 'Todos');
+
+  useEffect(function () {
+    setDesde(filtrosActuales.fechaDesde || '');
+    setHasta(filtrosActuales.fechaHasta || '');
+    setTipoVacuna(filtrosActuales.tipoVacuna || 'Todos');
+    setEstado(filtrosActuales.estado || 'Todos');
+  }, [filtrosActuales]);
+
+  if (!open) return null;
+
+  function handleAplicar() {
+    onAplicar({ fechaDesde: desde, fechaHasta: hasta, tipoVacuna, estado });
+    onClose();
+  }
+
+  function handleLimpiar() {
+    setDesde(''); setHasta(''); setTipoVacuna('Todos'); setEstado('Todos');
+    onAplicar({ fechaDesde: '', fechaHasta: '', tipoVacuna: 'Todos', estado: 'Todos' });
+    onClose();
+  }
+
   var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]";
   var labelClass = "block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1.5";
-  if (!open) return null;
+  var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0]";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-sm mx-4" onClick={function (e) { e.stopPropagation(); }}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
         <div className="flex items-center justify-between p-6 pb-0">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Filtros Avanzados</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Filtro Avanzado</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
         <div className="p-6 space-y-5">
-          <div>
-            <label className={labelClass}>Dueño</label>
-            <input type="text" value={dueño} onChange={function (e) { setDueño(e.target.value); }} className={inputClass} placeholder="Nombre del dueño" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Fecha Desde</label>
+              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Fecha Hasta</label>
+              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+            </div>
           </div>
           <div>
-            <label className={labelClass}>Vacuna</label>
-            <input type="text" value={vacuna} onChange={function (e) { setVacuna(e.target.value); }} className={inputClass} placeholder="Nombre de la vacuna" />
+            <label className={labelClass}>Tipo de Vacuna</label>
+            <select value={tipoVacuna} onChange={function (e) { setTipoVacuna(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
+              <option value="Rabia">Rabia</option>
+              <option value="Triple Felina">Triple Felina</option>
+              <option value="Sextuple">Séxtuple</option>
+              <option value="Octuple">Óctuple</option>
+              <option value="Parvovirosis">Parvovirosis</option>
+              <option value="Moquillo">Moquillo</option>
+              <option value="Hepatitis">Hepatitis</option>
+              <option value="Leucemia Felina">Leucemia Felina</option>
+              <option value="Bordetella">Bordetella</option>
+              <option value="Coronavirus">Coronavirus</option>
+              <option value="Giardia">Giardia</option>
+              <option value="Otra">Otra</option>
+            </select>
           </div>
           <div>
             <label className={labelClass}>Estado</label>
-            <select value={estado} onChange={function (e) { setEstado(e.target.value); }} className={inputClass}>
-              <option value="">Todos</option>
+            <select value={estado} onChange={function (e) { setEstado(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
               <option value="Aplicada">Aplicada</option>
-              <option value="Próxima a Vencer">Próxima a Vencer</option>
               <option value="Pendiente">Pendiente</option>
+              <option value="Próxima a Vencer">Próxima a Vencer</option>
             </select>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 p-6 pt-0">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={function () { onAplicar({ dueño, vacuna, estado }); onClose(); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+        <div className="flex items-center justify-between gap-3 p-6 pt-0">
+          <button onClick={handleLimpiar} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Limpiar Filtros</button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={handleAplicar} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+          </div>
         </div>
       </div>
     </div>
@@ -121,8 +168,8 @@ function Vacunacion() {
   const [search, setSearch] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [page, setPage] = useState(1);
-  const [showModalFiltros, setShowModalFiltros] = useState(false);
-  const [filtros, setFiltros] = useState({ dueño: '', vacuna: '', estado: '' });
+  const [showModalFiltro, setShowModalFiltro] = useState(false);
+  const [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', tipoVacuna: 'Todos', estado: 'Todos' });
   const [showModalDetalle, setShowModalDetalle] = useState(null);
 
   useEffect(function () {
@@ -133,16 +180,36 @@ function Vacunacion() {
     var q = search.toLowerCase();
     var matchSearch = !q || (v.mascota?.nombre || '').toLowerCase().includes(q) || (v.vacuna || '').toLowerCase().includes(q) || (v.lote || '').toLowerCase().includes(q);
     var matchEstado = !filterEstado || v.estado === filterEstado;
-    var matchFiltroDueño = !filtros.dueño || (v.mascota?.cliente?.nombre || '').toLowerCase().includes(filtros.dueño.toLowerCase());
-    var matchFiltroVacuna = !filtros.vacuna || (v.vacuna || '').toLowerCase().includes(filtros.vacuna.toLowerCase());
-    var matchFiltroEstado = !filtros.estado || v.estado === filtros.estado;
-    return matchSearch && matchEstado && matchFiltroDueño && matchFiltroVacuna && matchFiltroEstado;
+    var matchFechaDesde = !filtrosAvanzados.fechaDesde || (v.fechaAplicacion && v.fechaAplicacion >= filtrosAvanzados.fechaDesde);
+    var matchFechaHasta = !filtrosAvanzados.fechaHasta || (v.fechaAplicacion && v.fechaAplicacion <= filtrosAvanzados.fechaHasta);
+    var matchTipoVacuna = filtrosAvanzados.tipoVacuna === 'Todos' || v.vacuna === filtrosAvanzados.tipoVacuna;
+    var matchFiltroEstado = filtrosAvanzados.estado === 'Todos' || v.estado === filtrosAvanzados.estado;
+    return matchSearch && matchEstado && matchFechaDesde && matchFechaHasta && matchTipoVacuna && matchFiltroEstado;
   });
 
-  useEffect(function () { setPage(1); }, [search, filterEstado, filtros]);
+  useEffect(function () { setPage(1); }, [search, filterEstado, filtrosAvanzados]);
 
   var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
   var paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  function exportarExcel() {
+    var datos = filtered.map(function (v) {
+      return {
+        'Fecha': formatDate(v.fechaAplicacion),
+        'Mascota': v.mascota?.nombre || '',
+        'Vacuna': v.vacuna || '',
+        'Lote': v.lote || '',
+        'Próxima Dosis': formatDate(v.proximaDosis),
+        'Aplicada Por': v.aplicadaPor || '',
+        'Estado': v.estado || '',
+      };
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(wb, ws, 'Vacunas');
+    var fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'Vacunas_' + fecha + '.xlsx');
+  }
 
   var totalAplicadas = vacunas.filter(function (v) { return v.estado === 'Aplicada'; }).length;
   var totalProximas = vacunas.filter(function (v) { return v.estado === 'Próxima a Vencer'; }).length;
@@ -170,10 +237,6 @@ function Vacunacion() {
             <p className="text-sm text-gray-500 dark:text-[#909090] mt-0.5">Control de vacunación de mascotas</p>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => window.print()} className="px-5 py-2.5 border border-gray-300 dark:border-[#3A3A3A] bg-white dark:bg-[#1E1E1E] text-gray-700 dark:text-[#E0E0E0] text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors flex items-center gap-2 cursor-pointer">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" /></svg>
-              Imprimir
-            </button>
             <button onClick={() => navigate('/vacunacion/nueva')} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               Nueva Vacuna
@@ -193,6 +256,19 @@ function Vacunacion() {
               </div>
             );
           })}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-3">
+            <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
+              Filtro Avanzado
+            </button>
+            <button onClick={exportarExcel} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              Exportar
+            </button>
+          </div>
         </div>
 
         <div className="border-b border-gray-200 dark:border-[#333]">
@@ -228,9 +304,9 @@ function Vacunacion() {
                   <option value="Próxima a Vencer">Próxima a Vencer</option>
                   <option value="Pendiente">Pendiente</option>
                 </select>
-                <button onClick={function () { setShowModalFiltros(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+                <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
-                  Filtros
+                  Filtro Avanzado
                 </button>
               </div>
             </div>
@@ -380,7 +456,7 @@ function Vacunacion() {
       )}
 
       {showModalDetalle && <ModalDetalles vacuna={showModalDetalle} onClose={function () { setShowModalDetalle(null); }} />}
-      <ModalFiltros open={showModalFiltros} onClose={function () { setShowModalFiltros(false); }} filtros={filtros} setFiltros={setFiltros} onAplicar={setFiltros} />
+      <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
 }
