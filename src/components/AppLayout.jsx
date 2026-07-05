@@ -72,9 +72,9 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-surface)' }}>
-      <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-sidebar)' }}>
-        <div className="p-5 border-b border-white/10">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-[#121212]">
+      <aside className="w-64 min-h-screen flex flex-col bg-[#5F7B65] dark:bg-[#1E1E1E]">
+        <div className="p-5 border-b border-white/10 dark:border-white/5">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white/15 shrink-0">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
@@ -93,7 +93,7 @@ function AppLayout() {
           {menuGroups.map(function (group) {
             return (
               <div key={group.titulo}>
-                <p className="text-[10px] font-bold text-emerald-300/60 uppercase tracking-widest mb-2 px-3">{group.titulo}</p>
+                <p className="text-[10px] font-bold text-emerald-300/60 dark:text-emerald-400/60 uppercase tracking-widest mb-2 px-3">{group.titulo}</p>
                 <div className="space-y-0.5">
                   {group.items.map(function (item) {
                     return <SidebarLink key={item.to} to={item.to} label={item.label} icono={item.icono} />;
@@ -104,7 +104,7 @@ function AppLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 dark:border-white/5">
           <div className="flex items-center gap-3 mb-3">
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-white/15 text-white text-xs font-bold shrink-0">{iniciales}</div>
             <div className="min-w-0">
@@ -119,16 +119,11 @@ function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto" style={{ backgroundColor: 'var(--color-surface)' }}>
+      <main className="flex-1 overflow-auto bg-gray-50 dark:bg-[#121212]">
         <div className="flex items-center justify-end gap-3 px-8 pt-4 pb-0">
           <button
             onClick={toggleTheme}
-            className="flex items-center justify-center transition-colors cursor-pointer"
-            style={{ 
-              backgroundColor: 'transparent',
-              border: 'none',
-              padding: '4px'
-            }}
+            className="flex items-center justify-center transition-colors cursor-pointer p-1"
             aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             title={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
           >
