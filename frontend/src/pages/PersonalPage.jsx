@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 
 var empleadosRaw = [
   { nombre: 'Dr. Juan Pérez', cargo: 'Veterinario', email: 'juan.perez@vetcontrol.com', telefono: '+51 999 123 456', estado: 'Activo', fechaIngreso: '2024-01-15' },
@@ -21,12 +22,19 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function getInitials(name) {
+  var parts = name.trim().split(/\s+/);
+  var first = parts[0] || '';
+  var second = parts[1] || '';
+  return (first.charAt(0) + second.charAt(0)).toUpperCase();
+}
+
 function ModalDetallesPersonal({ empleado, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-lg mx-4" onClick={function (e) { e.stopPropagation(); }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg mx-4" onClick={function (e) { e.stopPropagation(); }}>
         <div className="flex items-center justify-between p-6 pb-0">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Detalles del Personal</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Detalles del Empleado</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -34,7 +42,7 @@ function ModalDetallesPersonal({ empleado, onClose }) {
         <div className="p-6 space-y-4">
           <div className="bg-gray-50 dark:bg-[#2C2C2C] rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-[#5F7B65] text-white font-bold text-sm">{empleado.nombre.charAt(0)}</div>
+              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-[#5F7B65] text-white font-bold text-sm">{getInitials(empleado.nombre)}</div>
               <div>
                 <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{empleado.nombre}</p>
                 <p className="text-sm text-gray-500 dark:text-[#909090]">{empleado.codigo}</p>
@@ -42,8 +50,12 @@ function ModalDetallesPersonal({ empleado, onClose }) {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Cargo / Rol</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.cargo}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Código</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.codigo}</p></div>
             <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Estado</p><span className={'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ' + (empleado.estado === 'Activo' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300')}>{empleado.estado}</span></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Nombre</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.nombre}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Cargo</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.cargo}</p></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Email</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{empleado.email || '—'}</p></div>
@@ -140,6 +152,74 @@ function NuevoPersonalModal({ onClose }) {
   );
 }
 
+function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
+  var [fechaIngresoDesde, setFechaIngresoDesde] = useState(filtrosActuales.fechaIngresoDesde || '');
+  var [fechaIngresoHasta, setFechaIngresoHasta] = useState(filtrosActuales.fechaIngresoHasta || '');
+  var [edadDesde, setEdadDesde] = useState(filtrosActuales.edadDesde || '');
+  var [edadHasta, setEdadHasta] = useState(filtrosActuales.edadHasta || '');
+  var [estado, setEstado] = useState(filtrosActuales.estado || 'Todos');
+
+  if (!open) return null;
+
+  function handleAplicar() {
+    onAplicar({ fechaIngresoDesde: fechaIngresoDesde, fechaIngresoHasta: fechaIngresoHasta, edadDesde: edadDesde, edadHasta: edadHasta, estado: estado });
+    onClose();
+  }
+
+  function handleLimpiar() {
+    setFechaIngresoDesde(''); setFechaIngresoHasta(''); setEdadDesde(''); setEdadHasta(''); setEstado('Todos');
+    onAplicar({ fechaIngresoDesde: '', fechaIngresoHasta: '', edadDesde: '', edadHasta: '', estado: 'Todos' });
+    onClose();
+  }
+
+  var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]";
+  var labelClass = "block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Filtro Avanzado</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-5">
+          <div>
+            <label className={labelClass}>Fecha de Ingreso</label>
+            <div className="grid grid-cols-2 gap-3">
+              <input type="date" value={fechaIngresoDesde} onChange={function (e) { setFechaIngresoDesde(e.target.value); }} className={inputClass} placeholder="Desde" />
+              <input type="date" value={fechaIngresoHasta} onChange={function (e) { setFechaIngresoHasta(e.target.value); }} className={inputClass} placeholder="Hasta" />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Rango de Edad</label>
+            <div className="grid grid-cols-2 gap-3">
+              <input type="number" value={edadDesde} onChange={function (e) { setEdadDesde(e.target.value); }} className={inputClass} placeholder="Edad mín" min="0" />
+              <input type="number" value={edadHasta} onChange={function (e) { setEdadHasta(e.target.value); }} className={inputClass} placeholder="Edad máx" min="0" />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Estado</label>
+            <select value={estado} onChange={function (e) { setEstado(e.target.value); }} className={inputClass + " cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10"}>
+              <option value="Todos">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 p-6 pt-0">
+          <button onClick={handleLimpiar} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Limpiar Filtros</button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={handleAplicar} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PersonalPage() {
   var [busqueda, setBusqueda] = useState('');
   var [filtroRol, setFiltroRol] = useState('Todos');
@@ -147,6 +227,8 @@ function PersonalPage() {
   var [pagina, setPagina] = useState(1);
   var [showModal, setShowModal] = useState(false);
   var [showModalDetalles, setShowModalDetalles] = useState(null);
+  var [showModalFiltro, setShowModalFiltro] = useState(false);
+  var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaIngresoDesde: '', fechaIngresoHasta: '', edadDesde: '', edadHasta: '', estado: 'Todos' });
   var porPagina = 5;
 
   var empleados = useMemo(function () {
@@ -155,7 +237,17 @@ function PersonalPage() {
     });
   }, []);
 
-  var filtrados = empleados.filter(function (e) {
+  function aplicarFiltrosAvanzados(lista) {
+    var f = filtrosAvanzados;
+    return lista.filter(function (e) {
+      if (f.fechaIngresoDesde && e.fechaIngreso && e.fechaIngreso < f.fechaIngresoDesde) return false;
+      if (f.fechaIngresoHasta && e.fechaIngreso && e.fechaIngreso > f.fechaIngresoHasta) return false;
+      if (f.estado !== 'Todos' && e.estado !== f.estado) return false;
+      return true;
+    });
+  }
+
+  var filtrados = aplicarFiltrosAvanzados(empleados).filter(function (e) {
     var coincideBusqueda = e.nombre.toLowerCase().includes(busqueda.toLowerCase()) || e.cargo.toLowerCase().includes(busqueda.toLowerCase());
     var coincideRol = filtroRol === 'Todos' || e.cargo === filtroRol;
     var coincideEstado = filtroEstado === 'Todos' || e.estado === filtroEstado;
@@ -168,6 +260,24 @@ function PersonalPage() {
   var totalVeterinarios = empleados.filter(function (e) { return e.cargo === 'Veterinario'; }).length;
   var totalAsistentes = empleados.filter(function (e) { return e.cargo === 'Asistente'; }).length;
   var totalAdmin = empleados.filter(function (e) { return e.cargo === 'Administrativo'; }).length;
+
+  function exportarExcel() {
+    var datos = filtrados.map(function (e) {
+      return {
+        Codigo: e.codigo,
+        Nombre: e.nombre,
+        Cargo: e.cargo,
+        Email: e.email || '',
+        Telefono: e.telefono || '',
+        Estado: e.estado,
+      };
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(wb, ws, 'Personal');
+    var fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'Personal_' + fecha + '.xlsx');
+  }
 
   return (
     <div className="space-y-6">
@@ -246,6 +356,14 @@ function PersonalPage() {
             <option value="Activo">Activo</option>
             <option value="Inactivo">Inactivo</option>
           </select>
+          <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
+            Filtro Avanzado
+          </button>
+          <button onClick={exportarExcel} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            Exportar
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -318,6 +436,7 @@ function PersonalPage() {
 
       {showModal && <NuevoPersonalModal onClose={function () { setShowModal(false); }} />}
       {showModalDetalles && <ModalDetallesPersonal empleado={showModalDetalles} onClose={function () { setShowModalDetalles(null); }} />}
+      <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
 }
