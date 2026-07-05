@@ -1,19 +1,5 @@
-﻿import { useState, useMemo, useRef } from 'react';
-
-const usuarios = [
-  { id: 1, nombre: 'Juan Pérez García', usuario: 'jperez', rol: 'Veterinario', email: 'juan.perez@vetcare.com', telefono: '987 654 321', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=11' },
-  { id: 2, nombre: 'María López Ruiz', usuario: 'mlopez', rol: 'Asistente', email: 'maria.lopez@vetcare.com', telefono: '912 345 678', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=5' },
-  { id: 3, nombre: 'Carlos Torres Vega', usuario: 'ctorres', rol: 'Veterinario', email: 'carlos.torres@vetcare.com', telefono: '923 456 789', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=12' },
-  { id: 4, nombre: 'Ana Martínez Silva', usuario: 'amartinez', rol: 'Recepcionista', email: 'ana.martinez@vetcare.com', telefono: '934 567 890', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=9' },
-  { id: 5, nombre: 'Luis Fernández Rios', usuario: 'lfernandez', rol: 'Administrador', email: 'luis.fernandez@vetcare.com', telefono: '945 678 901', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=14' },
-  { id: 6, nombre: 'Sofia Herrera Mendoza', usuario: 'sherrera', rol: 'Asistente', email: 'sofia.herrera@vetcare.com', telefono: '956 789 012', estado: 'Inactivo', foto: 'https://i.pravatar.cc/150?img=23' },
-  { id: 7, nombre: 'Roberto Díaz Luna', usuario: 'rdiaz', rol: 'Veterinario', email: 'roberto.diaz@vetcare.com', telefono: '967 123 456', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=15' },
-  { id: 8, nombre: 'Elena Vargas Ponce', usuario: 'evargas', rol: 'Asistente', email: 'elena.vargas@vetcare.com', telefono: '978 234 567', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=20' },
-  { id: 9, nombre: 'Miguel Ángel Reyes', usuario: 'mreyes', rol: 'Veterinario', email: 'miguel.reyes@vetcare.com', telefono: '989 345 678', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=33' },
-  { id: 10, nombre: 'Laura Campos Solís', usuario: 'lcampos', rol: 'Recepcionista', email: 'laura.campos@vetcare.com', telefono: '910 456 789', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=25' },
-  { id: 11, nombre: 'Fernando Morales Cruz', usuario: 'fmorales', rol: 'Administrador', email: 'fernando.morales@vetcare.com', telefono: '921 567 890', estado: 'Inactivo', foto: 'https://i.pravatar.cc/150?img=53' },
-  { id: 12, nombre: 'Valeria Núñez Rojas', usuario: 'vnunez', rol: 'Recepcionista', email: 'valeria.nunez@vetcare.com', telefono: '932 678 901', estado: 'Activo', foto: 'https://i.pravatar.cc/150?img=29' },
-];
+﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import API from '../services/axiosConfig';
 
 const rolStyles = {
   Veterinario: 'bg-blue-100 text-blue-700',
@@ -22,9 +8,11 @@ const rolStyles = {
   Administrador: 'bg-green-100 text-green-700',
 };
 
-const ITEMS_PER_PAGE = 6;
+var rolNameMap = { 1: 'Administrador', 2: 'Administrador', 3: 'Veterinario', 4: 'Asistente', 5: 'Recepcionista' };
 
-function NuevoUsuarioModal({ open, onClose }) {
+var ITEMS_PER_PAGE = 6;
+
+function NuevoUsuarioModal({ open, onClose, onCreado }) {
   const [form, setForm] = useState({
     nombre: '', usuario: '', email: '', rol: '', telefono: '', estado: '',
     contrasena: '', confirmarContrasena: '',
@@ -32,6 +20,8 @@ function NuevoUsuarioModal({ open, onClose }) {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [fotoPreview, setFotoPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const fileRef = useRef(null);
 
   if (!open) return null;
@@ -46,6 +36,35 @@ function NuevoUsuarioModal({ open, onClose }) {
       const reader = new FileReader();
       reader.onloadend = () => setFotoPreview(reader.result);
       reader.readAsDataURL(file);
+    }
+  };
+
+  const rolMap = { Veterinario: 3, Asistente: 4, Recepcionista: 5, Administrador: 2 };
+
+  const handleSubmit = async () => {
+    setError('');
+    if (!form.nombre || !form.usuario || !form.contrasena || !form.rol) {
+      setError('Completa todos los campos obligatorios');
+      return;
+    }
+    if (form.contrasena !== form.confirmarContrasena) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+    setSaving(true);
+    try {
+      await API.post('/usuarios', {
+        usuario: form.usuario,
+        password: form.contrasena,
+        nombreCompleto: form.nombre,
+        idRol: rolMap[form.rol] || 4,
+      });
+      onCreado();
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al crear usuario');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -64,6 +83,12 @@ function NuevoUsuarioModal({ open, onClose }) {
             </svg>
           </button>
         </div>
+
+        {error && (
+          <div className="mx-6 mt-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
 
         <div className="p-6">
           <div className="grid grid-cols-12 gap-6">
@@ -172,11 +197,11 @@ function NuevoUsuarioModal({ open, onClose }) {
           <button onClick={onClose} className="px-5 py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl text-gray-700 dark:text-[#C0C0C0] text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
             Cancelar
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-[#5F7B65] hover:bg-[#4E6553] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer">
+          <button onClick={handleSubmit} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 bg-[#5F7B65] hover:bg-[#4E6553] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
             </svg>
-            Guardar Usuario
+            {saving ? 'Guardando...' : 'Guardar Usuario'}
           </button>
         </div>
       </div>
@@ -185,34 +210,62 @@ function NuevoUsuarioModal({ open, onClose }) {
 }
 
 function GestionUsuarios() {
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('Todos');
   const [paginaActual, setPaginaActual] = useState(1);
-  const [showModal, setShowModal] = useState(false);
+  const [showModalNuevo, setShowModalNuevo] = useState(false);
+  const [showModalEditar, setShowModalEditar] = useState(null);
+  const [showModalEliminar, setShowModalEliminar] = useState(null);
 
-  const usuariosFiltrados = useMemo(() => {
+  useEffect(() => {
+    API.get('/usuarios').then(({ data }) => setUsuarios(data)).catch(console.error).finally(() => setLoading(false));
+  }, []);
+
+  function cargarUsuarios() {
+    API.get('/usuarios').then(({ data }) => setUsuarios(data)).catch(console.error);
+  }
+
+  var usuariosFiltrados = useMemo(() => {
     return usuarios.filter((u) => {
-      const coincideBusqueda =
-        u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        u.usuario.toLowerCase().includes(busqueda.toLowerCase()) ||
-        u.email.toLowerCase().includes(busqueda.toLowerCase());
-      const coincideRol = filtroRol === 'Todos' || u.rol === filtroRol;
+      var nombre = (u.nombreCompleto || u.nombre || '').toLowerCase();
+      var usuario = (u.usuario || '').toLowerCase();
+      var q = busqueda.toLowerCase();
+      var coincideBusqueda = !q || nombre.includes(q) || usuario.includes(q);
+      var rolName = rolNameMap[u.idRol] || 'Desconocido';
+      var coincideRol = filtroRol === 'Todos' || rolName === filtroRol;
       return coincideBusqueda && coincideRol;
     });
-  }, [busqueda, filtroRol]);
+  }, [usuarios, busqueda, filtroRol]);
 
-  const totalPaginas = Math.ceil(usuariosFiltrados.length / ITEMS_PER_PAGE);
-  const usuariosPagina = usuariosFiltrados.slice(
-    (paginaActual - 1) * ITEMS_PER_PAGE,
-    paginaActual * ITEMS_PER_PAGE
-  );
+  var totalPaginas = Math.ceil(usuariosFiltrados.length / ITEMS_PER_PAGE) || 1;
+  var usuariosPagina = usuariosFiltrados.slice((paginaActual - 1) * ITEMS_PER_PAGE, paginaActual * ITEMS_PER_PAGE);
+  var inicio = usuariosFiltrados.length > 0 ? (paginaActual - 1) * ITEMS_PER_PAGE + 1 : 0;
+  var fin = Math.min(paginaActual * ITEMS_PER_PAGE, usuariosFiltrados.length);
 
-  const inicio = usuariosFiltrados.length > 0 ? (paginaActual - 1) * ITEMS_PER_PAGE + 1 : 0;
-  const fin = Math.min(paginaActual * ITEMS_PER_PAGE, usuariosFiltrados.length);
+  useEffect(function () { setPaginaActual(1); }, [busqueda, filtroRol]);
 
-  const totalVeterinarios = usuarios.filter((u) => u.rol === 'Veterinario').length;
-  const totalAsistentes = usuarios.filter((u) => u.rol === 'Asistente').length;
-  const totalAdministrativos = usuarios.filter((u) => u.rol === 'Administrador').length;
+  var totalVeterinarios = usuarios.filter(function (u) { return u.idRol === 3; }).length;
+  var totalAsistentes = usuarios.filter(function (u) { return u.idRol === 4; }).length;
+  var totalAdministrativos = usuarios.filter(function (u) { return u.idRol === 1 || u.idRol === 2; }).length;
+
+  async function handleEliminar(id) {
+    try {
+      await API.delete('/usuarios/' + id);
+      cargarUsuarios();
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err);
+    }
+    setShowModalEliminar(null);
+  }
+
+  var rolStyles = {
+    Veterinario: 'bg-blue-100 text-blue-700',
+    Asistente: 'bg-purple-100 text-purple-700',
+    Recepcionista: 'bg-yellow-100 text-yellow-700',
+    Administrador: 'bg-green-100 text-green-700',
+  };
 
   return (
     <>
@@ -225,11 +278,11 @@ function GestionUsuarios() {
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">Gestión de Usuarios</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">Gesti&oacute;n de Usuarios</h1>
             <p className="text-sm text-gray-500 dark:text-[#909090]">Administra el personal que tiene acceso al sistema</p>
           </div>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 rounded-xl bg-[#5F7B65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#4E6553] cursor-pointer">
+        <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl bg-[#5F7B65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#4E6553] cursor-pointer">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
           Nuevo Usuario
         </button>
@@ -244,7 +297,7 @@ function GestionUsuarios() {
               </svg>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{usuarios.length}</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{loading ? '...' : usuarios.length}</p>
               <p className="text-sm text-gray-500 dark:text-[#909090]">Usuarios Totales</p>
             </div>
           </div>
@@ -257,7 +310,7 @@ function GestionUsuarios() {
               </svg>
             </div>
             <div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{totalVeterinarios}</p>
+            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{loading ? '...' : totalVeterinarios}</p>
             <p className="text-sm text-gray-500 dark:text-[#909090]">Veterinarios</p>
             </div>
           </div>
@@ -270,7 +323,7 @@ function GestionUsuarios() {
               </svg>
             </div>
             <div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{totalAsistentes}</p>
+            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{loading ? '...' : totalAsistentes}</p>
             <p className="text-sm text-gray-500 dark:text-[#909090]">Asistentes</p>
             </div>
           </div>
@@ -283,7 +336,7 @@ function GestionUsuarios() {
               </svg>
             </div>
             <div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{totalAdministrativos}</p>
+            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{loading ? '...' : totalAdministrativos}</p>
             <p className="text-sm text-gray-500 dark:text-[#909090]">Administrativos</p>
             </div>
           </div>
@@ -295,78 +348,60 @@ function GestionUsuarios() {
           <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }}
-            placeholder="Buscar por nombre, usuario o email..."
-            className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] pl-10 pr-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          />
+          <input type="text" value={busqueda} onChange={function (e) { setBusqueda(e.target.value); setPaginaActual(1); }} placeholder="Buscar por nombre o usuario..." className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] pl-10 pr-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
         </div>
-        <select
-          value={filtroRol}
-          onChange={(e) => { setFiltroRol(e.target.value); setPaginaActual(1); }}
-          className="rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-full sm:w-auto appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')] dark:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23909090%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10"
-        >
+        <select value={filtroRol} onChange={function (e) { setFiltroRol(e.target.value); setPaginaActual(1); }} className="rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 w-full sm:w-auto">
           <option value="Todos">Todos los roles</option>
           <option value="Veterinario">Veterinario</option>
           <option value="Asistente">Asistente</option>
           <option value="Recepcionista">Recepcionista</option>
           <option value="Administrador">Administrador</option>
         </select>
-        <button className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#1E1E1E] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#C0C0C0] transition-colors hover:bg-gray-50 dark:hover:bg-[#2C2C2C] w-full sm:w-auto justify-center cursor-pointer">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-          Exportar
-        </button>
       </div>
 
       <div className="rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-gray-400 dark:text-[#808080]">Cargando usuarios...</div>
+        ) : (
+        <>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#2C2C2C]">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Foto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Nombre Completo</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Usuario</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Rol</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Teléfono</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Estado</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
-              {usuariosPagina.map((u) => (
+              {usuariosPagina.map(function (u) {
+                var rolName = rolNameMap[u.idRol] || 'Desconocido';
+                return (
                 <tr key={u.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-[#2C2C2C]">
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#909090] font-medium">{u.id}</td>
-                  <td className="px-4 py-3">
-                    <img src={u.foto} alt={u.nombre} className="h-9 w-9 rounded-full object-cover ring-2 ring-gray-100 dark:ring-[#404040]" />
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{u.nombre}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{u.nombreCompleto}</td>
                   <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#909090]">{u.usuario}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${rolStyles[u.rol]}`}>
-                      {u.rol}
+                    <span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (rolStyles[rolName] || 'bg-gray-100 text-gray-700')}>
+                      {rolName}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#909090]">{u.email}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#909090]">{u.telefono}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      u.estado === 'Activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
-                    }`}>
-                      {u.estado}
+                    <span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (u.activo ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600')}>
+                      {u.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 dark:text-[#909090] transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
+                      <button onClick={function () { setShowModalEditar(u); }} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 dark:text-[#909090] transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer" title="Editar">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                         </svg>
                       </button>
-                      <button className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 dark:text-[#909090] transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 cursor-pointer">
+                      <button onClick={function () { setShowModalEliminar(u); }} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 dark:text-[#909090] transition-colors hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 cursor-pointer" title="Eliminar">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                         </svg>
@@ -374,11 +409,12 @@ function GestionUsuarios() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {usuariosPagina.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">
-                    No se encontraron usuarios con los filtros aplicados.
+                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">
+                    No se encontraron usuarios.
                   </td>
                 </tr>
               )}
@@ -387,44 +423,49 @@ function GestionUsuarios() {
         </div>
 
         <div className="flex items-center justify-between border-t border-gray-200 dark:border-[#333] px-4 py-3">
-          <p className="text-sm text-gray-500 dark:text-[#909090]">
-            Mostrando {inicio} a {fin} de {usuariosFiltrados.length} usuarios
-          </p>
+          <p className="text-sm text-gray-500 dark:text-[#909090]">Mostrando {inicio} a {fin} de {usuariosFiltrados.length} usuarios</p>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
-              disabled={paginaActual === 1}
-              className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
+            <button onClick={function () { setPaginaActual(Math.max(1, paginaActual - 1)); }} disabled={paginaActual === 1} className={'flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer'}>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
               Anterior
             </button>
-            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((pag) => (
-              <button
-                key={pag}
-                onClick={() => setPaginaActual(pag)}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
-                  paginaActual === pag
-                    ? 'bg-[#5F7B65] text-white'
-                    : 'border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#1E1E1E] text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C]'
-                }`}
-              >
-                {pag}
-              </button>
-            ))}
-            <button
-              onClick={() => setPaginaActual((p) => Math.min(totalPaginas, p + 1))}
-              disabled={paginaActual === totalPaginas}
-              className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
+            {Array.from({ length: totalPaginas }, function (_, i) { return i + 1; }).map(function (pag) {
+              return (
+                <button key={pag} onClick={function () { setPaginaActual(pag); }} className={'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ' + (paginaActual === pag ? 'bg-[#5F7B65] text-white' : 'border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#1E1E1E] text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C]')}>
+                  {pag}
+                </button>
+              );
+            })}
+            <button onClick={function () { setPaginaActual(Math.min(totalPaginas, paginaActual + 1)); }} disabled={paginaActual === totalPaginas} className={'flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer'}>
               Siguiente
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
             </button>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
-    <NuevoUsuarioModal open={showModal} onClose={() => setShowModal(false)} />
+
+    <NuevoUsuarioModal open={showModalNuevo} onClose={function () { setShowModalNuevo(false); }} onCreado={cargarUsuarios} />
+
+    {showModalEliminar && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={function () { setShowModalEliminar(null); }}>
+        <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-sm mx-4" onClick={function (e) { e.stopPropagation(); }}>
+          <div className="p-6 text-center">
+            <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+              <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0] mb-1">¿Eliminar usuario?</h3>
+            <p className="text-sm text-gray-500 dark:text-[#909090]">¿Estás seguro de eliminar a <span className="font-semibold text-gray-900 dark:text-[#E0E0E0]">{showModalEliminar.nombreCompleto}</span>?</p>
+          </div>
+          <div className="flex gap-3 p-6 pt-0">
+            <button onClick={function () { setShowModalEliminar(null); }} className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={function () { handleEliminar(showModalEliminar.id); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors cursor-pointer">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }

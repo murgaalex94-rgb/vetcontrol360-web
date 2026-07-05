@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import API from '../services/axiosConfig';
 import NuevoClienteModal from '../components/NuevoClienteModal';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import * as XLSX from 'xlsx';
 
 var ITEMS_PER_PAGE = 5;
 
@@ -189,6 +190,85 @@ function ModalEliminar({ cliente, onClose, onConfirmar }) {
   );
 }
 
+function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
+  var [desde, setDesde] = useState(filtrosActuales.fechaDesde || '');
+  var [hasta, setHasta] = useState(filtrosActuales.fechaHasta || '');
+  var [mascotas, setMascotas] = useState(filtrosActuales.mascotas || 'Todos');
+  var [estado, setEstado] = useState(filtrosActuales.estado || 'Todos');
+
+  useEffect(function () {
+    setDesde(filtrosActuales.fechaDesde || '');
+    setHasta(filtrosActuales.fechaHasta || '');
+    setMascotas(filtrosActuales.mascotas || 'Todos');
+    setEstado(filtrosActuales.estado || 'Todos');
+  }, [filtrosActuales]);
+
+  if (!open) return null;
+
+  function handleAplicar() {
+    onAplicar({ fechaDesde: desde, fechaHasta: hasta, mascotas: mascotas, estado: estado });
+    onClose();
+  }
+
+  function handleLimpiar() {
+    setDesde(''); setHasta(''); setMascotas('Todos'); setEstado('Todos');
+    onAplicar({ fechaDesde: '', fechaHasta: '', mascotas: 'Todos', estado: 'Todos' });
+    onClose();
+  }
+
+  var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]";
+  var labelClass = "block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1.5";
+  var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0] appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Filtro Avanzado</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Fecha Desde</label>
+              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Fecha Hasta</label>
+              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Número de Mascotas</label>
+            <select value={mascotas} onChange={function (e) { setMascotas(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
+              <option value="Con mascotas">Con mascotas</option>
+              <option value="Sin mascotas">Sin mascotas</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Estado</label>
+            <select value={estado} onChange={function (e) { setEstado(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 p-6 pt-0">
+          <button onClick={handleLimpiar} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Limpiar Filtros</button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={handleAplicar} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Clientes() {
   var [clientes, setClientes] = useState([]);
   var [loading, setLoading] = useState(true);
@@ -199,6 +279,8 @@ function Clientes() {
   var [search, setSearch] = useState('');
   var [estadoFilter, setEstadoFilter] = useState('');
   var [page, setPage] = useState(1);
+  var [showModalFiltro, setShowModalFiltro] = useState(false);
+  var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', mascotas: 'Todos', estado: 'Todos' });
 
   useEffect(function () {
     setLoading(true);
@@ -208,7 +290,19 @@ function Clientes() {
       .finally(function () { setLoading(false); });
   }, []);
 
-  var filtered = clientes.filter(function (c) {
+  function aplicarFiltrosAvanzados(lista) {
+    var f = filtrosAvanzados;
+    return lista.filter(function (c) {
+      if (f.fechaDesde && c.fechaNacimiento && c.fechaNacimiento < f.fechaDesde) return false;
+      if (f.fechaHasta && c.fechaNacimiento && c.fechaNacimiento > f.fechaHasta) return false;
+      if (f.mascotas === 'Con mascotas' && !c.mascotasCount) return false;
+      if (f.mascotas === 'Sin mascotas' && c.mascotasCount) return false;
+      if (f.estado !== 'Todos' && c.estado !== f.estado) return false;
+      return true;
+    });
+  }
+
+  var filtered = aplicarFiltrosAvanzados(clientes).filter(function (c) {
     var q = search.toLowerCase();
     var matchSearch = !q || (c.nombre || '').toLowerCase().includes(q) || (c.dni || '').includes(q) || (c.telefono || '').includes(q) || (generarCodigoCliente(c.id) || '').toLowerCase().includes(q);
     var matchEstado = !estadoFilter || c.estado === estadoFilter;
@@ -241,100 +335,121 @@ function Clientes() {
     refrescarLista();
   }
 
+  function exportarExcel() {
+    var datos = paginated.map(function (c) {
+      return {
+        Codigo: generarCodigoCliente(c.id),
+        Nombre: c.nombre,
+        DNI: c.dni || '',
+        Telefono: c.telefono || '',
+        Email: c.email || '',
+        Mascotas: c.mascotasCount || 0,
+        Estado: c.estado || 'Activo',
+      };
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+    var fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'Clientes_' + fecha + '.xlsx');
+  }
+
   var totalActivos = clientes.filter(function (c) { return c.estado === 'Activo'; }).length;
   var totalConMascotas = clientes.filter(function (c) { return c.mascotasCount > 0; }).length;
 
   return (
-    <div className="min-h-screen flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Módulo de Clientes</h1>
-          <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Administra los clientes y sus mascotas</p>
-        </div>
-        <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          Nuevo Cliente
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Total Clientes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0] mt-1">{clientes.length}</p>
-            </div>
-            <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
-            </div>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-none space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Módulo de Clientes</h1>
+            <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Administra los clientes y sus mascotas</p>
           </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Clientes Activos</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">{totalActivos}</p>
-            </div>
-            <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Nuevos este mes</p>
-              <p className="text-2xl font-bold text-amber-600 mt-1">2</p>
-            </div>
-            <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Con Mascotas</p>
-              <p className="text-2xl font-bold text-purple-600 mt-1">{totalConMascotas}</p>
-            </div>
-            <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" /></svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-end gap-3">
-          <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-            <input type="text" placeholder="Buscar por nombre, DNI, código..." value={search} onChange={function (e) { setSearch(e.target.value); }} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
-          </div>
-          <select value={estadoFilter} onChange={function (e) { setEstadoFilter(e.target.value); }} className="rounded-lg border border-gray-300 dark:border-[#404040] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0]">
-            <option value="">Todos los estados</option>
-            <option value="Activo">Activo</option>
-            <option value="Inactivo">Inactivo</option>
-          </select>
-          <button onClick={function () { alert('Abriendo filtro avanzado...'); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
-            Filtro Avanzado
-          </button>
-          <button onClick={function () { alert('Exportando datos...'); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-            Exportar
+          <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            Nuevo Cliente
           </button>
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Total Clientes</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0] mt-1">{clientes.length}</p>
+              </div>
+              <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Clientes Activos</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-1">{totalActivos}</p>
+              </div>
+              <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Nuevos este mes</p>
+                <p className="text-2xl font-bold text-amber-600 mt-1">2</p>
+              </div>
+              <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Con Mascotas</p>
+                <p className="text-2xl font-bold text-purple-600 mt-1">{totalConMascotas}</p>
+              </div>
+              <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" /></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-end gap-3">
+            <div className="relative flex-1">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+              <input type="text" placeholder="Buscar por nombre, DNI, código..." value={search} onChange={function (e) { setSearch(e.target.value); }} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+            </div>
+            <select value={estadoFilter} onChange={function (e) { setEstadoFilter(e.target.value); }} className="rounded-lg border border-gray-300 dark:border-[#404040] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0]">
+              <option value="">Todos los estados</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+            <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
+              Filtro Avanzado
+            </button>
+            <button onClick={exportarExcel} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              Exportar
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm overflow-hidden flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm overflow-hidden mt-6">
         {loading ? (
           <div className="p-8 text-center text-gray-400 dark:text-[#808080]">Cargando clientes...</div>
         ) : paginated.length === 0 ? (
           <div className="p-8 text-center text-gray-400 dark:text-[#808080]">No se encontraron clientes.</div>
         ) : (
           <>
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-sm h-full">
+            <div className="flex-1 overflow-auto min-h-0">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-[#2C2C2C] text-left">
                     <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Código</th>
@@ -382,7 +497,7 @@ function Clientes() {
               </table>
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-100 dark:border-[#333]">
+            <div className="flex-none flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-100 dark:border-[#333]">
               <button onClick={function () { setPage(Math.max(1, page - 1)); }} disabled={page === 1} className={'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors cursor-pointer ' + (page === 1 ? 'border-gray-200 dark:border-[#333] text-gray-300 dark:text-[#808080] cursor-not-allowed' : 'border-gray-300 dark:border-[#404040] text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C]')}>Anterior</button>
               {Array.from({ length: totalPages }, function (_, i) { return i + 1; }).map(function (n) {
                 return (
@@ -399,6 +514,7 @@ function Clientes() {
       {showModalDetalles && <ModalDetalles cliente={showModalDetalles} onClose={function () { setShowModalDetalles(null); }} />}
       {showModalEditar && <ModalEditar cliente={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarCliente} />}
       {showModalEliminar && <ModalEliminar cliente={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminarCliente} />}
+      <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
 }
