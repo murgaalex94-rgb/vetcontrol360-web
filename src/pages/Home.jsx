@@ -4,7 +4,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-[#1a2e1a] dark:to-[#0d2818] flex flex-col items-center justify-center">
       <div className="text-center">
-        <h1 className="text-5xl font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">VetControl 360</h1>
+        <h1 className="text-5xl font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">VetControl 360 - Deploy Test</h1>
         <p className="text-xl text-gray-600 dark:text-[#A0A0A0] mb-8">Sistema de Gestión Veterinaria</p>
         <Link
           to="/login"

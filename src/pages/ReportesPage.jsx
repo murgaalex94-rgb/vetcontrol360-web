@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 var reportesIniciales = [
@@ -70,12 +71,10 @@ function NuevoReporteModal({ onClose, onGenerar }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Fecha Desde *</label>
-              <input type="date" name="fechaDesde" value={form.fechaDesde} onChange={handleChange} className={inputClass} />
+              <MaterialDatePicker value={form.fechaDesde} onChange={function (val) { handleChange({ target: { name: 'fechaDesde', value: val } }); }} label="Fecha Desde *" placeholder="DD/MM/YYYY" />
             </div>
             <div>
-              <label className={labelClass}>Fecha Hasta *</label>
-              <input type="date" name="fechaHasta" value={form.fechaHasta} onChange={handleChange} className={inputClass} />
+              <MaterialDatePicker value={form.fechaHasta} onChange={function (val) { handleChange({ target: { name: 'fechaHasta', value: val } }); }} label="Fecha Hasta *" placeholder="DD/MM/YYYY" />
             </div>
           </div>
         </div>
@@ -129,8 +128,8 @@ function ReportesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex flex-none items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Reportes y Estadísticas</h1>
           <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Genera informes detallados y visualiza el rendimiento de la clínica</p>
@@ -200,12 +199,10 @@ function ReportesPage() {
       <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row items-end gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-[#B0B0B0] mb-1">Desde</label>
-            <input type="date" value={fechaDesde} onChange={function (e) { setFechaDesde(e.target.value); }} className="w-full rounded-lg border border-gray-300 dark:border-[#404040] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+            <MaterialDatePicker value={fechaDesde} onChange={setFechaDesde} label="Desde" placeholder="DD/MM/YYYY" />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-[#B0B0B0] mb-1">Hasta</label>
-            <input type="date" value={fechaHasta} onChange={function (e) { setFechaHasta(e.target.value); }} className="w-full rounded-lg border border-gray-300 dark:border-[#404040] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+            <MaterialDatePicker value={fechaHasta} onChange={setFechaHasta} label="Hasta" placeholder="DD/MM/YYYY" />
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 dark:text-[#B0B0B0] mb-1">Tipo de Reporte</label>
@@ -225,11 +222,11 @@ function ReportesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm">
-          <div className="p-5 border-b border-gray-100 dark:border-[#333]">
+        <div className="flex flex-col rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm">
+          <div className="flex-none p-5 border-b border-gray-100 dark:border-[#333]">
             <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">Últimos Reportes Generados</h2>
           </div>
-          <div className="p-4 space-y-3 max-h-[480px] overflow-y-auto">
+          <div className="flex-1 p-4 space-y-3 overflow-y-auto">
             {reportes.map(function (rep) {
               var activo = reporteSeleccionado && reporteSeleccionado.id === rep.id;
               return (

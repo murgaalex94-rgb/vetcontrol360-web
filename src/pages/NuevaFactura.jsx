@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const clientes = [
   { id: 1, nombre: 'Juan Pérez', telefono: '555-0101' },
@@ -71,8 +72,8 @@ function NuevaFactura() {
   const inputClass = 'w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex-none flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#909090] mb-1">
             <span>Ventas</span>
@@ -113,8 +114,7 @@ function NuevaFactura() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-[#A0A0A0] mb-1.5">Fecha de Emisión *</label>
-                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className={inputClass} />
+                <MaterialDatePicker value={fecha} onChange={setFecha} label="Fecha de Emisión *" placeholder="DD/MM/YYYY" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 dark:text-[#A0A0A0] mb-1.5">N° de Factura *</label>
@@ -134,8 +134,7 @@ function NuevaFactura() {
                 <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar producto o servicio..." className={inputClass + ' pl-10'} />
               </div>
-              <button onClick={addItem} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 cursor-pointer whitespace-nowrap">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              <button onClick={addItem} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 cursor-pointer whitespace-nowrap">
                 + Agregar Item
               </button>
             </div>

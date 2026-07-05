@@ -79,8 +79,8 @@ function Historial() {
   const consulta = MOCK_CONSULTAS.find((c) => c.id === selectedId);
 
   return (
-    <div className="space-y-5">
-      <nav className="text-sm text-gray-500">
+    <div className="flex flex-col h-full gap-5">
+      <nav className="flex-none text-sm text-gray-500">
         <Link to="/" className="hover:text-emerald-600">Inicio</Link>
         <span className="mx-2">/</span>
         <Link to="/mascotas" className="hover:text-emerald-600">Mascotas</Link>
@@ -110,7 +110,7 @@ function Historial() {
       </div>
 
       <div className="border-b border-gray-200 dark:border-[#333]">
-        <div className="flex gap-6">
+      <div className="flex-1 min-h-0 overflow-auto flex gap-6">
           {tabs.map((tab) => (
             <button
               key={tab}

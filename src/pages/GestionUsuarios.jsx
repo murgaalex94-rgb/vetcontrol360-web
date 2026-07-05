@@ -269,8 +269,8 @@ function GestionUsuarios() {
 
   return (
     <>
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex flex-none items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30">
             <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -359,7 +359,7 @@ function GestionUsuarios() {
         </select>
       </div>
 
-      <div className="rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-400 dark:text-[#808080]">Cargando usuarios...</div>
         ) : (

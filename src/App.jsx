@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import AppLayout from './components/AppLayout';
-import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
@@ -22,6 +22,7 @@ import HistoriaClinicaPage from './pages/HistoriaClinicaPage';
 import PersonalPage from './pages/PersonalPage';
 import ProveedoresPage from './pages/ProveedoresPage';
 import ReportesPage from './pages/ReportesPage';
+import ConfiguracionPage from './pages/ConfiguracionPage';
 
 function PlaceholderPage({ titulo }) {
   return (
@@ -40,7 +41,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -62,6 +63,7 @@ function App() {
             <Route path="/proveedores" element={<ProveedoresPage />} />
             <Route path="/personal" element={<PersonalPage />} />
             <Route path="/reportes" element={<ReportesPage />} />
+            <Route path="/configuracion" element={<ConfiguracionPage />} />
           </Route>
         </Routes>
       </Router>

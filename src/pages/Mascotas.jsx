@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import * as XLSX from 'xlsx';
@@ -180,7 +181,7 @@ function ModalEditar({ mascota, clientes, onClose, onGuardar }) {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div><label className={labelClass}>Fecha Nacimiento</label><input type="date" name="fechaNacimiento" value={form.fechaNacimiento} onChange={handleChange} className={inputClass} /></div>
+            <div><MaterialDatePicker value={form.fechaNacimiento} onChange={function (val) { handleChange({ target: { name: 'fechaNacimiento', value: val } }); }} label="Fecha Nacimiento" placeholder="DD/MM/YYYY" /></div>
             <div><label className={labelClass}>Color</label><input type="text" name="color" value={form.color} onChange={handleChange} className={inputClass} /></div>
             <div><label className={labelClass}>Peso (kg)</label><input type="number" step="0.1" min="0" name="peso" value={form.peso} onChange={handleChange} className={inputClass} /></div>
           </div>
@@ -313,12 +314,10 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar, especi
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Fecha Desde</label>
-              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={desde} onChange={setDesde} label="Fecha Desde" placeholder="DD/MM/YYYY" />
             </div>
             <div>
-              <label className={labelClass}>Fecha Hasta</label>
-              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={hasta} onChange={setHasta} label="Fecha Hasta" placeholder="DD/MM/YYYY" />
             </div>
           </div>
           <div>
