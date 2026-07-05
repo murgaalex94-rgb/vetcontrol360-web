@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { FiSun, FiMoon } from 'react-icons/fi';
 
 var menuGroups = [
   {
@@ -122,12 +123,28 @@ function AppLayout() {
         <div className="flex items-center justify-end gap-3 px-8 pt-4 pb-0">
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-lg transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
-            style={{ color: theme === 'dark' ? '#E0E0E0' : '#5F7B65' }}
+            className="flex items-center justify-center transition-colors cursor-pointer"
+            style={{ 
+              backgroundColor: 'transparent',
+              border: 'none',
+              padding: '4px'
+            }}
             aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             title={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
           >
-            {theme === 'dark' ? '🌙' : '☀️'}
+            {theme === 'dark' ? (
+              <FiMoon 
+                size={23} 
+                style={{ color: '#A0A0A0', transition: 'color 0.2s' }}
+                className="hover:opacity-70"
+              />
+            ) : (
+              <FiSun 
+                size={23} 
+                style={{ color: '#5F7B65', transition: 'color 0.2s' }}
+                className="hover:opacity-70"
+              />
+            )}
           </button>
         </div>
         <div className="p-8 pt-2">

@@ -8,6 +8,9 @@
     --color-primary: #5F7B65;
     --color-primary-hover: #4A6250;
     --color-primary-light: #E8F0E9;
+    --color-text: #111827;
+    --color-text-secondary: #6B7280;
+    --color-border: #E5E7EB;
   }
   .dark {
     --color-surface: #121212;
@@ -16,15 +19,18 @@
     --color-primary: #7FA389;
     --color-primary-hover: #6B8D73;
     --color-primary-light: #2C3A2E;
+    --color-text: #E0E0E0;
+    --color-text-secondary: #A0A0A0;
+    --color-border: #333333;
   }
 }
 
 body {
   background-color: var(--color-surface);
-  color: #111827;
+  color: var(--color-text);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .dark body {
-  color: #E0E0E0;
+  color: var(--color-text);
 }

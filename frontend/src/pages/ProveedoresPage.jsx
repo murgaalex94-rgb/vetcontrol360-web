@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 var nextProveedorId = 6;
 
@@ -95,12 +96,10 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Fecha Desde</label>
-              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={desde} onChange={setDesde} label="Fecha Desde" placeholder="DD/MM/YYYY" />
             </div>
             <div>
-              <label className={labelClass}>Fecha Hasta</label>
-              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={hasta} onChange={setHasta} label="Fecha Hasta" placeholder="DD/MM/YYYY" />
             </div>
           </div>
           <div>

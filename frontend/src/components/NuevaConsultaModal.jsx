@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 function NuevaConsultaModal({ onClose }) {
   var now = new Date();
@@ -46,8 +47,7 @@ function NuevaConsultaModal({ onClose }) {
             <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider mb-3">Información Básica</p>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-[#B0B0B0] mb-1.5">Fecha de Consulta *</label>
-                <input type="date" value={form.fecha} onChange={function (e) { handleChange('fecha', e.target.value); }} className={inputClass} />
+                <MaterialDatePicker value={form.fecha} onChange={function (val) { handleChange('fecha', val); }} label="Fecha de Consulta *" placeholder="DD/MM/YYYY" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 dark:text-[#B0B0B0] mb-1.5">Hora *</label>

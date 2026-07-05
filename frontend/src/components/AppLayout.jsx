@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { FiSun, FiMoon } from 'react-icons/fi';
 
 var menuGroups = [
   {
@@ -32,6 +33,7 @@ var menuGroups = [
     items: [
       { to: '/reportes', label: 'Reportes', icono: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z' },
       { to: '/auditoria', label: 'Auditoría', icono: 'M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z' },
+      { to: '/configuracion', label: 'Configuración', icono: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z' },
     ],
   },
 ];
@@ -59,14 +61,16 @@ function SidebarLink({ to, label, icono }) {
 function AppLayout() {
   var navigate = useNavigate();
   var { theme, toggleTheme } = useTheme();
-  var nombre = localStorage.getItem('nombreCompleto') || 'Dr. Juan Pérez';
-  var rol = localStorage.getItem('idRol') === '1' ? 'Administrador' : 'Veterinario';
+  var nombre = localStorage.getItem('userName') || localStorage.getItem('nombreCompleto') || 'Invitado';
+  var rol = localStorage.getItem('userRole') || (localStorage.getItem('idRol') === '1' ? 'Administrador' : localStorage.getItem('idRol') ? 'Veterinario' : '');
   var iniciales = nombre.split(' ').map(function (p) { return p[0]; }).join('').substring(0, 2).toUpperCase();
 
   function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('nombreCompleto');
     localStorage.removeItem('idRol');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
     navigate('/login');
   }
 
@@ -108,7 +112,7 @@ function AppLayout() {
             <div className="h-9 w-9 flex items-center justify-center rounded-full bg-white/15 text-white text-xs font-bold shrink-0">{iniciales}</div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{nombre}</p>
-              <p className="text-[11px] text-emerald-300/80">{rol}</p>
+              {rol && <p className="text-[11px] text-emerald-300/80">{rol}</p>}
             </div>
           </div>
           <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200 cursor-pointer">
@@ -122,12 +126,28 @@ function AppLayout() {
         <div className="flex-none flex items-center justify-end gap-3 px-8 pt-4 pb-0">
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-lg transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
-            style={{ color: theme === 'dark' ? '#E0E0E0' : '#5F7B65' }}
+            className="flex items-center justify-center transition-colors cursor-pointer"
+            style={{ 
+              backgroundColor: 'transparent',
+              border: 'none',
+              padding: '4px'
+            }}
             aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             title={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
           >
-            {theme === 'dark' ? '🌙' : '☀️'}
+            {theme === 'dark' ? (
+              <FiMoon 
+                size={23} 
+                style={{ color: '#A0A0A0', transition: 'color 0.2s' }}
+                className="hover:opacity-70"
+              />
+            ) : (
+              <FiSun 
+                size={23} 
+                style={{ color: '#5F7B65', transition: 'color 0.2s' }}
+                className="hover:opacity-70"
+              />
+            )}
           </button>
         </div>
         <div className="flex-1 flex flex-col min-h-0 p-8 pt-2">

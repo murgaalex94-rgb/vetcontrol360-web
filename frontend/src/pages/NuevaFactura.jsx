@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const clientes = [
   { id: 1, nombre: 'Juan Pérez', telefono: '555-0101' },
@@ -113,8 +114,7 @@ function NuevaFactura() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-[#A0A0A0] mb-1.5">Fecha de Emisión *</label>
-                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className={inputClass} />
+                <MaterialDatePicker value={fecha} onChange={setFecha} label="Fecha de Emisión *" placeholder="DD/MM/YYYY" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 dark:text-[#A0A0A0] mb-1.5">N° de Factura *</label>

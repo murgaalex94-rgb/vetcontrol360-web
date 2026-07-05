@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const clientes = [
   { id: 1, nombre: 'Juan Pérez García', telefono: '987 654 321' },
@@ -160,8 +161,7 @@ function NuevaCita() {
                 )}
               </div>
               <div>
-                <label className={labelClass}>Fecha *</label>
-                <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required className={inputClass} />
+                <MaterialDatePicker value={form.fecha} onChange={function (val) { handleChange({ target: { name: 'fecha', value: val } }); }} label="Fecha *" placeholder="DD/MM/YYYY" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

@@ -38,33 +38,33 @@ function PlaceholderPage({ titulo }) {
 function App() {
   return (
     <ThemeProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/mascotas" element={<Mascotas />} />
-          <Route path="/mascotas/nueva" element={<NuevaMascota />} />
-          <Route path="/historial/:mascotaId" element={<Historial />} />
-          <Route path="/historia-clinica" element={<HistoriaClinicaPage />} />
-          <Route path="/vacunacion" element={<Vacunacion />} />
-          <Route path="/vacunacion/nueva" element={<NuevaVacuna />} />
-          <Route path="/usuarios" element={<GestionUsuarios />} />
-          <Route path="/inventario" element={<GestionInventario />} />
-          <Route path="/inventario/nuevo" element={<NuevoProducto />} />
-          <Route path="/agenda" element={<AgendaCitas />} />
-          <Route path="/agenda/nueva" element={<NuevaCita />} />
-          <Route path="/facturacion" element={<FacturacionPage />} />
-          <Route path="/facturacion/nueva" element={<NuevaFactura />} />
-          <Route path="/auditoria" element={<AuditoriaPage />} />
-          <Route path="/proveedores" element={<ProveedoresPage />} />
-          <Route path="/personal" element={<PersonalPage />} />
-          <Route path="/reportes" element={<ReportesPage />} />
-        </Route>
-      </Routes>
-    </Router>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/mascotas" element={<Mascotas />} />
+            <Route path="/mascotas/nueva" element={<NuevaMascota />} />
+            <Route path="/historial/:mascotaId" element={<Historial />} />
+            <Route path="/historia-clinica" element={<HistoriaClinicaPage />} />
+            <Route path="/vacunacion" element={<Vacunacion />} />
+            <Route path="/vacunacion/nueva" element={<NuevaVacuna />} />
+            <Route path="/usuarios" element={<GestionUsuarios />} />
+            <Route path="/inventario" element={<GestionInventario />} />
+            <Route path="/inventario/nuevo" element={<NuevoProducto />} />
+            <Route path="/agenda" element={<AgendaCitas />} />
+            <Route path="/agenda/nueva" element={<NuevaCita />} />
+            <Route path="/facturacion" element={<FacturacionPage />} />
+            <Route path="/facturacion/nueva" element={<NuevaFactura />} />
+            <Route path="/auditoria" element={<AuditoriaPage />} />
+            <Route path="/proveedores" element={<ProveedoresPage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+            <Route path="/reportes" element={<ReportesPage />} />
+          </Route>
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 }

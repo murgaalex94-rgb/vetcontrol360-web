@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const VACUNAS_OPCIONES = ['Sextuple', 'Rabia', 'Bordetella', 'Múltiple', 'Parvovirus', 'Leucemia', 'Moquillo', 'Hepatitis'];
 const LABORATORIOS = ['Zoetis', 'Merial', 'Boehringer Ingelheim', 'Virbac', 'MSD Animal Health', 'Elanco'];
@@ -189,12 +190,10 @@ function NuevaVacuna() {
                     </select>
                   </div>
                   <div>
-                    <label className={labelClass}>Fecha de Aplicación *</label>
-                    <input type="date" name="fechaAplicacion" value={form.fechaAplicacion} onChange={handleChange} required className={inputClass} />
+                    <MaterialDatePicker value={form.fechaAplicacion} onChange={function (val) { handleChange({ target: { name: 'fechaAplicacion', value: val } }); }} label="Fecha de Aplicación *" placeholder="DD/MM/YYYY" />
                   </div>
                   <div>
-                    <label className={labelClass}>Próxima Dosis</label>
-                    <input type="date" name="proximaDosis" value={form.proximaDosis} onChange={handleChange} className={inputClass} />
+                    <MaterialDatePicker value={form.proximaDosis} onChange={function (val) { handleChange({ target: { name: 'proximaDosis', value: val } }); }} label="Próxima Dosis" placeholder="DD/MM/YYYY" />
                   </div>
                 </div>
               </div>

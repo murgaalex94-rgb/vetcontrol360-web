@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -37,6 +38,8 @@ function FacturacionPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('facturas');
   const [paginaActual, setPaginaActual] = useState(1);
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
 
   useEffect(() => {
     API.get('/facturas').then((res) => {
@@ -134,8 +137,8 @@ function FacturacionPage() {
               <option>Pendiente</option>
               <option>Anulada</option>
             </select>
-            <input type="date" className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 w-auto" />
-            <input type="date" className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 w-auto" />
+            <MaterialDatePicker value={fechaDesde} onChange={setFechaDesde} label="" placeholder="DD/MM/YYYY" />
+            <MaterialDatePicker value={fechaHasta} onChange={setFechaHasta} label="" placeholder="DD/MM/YYYY" />
           <button className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#333] transition-colors cursor-pointer">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
               Filtros

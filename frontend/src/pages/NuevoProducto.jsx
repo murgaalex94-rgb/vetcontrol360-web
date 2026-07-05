@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 function NuevoProducto() {
   const navigate = useNavigate();
@@ -219,8 +220,7 @@ function NuevoProducto() {
             </h2>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <label className={labelClass}>Fecha de Vencimiento</label>
-                <input type="date" name="fechaVencimiento" value={form.fechaVencimiento} onChange={handleChange} className={inputClass} />
+                <MaterialDatePicker value={form.fechaVencimiento} onChange={function (val) { handleChange({ target: { name: 'fechaVencimiento', value: val } }); }} label="Fecha de Vencimiento" placeholder="DD/MM/YYYY" />
               </div>
               <div>
                 <label className={labelClass}>Número de Lote</label>

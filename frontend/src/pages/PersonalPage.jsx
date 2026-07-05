@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 function generarCodigoPersonal(index) {
   var year = new Date().getFullYear();
@@ -264,10 +265,9 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
         </div>
         <div className="p-6 space-y-5">
           <div>
-            <label className={labelClass}>Fecha de Ingreso</label>
             <div className="grid grid-cols-2 gap-3">
-              <input type="date" value={fechaIngresoDesde} onChange={function (e) { setFechaIngresoDesde(e.target.value); }} className={inputClass} placeholder="Desde" />
-              <input type="date" value={fechaIngresoHasta} onChange={function (e) { setFechaIngresoHasta(e.target.value); }} className={inputClass} placeholder="Hasta" />
+              <MaterialDatePicker value={fechaIngresoDesde} onChange={setFechaIngresoDesde} label="Fecha Ingreso Desde" placeholder="DD/MM/YYYY" />
+              <MaterialDatePicker value={fechaIngresoHasta} onChange={setFechaIngresoHasta} label="Fecha Ingreso Hasta" placeholder="DD/MM/YYYY" />
             </div>
           </div>
           <div>

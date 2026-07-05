@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 var ITEMS_PER_PAGE = 8;
 
@@ -20,6 +21,13 @@ const PROXIMAS_VACUNAS = [
 ];
 
 const DONUT_COLORS = ['#5F7B65', '#D48C3D', '#D64A4A'];
+
+const ESQUEMAS_MOCK = [
+  { id: 'ESQ-2026-0001', especie: 'Perro', edad: '6-8 semanas', vacuna: 'Parvovirus', dosis: '1ml', refuerzo: 'Sí' },
+  { id: 'ESQ-2026-0002', especie: 'Perro', edad: '8-10 semanas', vacuna: 'Moquillo', dosis: '1ml', refuerzo: 'Sí' },
+  { id: 'ESQ-2026-0003', especie: 'Perro', edad: '12 semanas', vacuna: 'Rabia', dosis: '1ml', refuerzo: 'Anual' },
+  { id: 'ESQ-2026-0004', especie: 'Gato', edad: '8 semanas', vacuna: 'Triple Felina', dosis: '0.5ml', refuerzo: 'Sí' },
+];
 
 const tabs = ['Registro de Vacunas', 'Esquemas de Vacunación'];
 
@@ -112,12 +120,10 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Fecha Desde</label>
-              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={desde} onChange={setDesde} label="Fecha Desde" placeholder="DD/MM/YYYY" />
             </div>
             <div>
-              <label className={labelClass}>Fecha Hasta</label>
-              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+              <MaterialDatePicker value={hasta} onChange={setHasta} label="Fecha Hasta" placeholder="DD/MM/YYYY" />
             </div>
           </div>
           <div>
@@ -206,12 +212,10 @@ function ModalEditarVacuna({ vacuna, form, setForm, onClose, onGuardar }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Fecha Aplicación</label>
-              <input type="date" value={form.fechaAplicacion} onChange={function (e) { setForm(Object.assign({}, form, { fechaAplicacion: e.target.value })); }} className={inputClass} />
+              <MaterialDatePicker value={form.fechaAplicacion} onChange={function (val) { setForm(Object.assign({}, form, { fechaAplicacion: val })); }} label="Fecha Aplicación" placeholder="DD/MM/YYYY" />
             </div>
             <div>
-              <label className={labelClass}>Próxima Dosis</label>
-              <input type="date" value={form.proximaDosis} onChange={function (e) { setForm(Object.assign({}, form, { proximaDosis: e.target.value })); }} className={inputClass} />
+              <MaterialDatePicker value={form.proximaDosis} onChange={function (val) { setForm(Object.assign({}, form, { proximaDosis: val })); }} label="Próxima Dosis" placeholder="DD/MM/YYYY" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -260,6 +264,119 @@ function ModalEliminarVacuna({ vacuna, onClose, onConfirmar }) {
   );
 }
 
+function ModalDetalleEsquema({ esquema, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Detalle del Esquema</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-gray-50 dark:bg-[#2C2C2C] rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-sm font-bold shrink-0">{esquema.especie[0]}</div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{esquema.especie}</p>
+                <p className="text-sm text-gray-500 dark:text-[#909090]">{esquema.id}</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Edad</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{esquema.edad}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Vacuna</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{esquema.vacuna}</p></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Dosis</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{esquema.dosis}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Refuerzo</p><span className={'inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ' + (esquema.refuerzo === 'No' ? 'bg-gray-100 text-gray-600 dark:bg-[#2C2C2C] dark:text-[#A0A0A0]' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300')}>{esquema.refuerzo}</span></div>
+          </div>
+        </div>
+        <div className="p-6 pt-0">
+          <button onClick={onClose} className="w-full py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalEditarEsquema({ esquema, onClose, onGuardar }) {
+  var [form, setForm] = useState({ ...esquema });
+  var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]";
+  var labelClass = "block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1.5";
+  var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0] cursor-pointer";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-lg mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Editar Esquema</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Especie</label>
+              <select value={form.especie} onChange={function (e) { setForm(Object.assign({}, form, { especie: e.target.value })); }} className={selectClass}>
+                <option>Perro</option><option>Gato</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Edad</label>
+              <input type="text" value={form.edad} onChange={function (e) { setForm(Object.assign({}, form, { edad: e.target.value })); }} className={inputClass} placeholder="Ej: 6-8 semanas" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Vacuna</label>
+              <input type="text" value={form.vacuna} onChange={function (e) { setForm(Object.assign({}, form, { vacuna: e.target.value })); }} className={inputClass} placeholder="Nombre de la vacuna" />
+            </div>
+            <div>
+              <label className={labelClass}>Dosis</label>
+              <input type="text" value={form.dosis} onChange={function (e) { setForm(Object.assign({}, form, { dosis: e.target.value })); }} className={inputClass} placeholder="Ej: 1ml" />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Refuerzo</label>
+            <select value={form.refuerzo} onChange={function (e) { setForm(Object.assign({}, form, { refuerzo: e.target.value })); }} className={selectClass}>
+              <option>Sí</option><option>No</option><option>Anual</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={function () { onGuardar(esquema.id, form); onClose(); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalEliminarEsquema({ esquema, onClose, onConfirmar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="p-6">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0] text-center mb-2">Eliminar Esquema</h2>
+          <p className="text-sm text-gray-500 dark:text-[#909090] text-center mb-6">
+            ¿Estás seguro de eliminar el esquema <strong>{esquema.vacuna}</strong> para <strong>{esquema.especie}</strong>? Esta acción no se puede deshacer.
+          </p>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={onConfirmar} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#DC2626' }}>Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Vacunacion() {
   const navigate = useNavigate();
   const [vacunas, setVacunas] = useState([]);
@@ -274,6 +391,12 @@ function Vacunacion() {
   const [editVacuna, setEditVacuna] = useState(null);
   const [deleteVacuna, setDeleteVacuna] = useState(null);
   const [formEdit, setFormEdit] = useState({ vacuna: '', lote: '', fechaAplicacion: '', proximaDosis: '', aplicadaPor: '', estado: 'Aplicada' });
+  const [esquemas, setEsquemas] = useState(ESQUEMAS_MOCK);
+  const [esquemaSearch, setEsquemaSearch] = useState('');
+  const [esquemaFiltroEspecie, setEsquemaFiltroEspecie] = useState('Todos');
+  const [esquemaDetalle, setEsquemaDetalle] = useState(null);
+  const [esquemaEditar, setEsquemaEditar] = useState(null);
+  const [esquemaEliminar, setEsquemaEliminar] = useState(null);
 
   useEffect(function () {
     API.get('/vacunas').then(function (res) { setVacunas(res.data); setLoading(false); }).catch(function () { setLoading(false); });
@@ -305,6 +428,33 @@ function Vacunacion() {
   function handleEliminar() {
     setVacunas(vacunas.filter(function (v) { return v.id !== deleteVacuna.id; }));
     setDeleteVacuna(null);
+  }
+
+  function handleGuardarEsquema(id, form) {
+    setEsquemas(esquemas.map(function (e) { return e.id === id ? Object.assign({}, e, form) : e; }));
+  }
+
+  function handleEliminarEsquema() {
+    setEsquemas(esquemas.filter(function (e) { return e.id !== esquemaEliminar.id; }));
+    setEsquemaEliminar(null);
+  }
+
+  var esquemasFiltrados = esquemas.filter(function (e) {
+    var q = esquemaSearch.toLowerCase();
+    var matchSearch = !q || e.especie.toLowerCase().includes(q) || e.vacuna.toLowerCase().includes(q);
+    var matchEspecie = esquemaFiltroEspecie === 'Todos' || e.especie === esquemaFiltroEspecie;
+    return matchSearch && matchEspecie;
+  });
+
+  function exportarEsquemasExcel() {
+    var datos = esquemasFiltrados.map(function (e) {
+      return { 'ID': e.id, 'Especie': e.especie, 'Edad': e.edad, 'Vacuna': e.vacuna, 'Dosis': e.dosis, 'Refuerzo': e.refuerzo };
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(wb, ws, 'Esquemas');
+    var fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'Esquemas_Vacunacion_' + fecha + '.xlsx');
   }
 
   function exportarExcel() {
@@ -357,6 +507,12 @@ function Vacunacion() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               Nueva Vacuna
             </button>
+            {activeTab === 'Esquemas de Vacunación' && (
+              <button onClick={function () { /* TODO: navegar a crear esquema */ }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Nuevo Esquema
+              </button>
+            )}
           </div>
         </div>
 
@@ -558,10 +714,92 @@ function Vacunacion() {
       )}
 
       {activeTab === 'Esquemas de Vacunación' && (
-        <div className="flex-1 flex items-center justify-center mt-6">
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-12 text-center w-full">
-            <p className="text-gray-400 dark:text-[#808080]">Sección de Esquemas de Vacunación — Próximamente</p>
+        <div className="flex-1 flex flex-col mt-6 min-h-0 gap-4">
+          <div className="flex-none bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-4">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <svg className="w-5 h-5 text-gray-400 dark:text-[#808080] absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input type="text" placeholder="Buscar por especie o vacuna..." value={esquemaSearch} onChange={function (e) { setEsquemaSearch(e.target.value); }}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-transparent transition-all bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+              </div>
+              <select value={esquemaFiltroEspecie} onChange={function (e) { setEsquemaFiltroEspecie(e.target.value); }}
+                className="px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-transparent bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0] cursor-pointer">
+                <option value="Todos">Especie: Todas</option>
+                <option value="Perro">Perro</option>
+                <option value="Gato">Gato</option>
+              </select>
+              <button onClick={exportarEsquemasExcel} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                Exportar
+              </button>
+            </div>
           </div>
+
+          <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] overflow-hidden">
+            <div className="flex-1 overflow-auto min-h-0">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-gray-500 dark:text-[#909090] text-xs uppercase tracking-wider bg-gray-50 dark:bg-[#2C2C2C]">
+                    <th className="text-left py-4 px-5 font-semibold">ID</th>
+                    <th className="text-left py-4 px-5 font-semibold">Especie</th>
+                    <th className="text-left py-4 px-5 font-semibold">Edad</th>
+                    <th className="text-left py-4 px-5 font-semibold">Vacuna</th>
+                    <th className="text-left py-4 px-5 font-semibold">Dosis</th>
+                    <th className="text-left py-4 px-5 font-semibold">Refuerzo</th>
+                    <th className="text-center py-4 px-5 font-semibold">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
+                  {esquemasFiltrados.map(function (e) {
+                    return (
+                      <tr key={e.id} className="hover:bg-emerald-600/40 dark:hover:bg-emerald-900/20 transition-colors">
+                        <td className="py-4 px-5 text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{e.id}</td>
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-xs font-bold shrink-0">{e.especie[0]}</div>
+                            <span className="text-sm font-medium text-gray-900 dark:text-[#E0E0E0]">{e.especie}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-5 text-sm text-gray-600 dark:text-[#A0A0A0]">{e.edad}</td>
+                        <td className="py-4 px-5 text-sm text-gray-600 dark:text-[#A0A0A0]">{e.vacuna}</td>
+                        <td className="py-4 px-5 text-sm text-gray-600 dark:text-[#A0A0A0]">{e.dosis}</td>
+                        <td className="py-4 px-5">
+                          <span className={'inline-block px-3 py-1 rounded-full text-xs font-semibold ' + (e.refuerzo === 'No' ? 'bg-gray-100 text-gray-600 dark:bg-[#2C2C2C] dark:text-[#A0A0A0]' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300')}>{e.refuerzo}</span>
+                        </td>
+                        <td className="py-4 px-5 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={function () { setEsquemaDetalle(e); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                            </button>
+                            <button onClick={function () { setEsquemaEditar(e); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Editar">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                            </button>
+                            <button onClick={function () { setEsquemaEliminar(e); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors cursor-pointer" title="Eliminar">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {esquemasFiltrados.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-sm text-gray-400 dark:text-[#808080]">No se encontraron esquemas.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex-none flex items-center justify-between px-5 py-4 border-t border-gray-100 dark:border-[#333]">
+              <p className="text-sm text-gray-500 dark:text-[#909090]">{esquemasFiltrados.length} esquema(s) registrado(s)</p>
+            </div>
+          </div>
+
+          {esquemaDetalle && <ModalDetalleEsquema esquema={esquemaDetalle} onClose={function () { setEsquemaDetalle(null); }} />}
+          {esquemaEditar && <ModalEditarEsquema esquema={esquemaEditar} onClose={function () { setEsquemaEditar(null); }} onGuardar={handleGuardarEsquema} />}
+          {esquemaEliminar && <ModalEliminarEsquema esquema={esquemaEliminar} onClose={function () { setEsquemaEliminar(null); }} onConfirmar={handleEliminarEsquema} />}
         </div>
       )}
 
