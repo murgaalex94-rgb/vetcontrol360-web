@@ -63,56 +63,119 @@ function ModalDetallesPersonal({ empleado, onClose }) {
 }
 
 function NuevoPersonalModal({ onClose }) {
-  var [form, setForm] = useState({ nombres: '', apellidos: '', dni: '', telefono: '', email: '', rol: 'Veterinario', estado: 'Activo' });
+  var [form, setForm] = useState({ nombres: '', apellidos: '', dni: '', telefono: '', email: '', password: '', rol: 'Veterinario', estado: 'Activo' });
+  var [showPassword, setShowPassword] = useState(false);
+  var [foto, setFoto] = useState(null);
+  var [dragOver, setDragOver] = useState(false);
 
   function handleChange(e) {
     setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
   }
 
   function handleSubmit() {
-    console.log('Nuevo Personal:', form);
     onClose();
   }
 
-  var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
-  var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#C0C0C0] mb-1';
+  function handleFotoDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    var file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      var reader = new FileReader();
+      reader.onload = function (ev) { setFoto(ev.target.result); };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function handleFotoDragOver(e) {
+    e.preventDefault();
+    setDragOver(true);
+  }
+
+  function handleFotoDragLeave(e) {
+    e.preventDefault();
+    setDragOver(false);
+  }
+
+  var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]';
+  var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
         <div className="flex items-center justify-between p-6 pb-0">
           <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Nuevo Personal</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] text-gray-400 dark:text-[#808080] hover:text-gray-600 dark:hover:text-[#A0A0A0] transition-colors cursor-pointer">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Nombres *</label>
-              <input type="text" name="nombres" value={form.nombres} onChange={handleChange} className={inputClass} placeholder="Ej: Juan Carlos" />
+          <div className="flex gap-6">
+            <div className="flex-shrink-0">
+              <label className={labelClass}>Foto</label>
+              <div
+                onDrop={handleFotoDrop}
+                onDragOver={handleFotoDragOver}
+                onDragLeave={handleFotoDragLeave}
+                onClick={function () { document.getElementById('foto-input-nuevo').click(); }}
+                className={'relative flex flex-col items-center justify-center w-32 h-32 rounded-xl border-2 border-dashed cursor-pointer transition-colors ' + (dragOver ? 'border-[#5F7B65] bg-[#5F7B65]/5' : 'border-gray-300 dark:border-[#404040] hover:border-gray-400 dark:hover:border-[#606060]')}
+              >
+                {foto ? (
+                  <img src={foto} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 dark:text-[#808080] mb-1" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg>
+                    <span className="text-xs text-gray-400 dark:text-[#808080] text-center leading-tight px-1">Subir Foto<br />(Opcional)</span>
+                  </>
+                )}
+                <input id="foto-input-nuevo" type="file" accept="image/*" className="hidden" onChange={handleFotoDrop} />
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>Apellidos *</label>
-              <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} className={inputClass} placeholder="Ej: Pérez López" />
+
+            <div className="flex-1 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Nombres *</label>
+                  <input type="text" name="nombres" value={form.nombres} onChange={handleChange} className={inputClass} placeholder="Ej: Juan Carlos" />
+                </div>
+                <div>
+                  <label className={labelClass}>Apellidos *</label>
+                  <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} className={inputClass} placeholder="Ej: Pérez López" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>DNI *</label>
+                  <input type="text" name="dni" value={form.dni} onChange={handleChange} className={inputClass} placeholder="Ej: 12345678" />
+                </div>
+                <div>
+                  <label className={labelClass}>Teléfono</label>
+                  <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="Ej: +51 999 123 456" />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>DNI *</label>
-              <input type="text" name="dni" value={form.dni} onChange={handleChange} className={inputClass} placeholder="Ej: 12345678" />
+              <label className={labelClass}>Email *</label>
+              <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="Ej: correo@vetcontrol.com" />
             </div>
             <div>
-              <label className={labelClass}>Teléfono</label>
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="Ej: +51 999 123 456" />
+              <label className={labelClass}>Contraseña *</label>
+              <div className="relative">
+                <input type={showPassword ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} className={inputClass + ' pr-10'} placeholder="Ingresa una contraseña segura" />
+                <button type="button" onClick={function () { setShowPassword(!showPassword); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#808080] hover:text-gray-600 dark:hover:text-[#A0A0A0] transition-colors cursor-pointer">
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Email *</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="Ej: correo@vetcontrol.com" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -135,7 +198,7 @@ function NuevoPersonalModal({ onClose }) {
         </div>
 
         <div className="flex items-center justify-end gap-3 p-6 pt-2">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
           <button onClick={handleSubmit} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Personal</button>
         </div>
       </div>
