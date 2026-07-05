@@ -90,8 +90,8 @@ function Dashboard() {
   var totalVentas = ventasDiarias.reduce(function (sum, v) { return sum + v.ventas; }, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex-none flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{'\u00A1'}Bienvenido, Dr. Juan! {'\uD83D\uDC4B'}</h1>
           <p className="text-sm text-gray-500 dark:text-[#909090] mt-0.5">Aquí tienes un resumen de la actividad de tu clínica hoy.</p>
@@ -257,7 +257,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
         <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
           <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">Pacientes Más Atendidos</h3>
           <div className="space-y-3">

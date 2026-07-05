@@ -118,8 +118,8 @@ function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto" style={{ backgroundColor: 'var(--color-surface)' }}>
-        <div className="flex items-center justify-end gap-3 px-8 pt-4 pb-0">
+      <main className="flex-1 flex flex-col min-h-0 overflow-auto" style={{ backgroundColor: 'var(--color-surface)' }}>
+        <div className="flex-none flex items-center justify-end gap-3 px-8 pt-4 pb-0">
           <button
             onClick={toggleTheme}
             className="w-9 h-9 flex items-center justify-center rounded-full text-lg transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
@@ -130,7 +130,7 @@ function AppLayout() {
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>
         </div>
-        <div className="p-8 pt-2">
+        <div className="flex-1 flex flex-col min-h-0 p-8 pt-2">
           <Outlet />
         </div>
       </main>

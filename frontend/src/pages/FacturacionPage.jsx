@@ -53,8 +53,8 @@ function FacturacionPage() {
   const pendientesMonto = facturas.filter((f) => f.estado === 'Pendiente').reduce((sum, f) => sum + (f.total || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex-none flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 0 4.5 6h.75m13.5 0h.75a.75.75 0 0 0 .75-.75V4.5m-15 0v16.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V4.5" /></svg>
@@ -76,7 +76,7 @@ function FacturacionPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-none">
         <div className="rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm p-5">
           <div className="flex items-start justify-between">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
@@ -113,7 +113,7 @@ function FacturacionPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 border-b border-gray-200">
+      <div className="flex items-center gap-6 border-b border-gray-200 flex-none">
         {['facturas', 'ventas'].map((t) => (
           <button key={t} onClick={() => setTab(t)} className={'pb-3 text-sm font-semibold transition-colors cursor-pointer ' + (tab === t ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700')}>
             {t === 'facturas' ? 'Facturas' : 'Ventas'}
@@ -121,8 +121,8 @@ function FacturacionPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-8 space-y-4">
+      <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+        <div className="col-span-8 flex flex-col gap-4 min-h-0">
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
@@ -142,8 +142,8 @@ function FacturacionPage() {
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm flex-1 flex flex-col min-h-0">
+            <div className="overflow-auto flex-1 min-h-0">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#2C2C2C]">
