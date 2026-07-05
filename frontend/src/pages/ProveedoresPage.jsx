@@ -1,14 +1,138 @@
 import { useState } from 'react';
+import * as XLSX from 'xlsx';
+
+var nextProveedorId = 6;
+
+function generarCodigoProveedor(id) {
+  var anio = new Date().getFullYear();
+  var num = String(id).padStart(4, '0');
+  return 'PRO-' + anio + '-' + num;
+}
 
 var proveedoresMock = [
-  { id: 1, nombre: 'Vet Pharma', ruc: '20123456789', rubro: 'Medicamentos', telefono: '+51 999 111 222', email: 'ventas@vetpharma.com', estado: 'Activo', direccion: 'Av. Salud 123, Lima' },
-  { id: 2, nombre: 'Agrovet', ruc: '20987654321', rubro: 'Alimentos', telefono: '+51 999 333 444', email: 'pedidos@agrovet.com', estado: 'Activo', direccion: 'Jr. Veterinary 456, Arequipa' },
-  { id: 3, nombre: 'Pet Care', ruc: '20567891234', rubro: 'Accesorios', telefono: '+51 999 555 666', email: 'info@petcare.com', estado: 'Activo', direccion: 'Calle Mascotas 789, Cusco' },
-  { id: 4, nombre: 'AnimalHealth', ruc: '20432167890', rubro: 'Medicamentos', telefono: '+51 999 777 888', email: 'ventas@animalhealth.com', estado: 'Inactivo', direccion: 'Av. Veterinaria 321, Trujillo' },
-  { id: 5, nombre: 'NutriPet', ruc: '20678912345', rubro: 'Alimentos', telefono: '+51 999 999 000', email: 'contacto@nutripet.com', estado: 'Activo', direccion: 'Calle Nutrición 654, Lima' },
+  { id: 1, codigo: generarCodigoProveedor(1), nombre: 'Vet Pharma', ruc: '20123456789', rubro: 'Medicamentos', telefono: '+51 999 111 222', email: 'ventas@vetpharma.com', estado: 'Activo', direccion: 'Av. Salud 123, Lima' },
+  { id: 2, codigo: generarCodigoProveedor(2), nombre: 'Agrovet', ruc: '20987654321', rubro: 'Alimentos', telefono: '+51 999 333 444', email: 'pedidos@agrovet.com', estado: 'Activo', direccion: 'Jr. Veterinary 456, Arequipa' },
+  { id: 3, codigo: generarCodigoProveedor(3), nombre: 'Pet Care', ruc: '20567891234', rubro: 'Accesorios', telefono: '+51 999 555 666', email: 'info@petcare.com', estado: 'Activo', direccion: 'Calle Mascotas 789, Cusco' },
+  { id: 4, codigo: generarCodigoProveedor(4), nombre: 'AnimalHealth', ruc: '20432167890', rubro: 'Medicamentos', telefono: '+51 999 777 888', email: 'ventas@animalhealth.com', estado: 'Inactivo', direccion: 'Av. Veterinaria 321, Trujillo' },
+  { id: 5, codigo: generarCodigoProveedor(5), nombre: 'NutriPet', ruc: '20678912345', rubro: 'Alimentos', telefono: '+51 999 999 000', email: 'contacto@nutripet.com', estado: 'Activo', direccion: 'Calle Nutrición 654, Lima' },
 ];
 
 var coloresRubro = { Medicamentos: 'bg-blue-50 text-blue-700', Alimentos: 'bg-amber-50 text-amber-700', Accesorios: 'bg-purple-50 text-purple-700', Servicios: 'bg-gray-50 text-gray-700' };
+
+function ModalDetalleProveedor({ proveedor, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Detalle del Proveedor</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-gray-50 dark:bg-[#2C2C2C] rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-sm font-bold shrink-0">{proveedor.nombre[0]}</div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{proveedor.nombre}</p>
+                <p className="text-sm text-gray-500 dark:text-[#909090]">{proveedor.codigo}</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">RUC</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{proveedor.ruc}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Rubro</p><span className={'inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ' + (coloresRubro[proveedor.rubro] || 'bg-gray-50 text-gray-700')}>{proveedor.rubro}</span></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Teléfono</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{proveedor.telefono}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Email</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{proveedor.email}</p></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Dirección</p><p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">{proveedor.direccion}</p></div>
+            <div><p className="text-xs text-gray-500 dark:text-[#909090] font-medium">Estado</p><span className={'inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ' + (proveedor.estado === 'Activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')}>{proveedor.estado}</span></div>
+          </div>
+        </div>
+        <div className="p-6 pt-0">
+          <button onClick={onClose} className="w-full py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
+  var [desde, setDesde] = useState(filtrosActuales.fechaDesde || '');
+  var [hasta, setHasta] = useState(filtrosActuales.fechaHasta || '');
+  var [rubro, setRubro] = useState(filtrosActuales.rubro || 'Todos');
+  var [estado, setEstado] = useState(filtrosActuales.estado || 'Todos');
+
+  if (!open) return null;
+
+  function handleAplicar() {
+    onAplicar({ fechaDesde: desde, fechaHasta: hasta, rubro, estado });
+    onClose();
+  }
+
+  function handleLimpiar() {
+    setDesde(''); setHasta(''); setRubro('Todos'); setEstado('Todos');
+    onAplicar({ fechaDesde: '', fechaHasta: '', rubro: 'Todos', estado: 'Todos' });
+    onClose();
+  }
+
+  var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]";
+  var labelClass = "block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1.5";
+  var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7B65] cursor-pointer bg-white dark:bg-[#2C2C2C] text-gray-700 dark:text-[#D0D0D0]";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Filtro Avanzado</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Fecha Desde</label>
+              <input type="date" value={desde} onChange={function (e) { setDesde(e.target.value); }} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Fecha Hasta</label>
+              <input type="date" value={hasta} onChange={function (e) { setHasta(e.target.value); }} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Rubro</label>
+            <select value={rubro} onChange={function (e) { setRubro(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
+              <option value="Medicamentos">Medicamentos</option>
+              <option value="Alimentos">Alimentos</option>
+              <option value="Accesorios">Accesorios</option>
+              <option value="Servicios">Servicios</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Estado</label>
+            <select value={estado} onChange={function (e) { setEstado(e.target.value); }} className={selectClass}>
+              <option value="Todos">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 p-6 pt-0">
+          <button onClick={handleLimpiar} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Limpiar Filtros</button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+            <button onClick={handleAplicar} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NuevoProveedorModal({ onClose }) {
   var [form, setForm] = useState({ nombre: '', ruc: '', rubro: 'Medicamentos', telefono: '', email: '', direccion: '', estado: 'Activo' });
@@ -98,19 +222,54 @@ function ProveedoresPage() {
   var [filtroRubro, setFiltroRubro] = useState('Todos');
   var [pagina, setPagina] = useState(1);
   var [showModal, setShowModal] = useState(false);
+  var [showModalFiltro, setShowModalFiltro] = useState(false);
+  var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', rubro: 'Todos', estado: 'Todos' });
+  var [showModalDetalle, setShowModalDetalle] = useState(null);
   var porPagina = 5;
 
-  var filtrados = proveedoresMock.filter(function (p) {
-    var coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || p.ruc.includes(busqueda) || p.rubro.toLowerCase().includes(busqueda.toLowerCase());
+  function aplicarFiltrosAvanzados(lista) {
+    var f = filtrosAvanzados;
+    return lista.filter(function (p) {
+      if (f.fechaDesde) return false;
+      if (f.fechaHasta) return false;
+      if (f.rubro !== 'Todos' && p.rubro !== f.rubro) return false;
+      if (f.estado !== 'Todos' && p.estado !== f.estado) return false;
+      return true;
+    });
+  }
+
+  var filtradosBase = proveedoresMock.filter(function (p) {
+    var coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || p.ruc.includes(busqueda) || p.rubro.toLowerCase().includes(busqueda.toLowerCase()) || p.codigo.toLowerCase().includes(busqueda.toLowerCase());
     var coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
     var coincideRubro = filtroRubro === 'Todos' || p.rubro === filtroRubro;
     return coincideBusqueda && coincideEstado && coincideRubro;
   });
 
+  var filtrados = aplicarFiltrosAvanzados(filtradosBase);
+
   var totalPaginas = Math.ceil(filtrados.length / porPagina) || 1;
   var paginados = filtrados.slice((pagina - 1) * porPagina, pagina * porPagina);
 
   var totalActivos = proveedoresMock.filter(function (p) { return p.estado === 'Activo'; }).length;
+
+  function exportarExcel() {
+    var datos = filtrados.map(function (p) {
+      return {
+        'Código': p.codigo,
+        'Proveedor': p.nombre,
+        'RUC': p.ruc || '',
+        'Rubro': p.rubro || '',
+        'Teléfono': p.telefono || '',
+        'Email': p.email || '',
+        'Estado': p.estado || '',
+      };
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(datos);
+    XLSX.utils.book_append_sheet(wb, ws, 'Proveedores');
+    var fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'Proveedores_' + fecha + '.xlsx');
+  }
 
   return (
     <div className="space-y-6">
@@ -176,7 +335,7 @@ function ProveedoresPage() {
 
       <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm">
         <div className="p-4 border-b border-gray-100 dark:border-[#333] flex flex-col sm:flex-row gap-3">
-          <input type="text" placeholder="Buscar por nombre, RUC o rubro..." value={busqueda} onChange={function (e) { setBusqueda(e.target.value); setPagina(1); }} className="flex-1 rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+          <input type="text" placeholder="Buscar por nombre, código, RUC o rubro..." value={busqueda} onChange={function (e) { setBusqueda(e.target.value); setPagina(1); }} className="flex-1 rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
           <select value={filtroEstado} onChange={function (e) { setFiltroEstado(e.target.value); setPagina(1); }} className="rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-3 py-2.5 text-sm text-gray-700 dark:text-[#D0D0D0] focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
             <option value="Todos">Todos los estados</option>
             <option value="Activo">Activo</option>
@@ -188,13 +347,21 @@ function ProveedoresPage() {
             <option value="Alimentos">Alimentos</option>
             <option value="Accesorios">Accesorios</option>
           </select>
+          <button onClick={function () { setShowModalFiltro(true); }} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.3 48.3 0 0 1 12 3Z" /></svg>
+            Filtro Avanzado
+          </button>
+          <button onClick={exportarExcel} className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            Exportar
+          </button>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 dark:bg-[#2C2C2C] text-left">
-                <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#909090]">ID</th>
+                <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#909090]">Código</th>
                 <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#909090]">Proveedor</th>
                 <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#909090]">RUC</th>
                 <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#909090]">Rubro</th>
@@ -213,7 +380,7 @@ function ProveedoresPage() {
                   var iniciales = prov.nombre.split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
                   return (
                     <tr key={prov.id} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                      <td className="px-4 py-3 text-gray-500 dark:text-[#909090] font-mono">{prov.id}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-[#909090] font-mono text-xs">{prov.codigo}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0">{iniciales}</div>
@@ -233,6 +400,9 @@ function ProveedoresPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          <button onClick={function () { setShowModalDetalle(prov); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                          </button>
                           <button className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer" title="Editar">✏️</button>
                           <button className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer" title="Eliminar">🗑️</button>
                         </div>
@@ -257,6 +427,8 @@ function ProveedoresPage() {
       </div>
 
       {showModal && <NuevoProveedorModal onClose={function () { setShowModal(false); }} />}
+      {showModalDetalle && <ModalDetalleProveedor proveedor={showModalDetalle} onClose={function () { setShowModalDetalle(null); }} />}
+      <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
 }
