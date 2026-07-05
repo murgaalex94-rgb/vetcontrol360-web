@@ -133,20 +133,20 @@ function NuevaMascota() {
   return (
     <div className="flex flex-col h-full gap-6">
       <div className="flex-none flex items-center gap-4">
-        <button onClick={() => navigate('/mascotas')} className="p-2 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
+        <button onClick={() => navigate('/mascotas')} className="p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded-lg transition-colors cursor-pointer">
           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
           </svg>
         </button>
         <div>
           <nav className="text-sm text-gray-500 mb-1">
-            <span className="hover:text-emerald-600 cursor-pointer" onClick={() => navigate('/')}>Inicio</span>
+            <span className="hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" onClick={() => navigate('/')}>Inicio</span>
             <span className="mx-2">/</span>
-            <span className="hover:text-emerald-600 cursor-pointer" onClick={() => navigate('/mascotas')}>Mascotas</span>
+            <span className="hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" onClick={() => navigate('/mascotas')}>Mascotas</span>
             <span className="mx-2">/</span>
-            <span className="text-gray-800 font-medium">Nueva Mascota</span>
-          </nav>
-          <h1 className="text-2xl font-bold text-gray-800">Nueva Mascota</h1>
+            <span className="text-gray-800 dark:text-[#E0E0E0] font-medium">Nueva Mascota</span>
+            </nav>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">Nueva Mascota</h1>
         </div>
       </div>
 
@@ -166,9 +166,9 @@ function NuevaMascota() {
               <p className="text-red-600 bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-sm">{error}</p>
             )}
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2 pb-3 border-b border-gray-100">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-[#E0E0E0] flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-[#333]">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
                 </svg>
                 Información Básica
@@ -227,9 +227,9 @@ function NuevaMascota() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2 pb-3 border-b border-gray-100">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-[#E0E0E0] flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-[#333]">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
                 </svg>
@@ -281,8 +281,8 @@ function NuevaMascota() {
             </div>
 
             <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2 pb-3 border-b border-gray-100">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-[#E0E0E0] flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-[#333]">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
                 Asignar Dueño
@@ -298,7 +298,7 @@ function NuevaMascota() {
                     className={inputClass}
                   />
                 </div>
-                <button type="button" onClick={() => navigate('/clientes?nuevo=true')} className="px-4 py-2.5 border border-emerald-600 text-emerald-600 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors cursor-pointer whitespace-nowrap">
+                <button type="button" onClick={() => navigate('/clientes?nuevo=true')} className="px-4 py-2.5 border border-emerald-600 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors cursor-pointer whitespace-nowrap">
                   + Nuevo Dueño
                 </button>
               </div>
@@ -355,7 +355,7 @@ function NuevaMascota() {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 dark:border-[#404040] rounded-xl p-6 text-center hover:border-emerald-400 transition-colors cursor-pointer"
+                className="border-2 border-dashed border-gray-300 dark:border-[#3A3A3A] rounded-xl p-6 text-center hover:border-emerald-400 transition-colors cursor-pointer"
               >
                 {fotoPreview ? (
                   <div className="relative">
@@ -371,7 +371,7 @@ function NuevaMascota() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
                     </svg>
                     <p className="text-sm text-gray-500 mb-1">Arrastra y suelta o</p>
-                    <p className="text-sm text-emerald-600 font-medium">Seleccionar archivo</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Seleccionar archivo</p>
                     <p className="text-xs text-gray-400 mt-2">JPG, PNG o WEBP (máx. 5MB)</p>
                   </>
                 )}
@@ -380,7 +380,7 @@ function NuevaMascota() {
 
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                 </svg>
                 <div>

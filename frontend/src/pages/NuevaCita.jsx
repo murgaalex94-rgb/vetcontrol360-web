@@ -141,9 +141,9 @@ function NuevaCita() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-base font-bold text-gray-800 mb-5 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">2</span>
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+            <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold">2</span>
               Detalles de la Cita
             </h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
