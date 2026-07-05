@@ -468,19 +468,20 @@ function PersonalPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Gestión de Personal</h1>
-          <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Administra el equipo de trabajo de la clínica</p>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-none space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Gestión de Personal</h1>
+            <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Administra el equipo de trabajo de la clínica</p>
+          </div>
+          <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            Nuevo Personal
+          </button>
         </div>
-        <button onClick={function () { setShowModalNuevo(true); }} className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          Nuevo Personal
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -529,9 +530,10 @@ function PersonalPage() {
           </div>
         </div>
       </div>
+    </div>
 
-      <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm">
-        <div className="p-4 border-b border-gray-100 dark:border-[#333] flex flex-col sm:flex-row gap-3">
+      <div className="flex-1 flex flex-col min-h-0 rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] shadow-sm overflow-hidden mt-6">
+        <div className="flex-none p-4 border-b border-gray-100 dark:border-[#333] flex flex-col sm:flex-row gap-3">
           <input type="text" placeholder="Buscar por nombre o cargo..." value={busqueda} onChange={function (e) { setBusqueda(e.target.value); setPagina(1); }} className="flex-1 rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
           <select value={filtroRol} onChange={function (e) { setFiltroRol(e.target.value); setPagina(1); }} className="rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-3 py-2.5 text-sm text-gray-700 dark:text-[#D0D0D0] focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
             <option value="Todos">Todos los roles</option>
@@ -554,7 +556,7 @@ function PersonalPage() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="flex-1 overflow-auto min-h-0">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 dark:bg-[#2C2C2C] text-left">
@@ -611,7 +613,7 @@ function PersonalPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-100 dark:border-[#333]">
+        <div className="flex-none flex items-center justify-end gap-2 p-4 border-t border-gray-100 dark:border-[#333]">
           <button onClick={function () { if (pagina > 1) setPagina(pagina - 1); }} disabled={pagina === 1} className={'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors cursor-pointer ' + (pagina === 1 ? 'border-gray-200 dark:border-[#333] text-gray-300 dark:text-[#606060] cursor-not-allowed' : 'border-gray-300 dark:border-[#404040] text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C]')}>{'< Anterior'}</button>
           {Array.from({ length: totalPaginas }, function (_, i) { return i + 1; }).map(function (n) {
             return (
