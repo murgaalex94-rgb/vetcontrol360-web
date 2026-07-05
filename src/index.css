@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-surface: #F9FAFB;
+    --color-card: #FFFFFF;
+    --color-sidebar: #5F7B65;
+    --color-primary: #5F7B65;
+    --color-primary-hover: #4A6250;
+    --color-primary-light: #E8F0E9;
+  }
+  .dark {
+    --color-surface: #121212;
+    --color-card: #1E1E1E;
+    --color-sidebar: #1E1E1E;
+    --color-primary: #7FA389;
+    --color-primary-hover: #6B8D73;
+    --color-primary-light: #2C3A2E;
+  }
+}
+
+body {
+  background-color: var(--color-surface);
+  color: #111827;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dark body {
+  color: #E0E0E0;
+}
