@@ -71,8 +71,8 @@ function NuevaFactura() {
   const inputClass = 'w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex-none flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#909090] mb-1">
             <span>Ventas</span>

@@ -76,8 +76,8 @@ function GestionInventario() {
   const totalProximos = productos.filter((p) => p.estado === 'Crítico' || p.estado === 'Bajo').length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex flex-none items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ function GestionInventario() {
         </button>
       </div>
 
-      <div className="rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

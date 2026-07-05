@@ -159,8 +159,8 @@ function AgendaCitas() {
   }, []);
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between">
+    <div className="flex flex-col h-full gap-5">
+      <div className="flex-none flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
             <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ function AgendaCitas() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="flex-1 min-h-0 overflow-auto grid grid-cols-12 gap-6">
         <div className="col-span-9">
           <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
             <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#2C2C2C]">
