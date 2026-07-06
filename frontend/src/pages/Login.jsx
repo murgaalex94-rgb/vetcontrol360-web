@@ -14,7 +14,6 @@ function Login() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
-  const [showGooglePopup, setShowGooglePopup] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -53,11 +52,7 @@ function Login() {
   }
 
   function handleGoogleClick() {
-    console.log('Redirigiendo a Google OAuth...');
-    setShowGooglePopup(true);
-    setTimeout(function () {
-      setShowGooglePopup(false);
-    }, 2000);
+    console.log('Simulando autenticación con Google...');
   }
 
   return (
@@ -172,14 +167,6 @@ function Login() {
         </div>
       )}
 
-      {showGooglePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl px-8 py-6 flex items-center gap-4">
-            <div className="w-5 h-5 border-2 border-[#5F7B65] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-gray-700 dark:text-[#D0D0D0]">Simulando autenticación con Google...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
