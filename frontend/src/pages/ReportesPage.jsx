@@ -3,7 +3,7 @@ import MaterialDatePicker from '../components/MaterialDatePicker';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { autoTable } from 'jspdf-autotable';
 
 var reportesIniciales = [
   { id: 1, tipo: 'Ventas', fecha: '2026-07-03', titulo: 'Reporte de Ventas - Julio 2026', formato: 'PDF' },
@@ -72,20 +72,25 @@ function datosSimulados(tipo) {
 }
 
 function descargarPDF(reporte) {
-  var doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text(reporte.titulo, 14, 20);
-  doc.setFontSize(10);
-  doc.text('Generado: ' + reporte.fecha + ' | Tipo: ' + reporte.tipo, 14, 28);
+  try {
+    var doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(reporte.titulo, 14, 20);
+    doc.setFontSize(10);
+    doc.text('Generado: ' + reporte.fecha + ' | Tipo: ' + reporte.tipo, 14, 28);
 
-  var data = datosSimulados(reporte.tipo);
-  if (data.length > 0) {
-    var headers = Object.keys(data[0]);
-    var rows = data.map(function (r) { return headers.map(function (h) { return r[h]; }); });
-    doc.autoTable({ head: [headers], body: rows, startY: 34, theme: 'grid', styles: { fontSize: 8 } });
+    var data = datosSimulados(reporte.tipo);
+    if (data.length > 0) {
+      var headers = Object.keys(data[0]);
+      var rows = data.map(function (r) { return headers.map(function (h) { return r[h]; }); });
+      autoTable(doc, { head: [headers], body: rows, startY: 34, theme: 'grid', styles: { fontSize: 8 } });
+    }
+
+    doc.save(reporte.titulo.replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    console.error('Error al generar PDF:', e);
+    alert('Error al generar PDF: ' + e.message);
   }
-
-  doc.save(reporte.titulo.replace(/\s+/g, '_') + '.pdf');
 }
 
 function descargarExcel(reporte) {
