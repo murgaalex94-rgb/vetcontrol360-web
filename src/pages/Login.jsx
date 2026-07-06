@@ -49,14 +49,14 @@ function Login() {
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Z" /></svg>
           </div>
           <div>
-            <p className="text-lg font-bold text-white tracking-tight">VetCare</p>
-            <p className="text-[10px] text-white/70 -mt-0.5">Sistema de Gestión Veterinaria</p>
+            <p className="text-lg font-bold text-white tracking-tight">VetControl 360</p>
+            <p className="text-[10px] text-white/70 -mt-0.5">El sistema completo para la gestión de tu clínica veterinaria</p>
           </div>
         </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-12">
           <p className="text-sm font-medium text-white/80 tracking-wide uppercase">Bienvenido a</p>
-          <h1 className="text-5xl font-bold text-white mt-2">VetCare</h1>
+          <h1 className="text-5xl font-bold text-white mt-2">VetControl 360</h1>
           <p className="text-base text-white/80 mt-3 text-center max-w-sm leading-relaxed">
             El sistema completo para la gestión de tu clínica veterinaria
           </p>
@@ -94,8 +94,8 @@ function Login() {
       <div className="w-full lg:w-1/2 bg-white dark:bg-[#121212] flex items-center justify-center p-8 relative">
         <div className="w-full max-w-sm">
           <div className="flex flex-col items-center mb-8">
-            <div className="mb-4">
-              <Logo size={64} />
+            <div className="mb-6">
+              <img src="/logo-login.png" alt="VetControl 360" className="w-40 h-auto" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Iniciar Sesión</h1>
             <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Ingresa tus credenciales para continuar</p>
