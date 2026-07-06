@@ -44,39 +44,10 @@ function Login() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#5F7B65]/40 via-[#5F7B65]/20 to-[#5F7B65]/50" />
 
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-12">
-          <p className="text-sm font-medium text-white/80 tracking-wide uppercase">Bienvenido a</p>
-          <h1 className="text-5xl font-bold text-white mt-2">VetControl 360</h1>
+          <h1 className="text-5xl font-bold text-white">VetControl 360</h1>
           <p className="text-base text-white/80 mt-3 text-center max-w-sm leading-relaxed">
-            El sistema completo para la gestión de tu clínica veterinaria
+            Sistema de Gestión Veterinaria
           </p>
-        </div>
-
-        <div className="absolute bottom-8 left-6 right-6 z-10">
-          <div className="bg-[#5F7B65]/80 backdrop-blur-sm rounded-2xl px-6 py-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
-                <div>
-                  <p className="text-xs font-semibold text-white">Seguro</p>
-                  <p className="text-[10px] text-white/70">Tus datos protegidos</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6h16.5M3.75 12h16.5M3.75 18h16.5" /></svg>
-                <div>
-                  <p className="text-xs font-semibold text-white">Eficiente</p>
-                  <p className="text-[10px] text-white/70">Todo en un solo lugar</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>
-                <div>
-                  <p className="text-xs font-semibold text-white">Confiable</p>
-                  <p className="text-[10px] text-white/70">Soporte profesional</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
