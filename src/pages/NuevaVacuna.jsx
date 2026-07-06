@@ -181,7 +181,7 @@ function NuevaVacuna() {
                     <input type="text" name="lote" value={form.lote} onChange={handleChange} required className={inputClass} placeholder="Ej: L12345" />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={labelClass}>Laboratorio</label>
                     <select name="laboratorio" value={form.laboratorio} onChange={handleChange} className={selectClass}>
@@ -192,9 +192,9 @@ function NuevaVacuna() {
                   <div>
                     <MaterialDatePicker value={form.fechaAplicacion} onChange={function (val) { handleChange({ target: { name: 'fechaAplicacion', value: val } }); }} label="Fecha de Aplicación *" placeholder="DD/MM/YYYY" />
                   </div>
-                  <div>
-                    <MaterialDatePicker value={form.proximaDosis} onChange={function (val) { handleChange({ target: { name: 'proximaDosis', value: val } }); }} label="Próxima Dosis" placeholder="DD/MM/YYYY" />
-                  </div>
+                </div>
+                <div>
+                  <MaterialDatePicker value={form.proximaDosis} onChange={function (val) { handleChange({ target: { name: 'proximaDosis', value: val } }); }} label="Próxima Dosis" placeholder="DD/MM/YYYY" />
                 </div>
               </div>
             </div>
@@ -235,18 +235,18 @@ function NuevaVacuna() {
                   <label className={labelClass}>Estado</label>
                   <div className="flex items-center gap-3 mt-1.5">
                     <button type="button" onClick={() => setForm({ ...form, estado: 'Aplicada' })}
-                     className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all cursor-pointer border-2 ${
-                         form.estado === 'Aplicada' ? 'bg-emerald-50 text-emerald-700 border-sage' : 'bg-white dark:bg-[#1E1E1E] text-gray-500 dark:text-[#909090] border-gray-200 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#404040]'
-                       }`}>
-                      <span className={`w-2.5 h-2.5 rounded-full ${form.estado === 'Aplicada' ? 'bg-emerald-600' : 'bg-gray-300'}`} />
-                      Aplicada
+                      className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all cursor-pointer border-2 ${
+                          form.estado === 'Aplicada' ? 'bg-emerald-50 text-emerald-700 border-sage' : 'bg-white dark:bg-[#1E1E1E] text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-600'
+                        }`}>
+                       <span className={`w-2.5 h-2.5 rounded-full ${form.estado === 'Aplicada' ? 'bg-emerald-600' : 'bg-emerald-300'}`} />
+                       Aplicada
                     </button>
                     <button type="button" onClick={() => setForm({ ...form, estado: 'Pendiente' })}
-                     className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all cursor-pointer border-2 ${
-                         form.estado === 'Pendiente' ? 'bg-red-50 text-red-700 border-red-400' : 'bg-white dark:bg-[#1E1E1E] text-gray-500 dark:text-[#909090] border-gray-200 dark:border-[#333] hover:border-gray-300 dark:hover:border-[#404040]'
-                      }`}>
-                      <span className={`w-2.5 h-2.5 rounded-full ${form.estado === 'Pendiente' ? 'bg-terracotta' : 'bg-gray-300'}`} />
-                      Pendiente
+                      className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all cursor-pointer border-2 ${
+                          form.estado === 'Pendiente' ? 'bg-red-50 text-red-700 border-red-400' : 'bg-white dark:bg-[#1E1E1E] text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-700 hover:border-orange-400 dark:hover:border-orange-600'
+                       }`}>
+                       <span className={`w-2.5 h-2.5 rounded-full ${form.estado === 'Pendiente' ? 'bg-terracotta' : 'bg-orange-300'}`} />
+                       Pendiente
                     </button>
                   </div>
                 </div>
@@ -320,22 +320,22 @@ function NuevaVacuna() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex-none flex items-center justify-between border-t border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] rounded-xl px-5 py-3 -mx-1">
             <button type="button" onClick={() => navigate('/vacunacion')}
-              className="px-6 py-3 border border-gray-300 dark:border-[#404040] rounded-xl text-gray-700 dark:text-[#D0D0D0] font-medium hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer flex items-center gap-2">
+              className="px-5 py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl text-gray-700 dark:text-[#D0D0D0] font-medium hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer flex items-center gap-2 text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
               Cancelar
             </button>
             <button type="submit" disabled={saving}
-              className="px-8 py-3 bg-[#5F7B65] hover:bg-[#4E6553] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+              className="px-6 py-2.5 bg-[#5F7B65] hover:bg-[#4E6553] text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
               {saving ? 'Guardando...' : 'Guardar Vacuna'}
             </button>
           </div>
         </div>
 
-        <div className="col-span-4 space-y-5">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 space-y-3">
+        <div className="col-span-4 flex flex-col h-full">
+            <div className="flex-none bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 space-y-3">
             <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
@@ -355,7 +355,7 @@ function NuevaVacuna() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-8 flex flex-col items-center justify-center min-h-[180px]">
+          <div className="flex-1 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-8 flex flex-col items-center justify-center mt-5">
             {form.vacuna && INFO_VACUNAS[form.vacuna] ? (
               <div className="space-y-2 text-center">
                 <div className="w-12 h-12 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">

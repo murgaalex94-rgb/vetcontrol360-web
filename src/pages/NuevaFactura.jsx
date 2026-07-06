@@ -43,10 +43,11 @@ function NuevaFactura() {
   const mascotasDisponibles = clienteId ? (mascotasMap[clienteId] || []) : [];
   const mascotaSeleccionada = mascotasDisponibles.find((m) => m.id === Number(mascotaId));
 
-  const subtotalItems = items.reduce((sum, item) => sum + (item.cantidad * item.precio * (1 - item.descuento / 100)), 0);
+  const subtotalBruto = items.reduce((sum, item) => sum + item.cantidad * item.precio, 0);
   const descuentoTotal = items.reduce((sum, item) => sum + (item.cantidad * item.precio * item.descuento / 100), 0);
-  const igv = subtotalItems * 0.18;
-  const totalPagar = subtotalItems + igv;
+  const subtotalNeto = subtotalBruto - descuentoTotal;
+  const igv = subtotalNeto * 0.18;
+  const totalPagar = subtotalNeto + igv;
 
   function addItem() {
     setItems([...items, { id: nextId++, descripcion: busqueda || 'Nuevo Producto', categoria: 'Servicios', cantidad: 1, precio: 0, descuento: 0 }]);
@@ -72,7 +73,7 @@ function NuevaFactura() {
   const inputClass = 'w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col min-h-screen gap-6">
       <div className="flex-none flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#909090] mb-1">
@@ -90,8 +91,8 @@ function NuevaFactura() {
         </button>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-9 space-y-6">
+      <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+        <div className="col-span-9 flex flex-col gap-6 min-h-0 overflow-auto">
 
           <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-6">
             <div className="flex items-center gap-3 mb-5">
@@ -134,7 +135,7 @@ function NuevaFactura() {
                 <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar producto o servicio..." className={inputClass + ' pl-10'} />
               </div>
-              <button onClick={addItem} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 cursor-pointer whitespace-nowrap">
+              <button onClick={addItem} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer whitespace-nowrap" style={{ backgroundColor: '#5F7B65' }}>
                 + Agregar Item
               </button>
             </div>
@@ -244,18 +245,16 @@ function NuevaFactura() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 pb-4">
-            <button onClick={() => navigate('/facturacion')} className="rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
+          <div className="flex items-center justify-end gap-3 pt-2 pb-4">
+            <button onClick={() => navigate('/facturacion')} className="rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
               Cancelar
             </button>
-            <div className="flex items-center gap-3">
-              <button className="rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-[#2C2C2C] px-6 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer">
-                Guardar Borrador
-              </button>
-              <button className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 cursor-pointer">
-                Emitir Factura
-              </button>
-            </div>
+            <button className="rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer">
+              Guardar Borrador
+            </button>
+            <button className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+              Emitir Factura
+            </button>
           </div>
         </div>
 
@@ -273,8 +272,9 @@ function NuevaFactura() {
           <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
             <h4 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">Detalles Financieros</h4>
             <div className="space-y-3">
-              <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">Subtotal ({items.length} items)</span><span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">S/ {subtotalItems.toFixed(2)}</span></div>
-              <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">Descuento</span><span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">S/ {descuentoTotal.toFixed(2)}</span></div>
+              <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">Subtotal ({items.length} items)</span><span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">S/ {subtotalBruto.toFixed(2)}</span></div>
+              <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">Descuento</span><span className="text-sm font-medium text-red-500">- S/ {descuentoTotal.toFixed(2)}</span></div>
+              <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">Subtotal Neto</span><span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">S/ {subtotalNeto.toFixed(2)}</span></div>
               <div className="flex items-center justify-between"><span className="text-sm text-gray-600 dark:text-[#A0A0A0]">IGV (18%)</span><span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">S/ {igv.toFixed(2)}</span></div>
               <div className="border-t border-gray-200 dark:border-[#333] pt-3 flex items-center justify-between">
                 <span className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">Total a Pagar</span>

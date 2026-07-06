@@ -212,7 +212,7 @@ function MaterialDatePicker({
     <>
       {/* ===== INPUT FIELD ===== */}
       <div className="relative" onKeyDown={handleKeyDown}>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label || 'Fecha'}</label>
+        {label ? <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{label}</label> : null}
         <div
           onClick={handleInputClick}
           className={classNames(

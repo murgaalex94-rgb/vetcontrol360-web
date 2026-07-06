@@ -1,7 +1,16 @@
-﻿import { useState, useMemo, useEffect } from 'react';
+﻿import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import * as XLSX from 'xlsx';
+
+var _contadorInv = 0;
+
+function generarCodigoInv() {
+  _contadorInv += 1;
+  var anio = new Date().getFullYear();
+  return 'INV-' + anio + '-' + String(_contadorInv).padStart(4, '0');
+}
 
 function computeEstado(p) {
   if (p.stockActual === 0 && p.fechaVencimiento) return 'Vencido';
@@ -11,7 +20,7 @@ function computeEstado(p) {
 
 function formatFecha(dateStr) {
   if (!dateStr) return '—';
-  const d = new Date(dateStr);
+  var d = new Date(dateStr);
   return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
@@ -21,6 +30,14 @@ const estadoStyles = {
   Crítico: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   Vencido: 'bg-gray-100 text-gray-600 dark:bg-[#2C2C2C] dark:text-[#A0A0A0]',
 };
+
+var SIMULACION_IMPORTACION = [
+  { nombre: 'Antiparasitario Interno Canino', categoria: 'Medicamentos', proveedor: 'Vet Pharma', stockActual: 25, stockMinimo: 10, precioCompra: 18.50, precioVenta: 35.00 },
+  { nombre: 'Shampoo Medicado para Dermatitis', categoria: 'Higiene', proveedor: 'Virbac', stockActual: 40, stockMinimo: 15, precioCompra: 22.00, precioVenta: 45.00 },
+  { nombre: 'Juguete Interactivo Kong Classic M', categoria: 'Accesorios', proveedor: 'Kong', stockActual: 60, stockMinimo: 20, precioCompra: 30.00, precioVenta: 55.00 },
+  { nombre: 'Alimento Royal Canin Digestive Care 7kg', categoria: 'Alimentos', proveedor: 'Royal Canin', stockActual: 18, stockMinimo: 8, precioCompra: 85.00, precioVenta: 145.00 },
+  { nombre: 'Vacuna Polivalente Canina V8', categoria: 'Vacunas', proveedor: 'Zoetis', stockActual: 50, stockMinimo: 25, precioCompra: 12.00, precioVenta: 28.00 },
+];
 
 function ModalDetallesProducto({ producto, onClose }) {
   return (
@@ -173,10 +190,127 @@ function ModalEliminarProducto({ producto, onClose, onConfirmar }) {
   );
 }
 
+function ModalFiltroAvanzado({ abierto, onClose, onAplicar, filtros }) {
+  var [local, setLocal] = useState(filtros);
+
+  useEffect(function () { setLocal(filtros); }, [filtros]);
+
+  if (!abierto) return null;
+
+  function handleChange(e) {
+    setLocal(Object.assign({}, local, { [e.target.name]: e.target.value }));
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">Filtro Avanzado</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-5">
+          <div>
+            <p className="text-sm font-semibold text-gray-700 dark:text-[#D0D0D0] mb-3">Rango de Precios</p>
+            <div className="grid grid-cols-2 gap-3">
+              <input type="number" name="precioMin" value={local.precioMin} onChange={handleChange} placeholder="Mínimo" className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]" />
+              <input type="number" name="precioMax" value={local.precioMax} onChange={handleChange} placeholder="Máximo" className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]" />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700 dark:text-[#D0D0D0] mb-3">Rango de Stock</p>
+            <div className="grid grid-cols-2 gap-3">
+              <input type="number" name="stockMin" value={local.stockMin} onChange={handleChange} placeholder="Mínimo" className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]" />
+              <input type="number" name="stockMax" value={local.stockMax} onChange={handleChange} placeholder="Máximo" className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]" />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700 dark:text-[#D0D0D0] mb-3">Proveedor</p>
+            <select name="proveedorFiltro" value={local.proveedorFiltro} onChange={handleChange} className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]">
+              <option value="">Todos los proveedores</option>
+              <option value="Vet Pharma">Vet Pharma</option>
+              <option value="Zoetis">Zoetis</option>
+              <option value="Royal Canin">Royal Canin</option>
+              <option value="Bayer">Bayer</option>
+              <option value="Whiskas">Whiskas</option>
+              <option value="Kong">Kong</option>
+              <option value="Virbac">Virbac</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={function () { onAplicar(local); onClose(); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Aplicar Filtros</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalConfirmarImportacion({ abierto, datos, onClose, onConfirmar }) {
+  if (!abierto || !datos || datos.length === 0) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">Confirmar Importación</h2>
+            <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">{datos.length} productos encontrados en el archivo</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6">
+          <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider mb-3">Vista previa (primeros 5)</p>
+          <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-[#333]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-[#2C2C2C] border-b border-gray-200 dark:border-[#333]">
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">Producto</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">Categoría</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">Proveedor</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">Stock</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">P. Compra</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 dark:text-[#909090]">P. Venta</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
+                {datos.slice(0, 5).map(function (p, i) { return (
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C]">
+                    <td className="px-3 py-2 text-sm text-gray-800 dark:text-[#E0E0E0]">{p.nombre}</td>
+                    <td className="px-3 py-2"><span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">{p.categoria}</span></td>
+                    <td className="px-3 py-2 text-sm text-gray-600 dark:text-[#A0A0A0]">{p.proveedor}</td>
+                    <td className="px-3 py-2 text-sm text-gray-800 dark:text-[#E0E0E0]">{p.stockActual}</td>
+                    <td className="px-3 py-2 text-sm text-gray-800 dark:text-[#E0E0E0]">S/ {Number(p.precioCompra || 0).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-sm text-gray-800 dark:text-[#E0E0E0] font-medium">S/ {Number(p.precioVenta || 0).toFixed(2)}</td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+          </div>
+          {datos.length > 5 && (
+            <p className="text-xs text-gray-400 dark:text-[#808080] mt-2 text-center">... y {datos.length - 5} productos más</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={function () { onConfirmar(datos); onClose(); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer flex items-center gap-2" style={{ backgroundColor: '#5F7B65' }}>Confirmar Importación</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ITEMS_PER_PAGE = 8;
 
 function GestionInventario() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
@@ -184,42 +318,59 @@ function GestionInventario() {
   const [filtroProveedor, setFiltroProveedor] = useState('Todos');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
   const [paginaActual, setPaginaActual] = useState(1);
+  const [showModalFiltroAvanzado, setShowModalFiltroAvanzado] = useState(false);
+  var [filtrosAvanzados, setFiltrosAvanzados] = useState({
+    precioMin: '', precioMax: '', stockMin: '', stockMax: '', proveedorFiltro: '',
+  });
   const [showModalDetalle, setShowModalDetalle] = useState(null);
   const [showModalEditar, setShowModalEditar] = useState(null);
   const [showModalEliminar, setShowModalEliminar] = useState(null);
+  const [showModalImportar, setShowModalImportar] = useState(false);
+  var [datosImportados, setDatosImportados] = useState([]);
 
   useEffect(() => {
     API.get('/productos').then((res) => {
-      const mapped = res.data.map((p) => ({ ...p, estado: computeEstado(p), imagen: p.imagen || 'https://placehold.co/50x50/DBEAFE/1E40AF?text=PROD' }));
+      _contadorInv = 0;
+      var mapped = res.data.map(function (p) {
+        _contadorInv += 1;
+        var anio = new Date().getFullYear();
+        var codigo = 'INV-' + anio + '-' + String(_contadorInv).padStart(4, '0');
+        return Object.assign({}, p, { codigo: codigo, estado: computeEstado(p), imagen: p.imagen || 'https://placehold.co/50x50/DBEAFE/1E40AF?text=PROD' });
+      });
       setProductos(mapped);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(function () { setLoading(false); });
   }, []);
 
   const categorias = ['Todas', 'Medicamentos', 'Alimentos', 'Accesorios', 'Vacunas', 'Higiene'];
   const proveedores = ['Todos', 'Vet Pharma', 'Zoetis', 'Royal Canin', 'Bayer', 'Whiskas', 'Kong', 'Virbac'];
   const estados = ['Todos', 'Normal', 'Bajo', 'Crítico', 'Vencido'];
 
-  const productosFiltrados = useMemo(() => {
-    return productos.filter((p) => {
-      const coincideBusqueda = (p.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) || (p.sku || '').toLowerCase().includes(busqueda.toLowerCase());
-      const coincideCategoria = filtroCategoria === 'Todas' || p.categoria === filtroCategoria;
-      const coincideProveedor = filtroProveedor === 'Todos' || p.proveedor === filtroProveedor;
-      const coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
-      return coincideBusqueda && coincideCategoria && coincideProveedor && coincideEstado;
+  const productosFiltrados = useMemo(function () {
+    return productos.filter(function (p) {
+      var coincideBusqueda = (p.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) || (p.sku || '').toLowerCase().includes(busqueda.toLowerCase());
+      var coincideCategoria = filtroCategoria === 'Todas' || p.categoria === filtroCategoria;
+      var coincideProveedor = filtroProveedor === 'Todos' || p.proveedor === filtroProveedor;
+      var coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
+      var fa = filtrosAvanzados;
+      var coincidePrecio = (!fa.precioMin || (p.precioVenta || 0) >= Number(fa.precioMin)) && (!fa.precioMax || (p.precioVenta || 0) <= Number(fa.precioMax));
+      var coincideStock = (!fa.stockMin || (p.stockActual || 0) >= Number(fa.stockMin)) && (!fa.stockMax || (p.stockActual || 0) <= Number(fa.stockMax));
+      var coincideProveedorFA = !fa.proveedorFiltro || p.proveedor === fa.proveedorFiltro;
+      return coincideBusqueda && coincideCategoria && coincideProveedor && coincideEstado && coincidePrecio && coincideStock && coincideProveedorFA;
     });
-  }, [productos, busqueda, filtroCategoria, filtroProveedor, filtroEstado]);
+  }, [productos, busqueda, filtroCategoria, filtroProveedor, filtroEstado, filtrosAvanzados]);
 
   const totalPaginas = Math.ceil(productosFiltrados.length / ITEMS_PER_PAGE);
   const productosPagina = productosFiltrados.slice((paginaActual - 1) * ITEMS_PER_PAGE, paginaActual * ITEMS_PER_PAGE);
   const inicio = productosFiltrados.length > 0 ? (paginaActual - 1) * ITEMS_PER_PAGE + 1 : 0;
   const fin = Math.min(paginaActual * ITEMS_PER_PAGE, productosFiltrados.length);
 
-  const limpiarFiltros = () => {
+  const limpiarFiltros = function () {
     setBusqueda('');
     setFiltroCategoria('Todas');
     setFiltroProveedor('Todos');
     setFiltroEstado('Todos');
+    setFiltrosAvanzados({ precioMin: '', precioMax: '', stockMin: '', stockMax: '', proveedorFiltro: '' });
     setPaginaActual(1);
   };
 
@@ -245,6 +396,80 @@ function GestionInventario() {
   const proximosVencer = productos.filter((p) => p.estado === 'Vencido').length;
   const totalProximos = productos.filter((p) => p.estado === 'Crítico' || p.estado === 'Bajo').length;
 
+  var handleExportar = function () {
+    var dataExport = productosFiltrados.map(function (p) {
+      return {
+        ID: p.codigo || '—',
+        Producto: p.nombre || '—',
+        'Categoría': p.categoria || '—',
+        Proveedor: p.proveedor || '—',
+        'Stock Actual': p.stockActual || 0,
+        'Precio Compra': (p.precioCompra || 0),
+        'Precio Venta': (p.precioVenta || 0),
+        Estado: p.estado || '—',
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(dataExport);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+    var fileName = 'Inventario_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+    XLSX.writeFile(wb, fileName);
+  };
+
+  var handleFileSelect = function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    (async function () {
+      try {
+        var data = await file.arrayBuffer();
+        var workbook = XLSX.read(data, { type: 'array' });
+        var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        var rows = XLSX.utils.sheet_to_json(firstSheet);
+        var mapeados = rows.map(function (r) {
+          var nombre = r.Producto || r.Nombre || r.producto || r.nombre || '';
+          var categoria = r.Categoria || r.categoria || r.Categoría || 'Medicamentos';
+          var proveedor = r.Proveedor || r.proveedor || '';
+          var stockActual = Number(r.Stock || r.stock || r['Stock Actual'] || 0);
+          var stockMinimo = Number(r['Stock Mínimo'] || r.stockMinimo || r['Stock Minimo'] || 5);
+          var precioCompra = Number(r['Precio Compra'] || r.precioCompra || r.Precio_Compra || 0);
+          var precioVenta = Number(r['Precio Venta'] || r.precioVenta || r.Precio_Venta || 0);
+          return {
+            nombre: nombre,
+            sku: 'IMP-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            categoria: ['Medicamentos', 'Alimentos', 'Accesorios', 'Vacunas', 'Higiene'].indexOf(categoria) !== -1 ? categoria : 'Medicamentos',
+            proveedor: proveedor,
+            stockActual: stockActual,
+            stockMinimo: stockMinimo,
+            precioCompra: precioCompra,
+            precioVenta: precioVenta,
+            fechaVencimiento: '',
+            imagen: r.Imagen || r.imagen || 'https://placehold.co/50x50/DBEAFE/1E40AF?text=IMP',
+          };
+        });
+        if (mapeados.length === 0) {
+          mapeados = SIMULACION_IMPORTACION;
+        }
+        setDatosImportados(mapeados);
+        setShowModalImportar(true);
+      } catch (err) {
+        alert('Error al leer el archivo: ' + err.message);
+      }
+    })();
+    e.target.value = '';
+  };
+
+  var handleConfirmarImportacion = function (datos) {
+    setProductos(function (prev) {
+      var nuevos = datos.map(function (d) {
+        _contadorInv += 1;
+        var anio = new Date().getFullYear();
+        var codigo = 'INV-' + anio + '-' + String(_contadorInv).padStart(4, '0');
+        return Object.assign({}, d, { codigo: codigo, id: Date.now() + Math.random(), estado: computeEstado(d) });
+      });
+      return prev.concat(nuevos);
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-none items-start justify-between">
@@ -260,18 +485,19 @@ function GestionInventario() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
+          <button onClick={function () { fileInputRef.current && fileInputRef.current.click(); }} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
             Importar Productos
           </button>
-          <button onClick={() => navigate('/inventario/nuevo')} className="flex items-center gap-2 rounded-xl bg-[#5F7B65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5F7B65]/80 cursor-pointer">
+          <input type="file" ref={fileInputRef} accept=".xlsx,.csv" onChange={handleFileSelect} className="hidden" />
+          <button onClick={function () { navigate('/inventario/nuevo'); }} className="flex items-center gap-2 rounded-xl bg-[#5F7B65] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#5F7B65]/80 cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             Nuevo Producto
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="flex-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm p-5">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
@@ -330,61 +556,65 @@ function GestionInventario() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-4 shadow-sm">
-        <div className="flex flex-col lg:flex-row items-end lg:items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
-            <input type="text" value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }} placeholder="Buscar por nombre de producto..." className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] pl-10 pr-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+      <div className="flex-none rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <div className="relative flex-1 max-w-xs">
+              <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-[#808080]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <input type="text" value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }} placeholder="Buscar por nombre de producto..." className="w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] pl-10 pr-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+            </div>
+            <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); setPaginaActual(1); }} className={selectClass + ' w-40'}>
+              <option value="Todas">Categoría</option>
+              {categorias.filter(c => c !== 'Todas').map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={filtroProveedor} onChange={(e) => { setFiltroProveedor(e.target.value); setPaginaActual(1); }} className={selectClass + ' w-40'}>
+              <option value="Todos">Proveedor</option>
+              {proveedores.filter(p => p !== 'Todos').map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPaginaActual(1); }} className={selectClass + ' w-36'}>
+              <option value="Todos">Estado</option>
+              {estados.filter(e => e !== 'Todos').map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
           </div>
-          <select value={filtroCategoria} onChange={(e) => { setFiltroCategoria(e.target.value); setPaginaActual(1); }} className={selectClass}>
-            <option value="Todas">Categoría</option>
-            {categorias.filter(c => c !== 'Todas').map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={filtroProveedor} onChange={(e) => { setFiltroProveedor(e.target.value); setPaginaActual(1); }} className={selectClass}>
-            <option value="Todos">Proveedor</option>
-            {proveedores.filter(p => p !== 'Todos').map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <select value={filtroEstado} onChange={(e) => { setFiltroEstado(e.target.value); setPaginaActual(1); }} className={selectClass}>
-            <option value="Todos">Estado</option>
-            {estados.filter(e => e !== 'Todos').map((e) => <option key={e} value={e}>{e}</option>)}
-          </select>
-          <button className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
-            Filtro Avanzado
-          </button>
-          <button onClick={limpiarFiltros} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
-            Limpiar filtros
-          </button>
-          <button className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-            Exportar
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={function () { setShowModalFiltroAvanzado(true); }} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+              Filtro Avanzado
+            </button>
+            <button onClick={handleExportar} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              Exportar
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0 rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden mt-6">
+      <div className="flex-1 flex flex-col min-h-0 rounded-2xl bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] shadow-sm overflow-hidden">
         <div className="flex-1 overflow-auto min-h-0">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#2C2C2C]">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Producto</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Categoría</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Proveedor</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Stock Actual</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Stock Mínimo</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Precio Compra</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Precio Venta</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Vencimiento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Estado</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Acciones</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-20">ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider min-w-[220px]">Producto</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Categoría</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider min-w-[160px]">Proveedor</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Stock Actual</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Stock Mínimo</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Precio Compra</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Precio Venta</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-32">Vencimiento</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-24">Estado</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider w-28">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
               {productosPagina.map((p) => (
                 <tr key={p.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-[#2C2C2C]">
+                  <td className="px-4 py-3">
+                    <p className="text-xs font-mono font-medium text-gray-500 dark:text-[#909090]">{p.codigo}</p>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img src={p.imagen} alt={p.nombre} className="w-10 h-10 rounded-lg object-cover ring-1 ring-gray-200 dark:ring-[#404040]" />
@@ -427,7 +657,7 @@ function GestionInventario() {
               ))}
               {productosPagina.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">No se encontraron productos con los filtros aplicados.</td>
+                  <td colSpan={11} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">No se encontraron productos con los filtrados aplicados.</td>
                 </tr>
               )}
             </tbody>
@@ -453,6 +683,18 @@ function GestionInventario() {
       {showModalDetalle && <ModalDetallesProducto producto={showModalDetalle} onClose={function () { setShowModalDetalle(null); }} />}
       {showModalEditar && <ModalEditarProducto producto={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarEdicion} />}
       {showModalEliminar && <ModalEliminarProducto producto={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminar} />}
+      <ModalFiltroAvanzado
+        abierto={showModalFiltroAvanzado}
+        onClose={function () { setShowModalFiltroAvanzado(false); }}
+        onAplicar={function (filtros) { setFiltrosAvanzados(filtros); }}
+        filtros={filtrosAvanzados}
+      />
+      <ModalConfirmarImportacion
+        abierto={showModalImportar}
+        datos={datosImportados}
+        onClose={function () { setShowModalImportar(false); }}
+        onConfirmar={handleConfirmarImportacion}
+      />
     </div>
   );
 }

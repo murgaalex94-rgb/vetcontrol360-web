@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import NuevoProveedorModal from '../components/NuevoProveedorModal';
+
+var PROVEEDORES_INICIALES = [
+  { id: 1, nombre: 'Vet Pharma' },
+  { id: 2, nombre: 'Zoetis' },
+  { id: 3, nombre: 'Royal Canin' },
+  { id: 4, nombre: 'Bayer' },
+  { id: 5, nombre: 'Whiskas' },
+  { id: 6, nombre: 'Kong' },
+];
 
 function NuevoProducto() {
   const navigate = useNavigate();
+  var [proveedores, setProveedores] = useState(PROVEEDORES_INICIALES);
+  var [showModalProveedor, setShowModalProveedor] = useState(false);
   const [form, setForm] = useState({
     nombre: '', categoria: '', sku: '', tipo: '', presentacion: '', unidad: '', descripcion: '',
     proveedor: '', precioCompra: '', precioVenta: '', margen: '',
@@ -24,6 +36,10 @@ function NuevoProducto() {
     e.preventDefault();
     console.log('Guardar producto:', form);
   };
+
+  function handleProveedorCreado(nuevo) {
+    setProveedores(function (prev) { return prev.concat(nuevo); });
+  }
 
   const inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
   const labelClass = "block text-sm font-medium text-gray-700 dark:text-[#B0B0B0] mb-1.5";
@@ -145,15 +161,10 @@ function NuevoProducto() {
                 <label className={labelClass}>Proveedor *</label>
                 <select name="proveedor" value={form.proveedor} onChange={handleChange} required className={selectClass}>
                   <option value="">Seleccione un proveedor</option>
-                  <option value="Vet Pharma">Vet Pharma</option>
-                  <option value="Zoetis">Zoetis</option>
-                  <option value="Royal Canin">Royal Canin</option>
-                  <option value="Bayer">Bayer</option>
-                  <option value="Whiskas">Whiskas</option>
-                  <option value="Kong">Kong</option>
+                  {proveedores.map(function (p) { return <option key={p.id} value={p.nombre}>{p.nombre}</option>; })}
                 </select>
               </div>
-              <button type="button" className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors cursor-pointer py-2.5">
+              <button type="button" onClick={function () { setShowModalProveedor(true); }} className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors cursor-pointer py-2.5">
                 + Nuevo Proveedor
               </button>
             </div>
@@ -303,6 +314,13 @@ function NuevoProducto() {
           </div>
         </div>
       </form>
+
+      {showModalProveedor && (
+        <NuevoProveedorModal
+          onClose={function () { setShowModalProveedor(false); }}
+          onProveedorCreado={handleProveedorCreado}
+        />
+      )}
     </div>
   );
 }

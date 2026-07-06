@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import MaterialDatePicker from '../components/MaterialDatePicker';
-
-var nextProveedorId = 6;
+import NuevoProveedorModal from '../components/NuevoProveedorModal';
 
 function generarCodigoProveedor(id) {
   var anio = new Date().getFullYear();
@@ -10,7 +9,7 @@ function generarCodigoProveedor(id) {
   return 'PRO-' + anio + '-' + num;
 }
 
-var proveedoresMock = [
+var proveedoresMockInit = [
   { id: 1, codigo: generarCodigoProveedor(1), nombre: 'Vet Pharma', ruc: '20123456789', rubro: 'Medicamentos', telefono: '+51 999 111 222', email: 'ventas@vetpharma.com', estado: 'Activo', direccion: 'Av. Salud 123, Lima' },
   { id: 2, codigo: generarCodigoProveedor(2), nombre: 'Agrovet', ruc: '20987654321', rubro: 'Alimentos', telefono: '+51 999 333 444', email: 'pedidos@agrovet.com', estado: 'Activo', direccion: 'Jr. Veterinary 456, Arequipa' },
   { id: 3, codigo: generarCodigoProveedor(3), nombre: 'Pet Care', ruc: '20567891234', rubro: 'Accesorios', telefono: '+51 999 555 666', email: 'info@petcare.com', estado: 'Activo', direccion: 'Calle Mascotas 789, Cusco' },
@@ -133,89 +132,10 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
   );
 }
 
-function NuevoProveedorModal({ onClose }) {
-  var [form, setForm] = useState({ nombre: '', ruc: '', rubro: 'Medicamentos', telefono: '', email: '', direccion: '', estado: 'Activo' });
 
-  function handleChange(e) {
-    setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
-  }
-
-  function handleSubmit() {
-    console.log('Nuevo Proveedor:', form);
-    onClose();
-  }
-
-  var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
-  var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#C0C0C0] mb-1';
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
-        <div className="flex items-center justify-between p-6 pb-0">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Nuevo Proveedor</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] text-gray-400 dark:text-[#808080] hover:text-gray-600 dark:hover:text-[#A0A0A0] transition-colors cursor-pointer">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Nombre Proveedor *</label>
-              <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={inputClass} placeholder="Ej: Vet Pharma" />
-            </div>
-            <div>
-              <label className={labelClass}>RUC *</label>
-              <input type="text" name="ruc" value={form.ruc} onChange={handleChange} className={inputClass} placeholder="Ej: 20123456789" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Rubro *</label>
-              <select name="rubro" value={form.rubro} onChange={handleChange} className={inputClass}>
-                <option value="Medicamentos">Medicamentos</option>
-                <option value="Alimentos">Alimentos</option>
-                <option value="Accesorios">Accesorios</option>
-                <option value="Servicios">Servicios</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Teléfono *</label>
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="Ej: +51 999 123 456" />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Email *</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="Ej: ventas@empresa.com" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Dirección</label>
-              <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} placeholder="Ej: Av. Salud 123, Lima" />
-            </div>
-            <div>
-              <label className={labelClass}>Estado</label>
-              <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3 p-6 pt-2">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={handleSubmit} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Proveedor</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ProveedoresPage() {
+  var [proveedores, setProveedores] = useState(proveedoresMockInit);
   var [busqueda, setBusqueda] = useState('');
   var [filtroEstado, setFiltroEstado] = useState('Todos');
   var [filtroRubro, setFiltroRubro] = useState('Todos');
@@ -225,6 +145,10 @@ function ProveedoresPage() {
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', rubro: 'Todos', estado: 'Todos' });
   var [showModalDetalle, setShowModalDetalle] = useState(null);
   var porPagina = 5;
+
+  function handleProveedorCreado(nuevo) {
+    setProveedores(function (prev) { return prev.concat(nuevo); });
+  }
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
@@ -237,7 +161,7 @@ function ProveedoresPage() {
     });
   }
 
-  var filtradosBase = proveedoresMock.filter(function (p) {
+  var filtradosBase = proveedores.filter(function (p) {
     var coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || p.ruc.includes(busqueda) || p.rubro.toLowerCase().includes(busqueda.toLowerCase()) || p.codigo.toLowerCase().includes(busqueda.toLowerCase());
     var coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
     var coincideRubro = filtroRubro === 'Todos' || p.rubro === filtroRubro;
@@ -249,7 +173,7 @@ function ProveedoresPage() {
   var totalPaginas = Math.ceil(filtrados.length / porPagina) || 1;
   var paginados = filtrados.slice((pagina - 1) * porPagina, pagina * porPagina);
 
-  var totalActivos = proveedoresMock.filter(function (p) { return p.estado === 'Activo'; }).length;
+  var totalActivos = proveedores.filter(function (p) { return p.estado === 'Activo'; }).length;
 
   function exportarExcel() {
     var datos = filtrados.map(function (p) {
@@ -287,7 +211,7 @@ function ProveedoresPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Total Proveedores</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0] mt-1">{proveedoresMock.length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0] mt-1">{proveedores.length}</p>
             </div>
             <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.15-.463 1.265-1.07l1.69-10.16A1.125 1.125 0 0 0 20.25 7.25H5.25L4.063 3.04A1.125 1.125 0 0 0 2.954 2.25H.75" /></svg>
@@ -425,7 +349,7 @@ function ProveedoresPage() {
         </div>
       </div>
 
-      {showModal && <NuevoProveedorModal onClose={function () { setShowModal(false); }} />}
+      {showModal && <NuevoProveedorModal onClose={function () { setShowModal(false); }} onProveedorCreado={handleProveedorCreado} />}
       {showModalDetalle && <ModalDetalleProveedor proveedor={showModalDetalle} onClose={function () { setShowModalDetalle(null); }} />}
       <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
