@@ -1,41 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import API from '../services/axiosConfig';
 
-const ventasDiarias = [
-  { dia: '16', ventas: 1200 }, { dia: '17', ventas: 1850 }, { dia: '18', ventas: 2100 },
-  { dia: '19', ventas: 1650 }, { dia: '20', ventas: 2400 }, { dia: '21', ventas: 2850 },
-  { dia: '22', ventas: 2450 },
-];
-
-const citasHoy = [
-  { id: 1, hora: '09:00 AM', mascota: 'Max', raza: 'Golden Retriever', tipo: 'Consulta General', veterinario: 'Dr. Carlos Ramírez', foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=M' },
-  { id: 2, hora: '09:30 AM', mascota: 'Luna', raza: 'Siamés', tipo: 'Vacunación', veterinario: 'Dra. María García', foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=L' },
-  { id: 3, hora: '10:00 AM', mascota: 'Rocky', raza: 'Pastor Alemán', tipo: 'Desparasitación', veterinario: 'Dr. Carlos Ramírez', foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=R' },
-  { id: 4, hora: '10:30 AM', mascota: 'Coco', raza: 'Labrador', tipo: 'Control / Revisión', veterinario: 'Dra. Ana Martínez', foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=C' },
-  { id: 5, hora: '11:00 AM', mascota: 'Simba', raza: 'Persa', tipo: 'Consulta General', veterinario: 'Dra. María García', foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=S' },
-];
-
-const inventarioDonut = [
-  { nombre: 'Stock Normal', valor: 160, color: '#10B981' },
-  { nombre: 'Stock Bajo', valor: 18, color: '#F59E0B' },
-  { nombre: 'Stock Crítico', valor: 6, color: '#EF4444' },
-  { nombre: 'Sin Stock', valor: 72, color: '#6B7280' },
-];
-
-const productosPorVencer = [
-  { nombre: 'Doxivet 100 mg', dias: 43, lote: 'LOT-012' },
-  { nombre: 'Antibiótico Pet 250 mg', dias: 18, lote: 'LOT-045' },
-  { nombre: 'Meloxicam 2 mg', dias: 7, lote: 'LOT-089' },
-];
-
-const topMascotas = [
-  { nombre: 'Max', visitas: 5, color: 'bg-blue-500' },
-  { nombre: 'Luna', visitas: 4, color: 'bg-blue-400' },
-  { nombre: 'Rocky', visitas: 3, color: 'bg-blue-300' },
-  { nombre: 'Coco', visitas: 3, color: 'bg-blue-300' },
-  { nombre: 'Simba', visitas: 2, color: 'bg-blue-200' },
-];
+const tipoColores = {
+  'Consulta General': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  'Vacunación': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  'Desparasitación': 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300',
+  'Control / Revisión': 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300',
+};
 
 const actividadReciente = [
   { id: 1, texto: 'Se creó una nueva cita para Max', hora: 'Hace 5 min', color: 'bg-blue-500', icono: 'calendar' },
@@ -53,19 +26,20 @@ const recordatorios = [
   { id: 5, texto: 'Actualizar inventario de alimentos', etiqueta: 'Pendiente', colorEtiqueta: 'bg-gray-50 dark:bg-[#2C2C2C] text-gray-500 dark:text-[#909090]', prioridad: 'baja' },
 ];
 
-const tipoColores = {
-  'Consulta General': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  'Vacunación': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-  'Desparasitación': 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300',
-  'Control / Revisión': 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300',
-};
+const topMascotas = [
+  { nombre: 'Max', visitas: 5, color: 'bg-blue-500' },
+  { nombre: 'Luna', visitas: 4, color: 'bg-blue-400' },
+  { nombre: 'Rocky', visitas: 3, color: 'bg-blue-300' },
+  { nombre: 'Coco', visitas: 3, color: 'bg-blue-300' },
+  { nombre: 'Simba', visitas: 2, color: 'bg-blue-200' },
+];
 
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg shadow-sm px-3 py-2 text-xs">
         <p className="font-semibold text-gray-700 dark:text-[#D0D0D0]">Día {label}</p>
-        <p className="text-emerald-600 font-bold">S/ {payload[0].value.toLocaleString()}</p>
+        <p className="text-emerald-600 font-bold">S/ {Number(payload[0].value).toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
       </div>
     );
   }
@@ -83,11 +57,30 @@ function ActivityIcon({ type }) {
   return icons[type] || icons.calendar;
 }
 
+function formatCurrency(val) {
+  if (val == null || isNaN(val)) return 'S/ 0.00';
+  return 'S/ ' + Number(val).toLocaleString('es-PE', { minimumFractionDigits: 2 });
+}
+
 function Dashboard() {
   var navigate = useNavigate();
-  var [fechaSeleccionada] = useState('22 de mayo, 2024');
+  var [resumen, setResumen] = useState(null);
+  var [ventas, setVentas] = useState([]);
+  var [citasHoy, setCitasHoy] = useState([]);
+  var [invResumen, setInvResumen] = useState([]);
+  var [proxVencer, setProxVencer] = useState([]);
+  var [fechaSeleccionada] = useState(new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }));
 
-  var totalVentas = ventasDiarias.reduce(function (sum, v) { return sum + v.ventas; }, 0);
+  useEffect(function () {
+    API.get('/dashboard/resumen').then(function (r) { setResumen(r.data); }).catch(function () {});
+    API.get('/dashboard/ventas').then(function (r) { setVentas(r.data); }).catch(function () {});
+    API.get('/citas/hoy').then(function (r) { setCitasHoy(r.data); }).catch(function () {});
+    API.get('/dashboard/inventario/resumen').then(function (r) { setInvResumen(r.data); }).catch(function () {});
+    API.get('/dashboard/inventario/proximos-a-vencer').then(function (r) { setProxVencer(r.data); }).catch(function () {});
+  }, []);
+
+  var totalVentas = ventas.reduce(function (sum, v) { return sum + (v.ventas || 0); }, 0);
+  var totalProductos = invResumen.reduce(function (sum, c) { return sum + (c.valor || 0); }, 0);
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -114,7 +107,7 @@ function Dashboard() {
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50"><svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg></div>
           </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">12</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{resumen ? resumen.citasHoy : '—'}</p>
           <p className="text-sm text-gray-500 dark:text-[#909090]">Citas de Hoy</p>
           <button onClick={function () { navigate('/agenda'); }} className="text-xs text-blue-600 font-medium mt-2 hover:text-blue-600 cursor-pointer">Ver agenda {'\u2192'}</button>
         </div>
@@ -123,7 +116,7 @@ function Dashboard() {
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-green-50"><svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg></div>
           </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">8</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{resumen ? resumen.pacientesAtendidos : '—'}</p>
           <p className="text-sm text-gray-500 dark:text-[#909090]">Pacientes Atendidos</p>
           <button onClick={function () { navigate('/mascotas'); }} className="text-xs text-green-600 font-medium mt-2 hover:text-green-700 cursor-pointer">Ver historial {'\u2192'}</button>
         </div>
@@ -132,16 +125,15 @@ function Dashboard() {
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-purple-100"><svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg></div>
           </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">S/ 2,450.00</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{resumen ? formatCurrency(resumen.ventasDia) : '—'}</p>
           <p className="text-sm text-gray-500 dark:text-[#909090]">Ventas del Día</p>
-          <p className="text-xs text-emerald-600 font-semibold mt-1">{'\u2191'} 18% vs ayer</p>
         </div>
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-orange-50"><svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg></div>
           </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">18</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{resumen ? resumen.stockBajo : '—'}</p>
           <p className="text-sm text-gray-500 dark:text-[#909090]">Stock Bajo</p>
           <button onClick={function () { navigate('/inventario'); }} className="text-xs text-orange-600 font-medium mt-2 hover:text-orange-600 cursor-pointer">Ver inventario {'\u2192'}</button>
         </div>
@@ -150,7 +142,7 @@ function Dashboard() {
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-red-50"><svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg></div>
           </div>
-          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">6</p>
+          <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{resumen ? resumen.pendientesPago : '—'}</p>
           <p className="text-sm text-gray-500 dark:text-[#909090]">Pendientes de Pago</p>
           <button onClick={function () { navigate('/facturacion'); }} className="text-xs text-red-600 font-medium mt-2 hover:text-red-600 cursor-pointer">Ver facturación {'\u2192'}</button>
         </div>
@@ -160,26 +152,24 @@ function Dashboard() {
         <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">Resumen de Ventas</h3>
-            <span className="text-[10px] text-gray-400 dark:text-[#808080]">Mayo 16 - 22</span>
+            <span className="text-[10px] text-gray-400 dark:text-[#808080]">Últimos 7 días</span>
           </div>
           <div className="flex items-end gap-2 mb-2">
-            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">S/ 18,750.00</p>
-            <span className="text-xs text-emerald-600 font-semibold mb-0.5">{'\u2191'} 12.5%</span>
+            <p className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{formatCurrency(totalVentas)}</p>
           </div>
-          <p className="text-xs text-gray-400 dark:text-[#808080] mb-4">vs. mes anterior</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={ventasDiarias} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
-              <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="ventas" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 3 }} activeDot={{ r: 5 }} />
-            </LineChart>
-          </ResponsiveContainer>
-          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-[#333]">
-            <div><p className="text-xs text-gray-500 dark:text-[#909090]">Ventas Totales</p><p className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">S/ 18,750</p></div>
-            <div><p className="text-xs text-gray-500 dark:text-[#909090]">Pagado</p><p className="text-sm font-bold text-green-600">S/ 15,300</p></div>
-            <div><p className="text-xs text-gray-500 dark:text-[#909090]">Pendiente</p><p className="text-sm font-bold text-orange-600">S/ 3,450</p></div>
-          </div>
+          <p className="text-xs text-gray-400 dark:text-[#808080] mb-4">Total acumulado</p>
+          {ventas.length > 0 ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <LineChart data={ventas} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line type="monotone" dataKey="ventas" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[160px] text-xs text-gray-400 dark:text-[#808080]">No hay datos de ventas</div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
@@ -188,24 +178,22 @@ function Dashboard() {
             <button onClick={function () { navigate('/agenda'); }} className="text-xs text-blue-600 font-semibold hover:text-blue-600 cursor-pointer">Ver todas</button>
           </div>
           <div className="space-y-3">
-            {citasHoy.map(function (c) {
-              return (
-                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-[#909090] w-16 shrink-0">{c.hora}</span>
-                  <img src={c.foto} alt={c.mascota} className="w-8 h-8 rounded-full" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{c.mascota} <span className="text-gray-400 dark:text-[#808080] font-normal">- {c.raza}</span></p>
-                    <p className="text-[11px] text-gray-400 dark:text-[#808080]">{c.veterinario}</p>
+            {citasHoy.length === 0 ? (
+              <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-4">No hay citas para hoy</p>
+            ) : (
+              citasHoy.slice(0, 5).map(function (c) {
+                return (
+                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-[#909090] w-16 shrink-0">{c.hora ? c.hora.substring(0, 5) : '—'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{c.mascota ? c.mascota.nombre : '—'}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-[#808080]">{c.veterinario || '—'}</p>
+                    </div>
+                    <span className={'text-[10px] font-semibold px-2 py-0.5 rounded-full ' + (tipoColores[c.tipoCita] || 'bg-gray-50 dark:bg-[#2C2C2C] text-gray-500 dark:text-[#909090]')}>{c.tipoCita || '—'}</span>
                   </div>
-                  <span className={'text-[10px] font-semibold px-2 py-0.5 rounded-full ' + (tipoColores[c.tipo] || 'bg-gray-50 dark:bg-[#2C2C2C] text-gray-500 dark:text-[#909090]')}>{c.tipo}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-[#333]">
-            <div className="text-center"><p className="text-lg font-bold text-gray-800 dark:text-[#E0E0E0]">12</p><p className="text-[10px] text-gray-500 dark:text-[#909090]">Citas hoy</p></div>
-            <div className="text-center"><p className="text-lg font-bold text-orange-600">3</p><p className="text-[10px] text-gray-500 dark:text-[#909090]">Pendientes</p></div>
-            <div className="text-center"><p className="text-lg font-bold text-green-600">9</p><p className="text-[10px] text-gray-500 dark:text-[#909090]">Completadas</p></div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -215,17 +203,17 @@ function Dashboard() {
             <div className="flex items-center gap-4">
               <div className="relative" style={{ width: 120, height: 120 }}>
                 <PieChart width={120} height={120}>
-                  <Pie data={inventarioDonut} cx={60} cy={60} innerRadius={40} outerRadius={55} paddingAngle={2} dataKey="valor">
-                    {inventarioDonut.map(function (entry, i) { return <Cell key={i} fill={entry.color} />; })}
+                  <Pie data={invResumen.length > 0 ? invResumen : [{ nombre: 'Sin datos', valor: 1, color: '#E5E7EB' }]} cx={60} cy={60} innerRadius={40} outerRadius={55} paddingAngle={2} dataKey="valor">
+                    {(invResumen.length > 0 ? invResumen : [{ nombre: 'Sin datos', valor: 1, color: '#E5E7EB' }]).map(function (entry, i) { return <Cell key={i} fill={entry.color} />; })}
                   </Pie>
                 </PieChart>
                 <div className="absolute inset-0 flex items-center justify-center flex-col">
-                  <p className="text-lg font-bold text-gray-800 dark:text-[#E0E0E0] leading-none">256</p>
+                  <p className="text-lg font-bold text-gray-800 dark:text-[#E0E0E0] leading-none">{totalProductos}</p>
                   <p className="text-[9px] text-gray-400 dark:text-[#808080]">Productos</p>
                 </div>
               </div>
               <div className="space-y-1.5 flex-1">
-                {inventarioDonut.map(function (d) {
+                {(invResumen.length > 0 ? invResumen : []).map(function (d) {
                   return (
                     <div key={d.nombre} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />{d.nombre}</span>
@@ -233,6 +221,7 @@ function Dashboard() {
                     </div>
                   );
                 })}
+                {invResumen.length === 0 && <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-2">Cargando...</p>}
               </div>
             </div>
           </div>
@@ -240,18 +229,22 @@ function Dashboard() {
           <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
             <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-3">Productos Próximos a Vencer</h3>
             <div className="space-y-2.5">
-              {productosPorVencer.map(function (p, i) {
-                var diasColor = p.dias <= 10 ? 'text-red-600' : p.dias <= 30 ? 'text-orange-600' : 'text-green-600';
-                return (
-                  <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{p.nombre}</p>
-                      <p className="text-[11px] text-gray-400 dark:text-[#808080]">Lote: {p.lote}</p>
+              {proxVencer.length === 0 ? (
+                <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-4">Sin productos próximos a vencer</p>
+              ) : (
+                proxVencer.slice(0, 5).map(function (p, i) {
+                  var diasColor = p.dias <= 10 ? 'text-red-600' : p.dias <= 30 ? 'text-orange-600' : 'text-green-600';
+                  return (
+                    <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{p.nombre}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-[#808080]">Lote: {p.lote}</p>
+                      </div>
+                      <span className={'text-xs font-bold ' + diasColor}>{p.dias} días</span>
                     </div>
-                    <span className={'text-xs font-bold ' + diasColor}>{p.dias} días</span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
