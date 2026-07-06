@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import API from '../services/axiosConfig';
+import MaterialDatePicker from '../components/MaterialDatePicker';
+
+var PRIMARY = '#5F7B65';
 
 const tipoColores = {
   'Consulta General': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
@@ -34,6 +37,28 @@ const topMascotas = [
   { nombre: 'Simba', visitas: 2, color: 'bg-blue-200' },
 ];
 
+const notificacionesMock = [
+  { id: 1, mensaje: 'Stock crítico: Doxivet tiene 2 unidades', modulo: 'inventario', leida: false },
+  { id: 2, mensaje: 'Nuevo cliente registrado: María López', modulo: 'clientes', leida: false },
+  { id: 3, mensaje: 'Cita confirmada para Max mañana 10:00', modulo: 'agenda', leida: false },
+  { id: 4, mensaje: 'Factura F-000130 está pendiente de pago', modulo: 'facturacion', leida: true },
+  { id: 5, mensaje: 'Vacuna antirrábica vence en 7 días (lote V-342)', modulo: 'inventario', leida: true },
+  { id: 6, mensaje: 'Recordatorio: Cumpleaños de Luna este sábado', modulo: 'mascotas', leida: false },
+];
+
+const sucursales = [
+  { id: 1, nombre: 'VetCare Clínica', direccion: 'Av. Principal 123' },
+  { id: 2, nombre: 'VetCare Centro', direccion: 'Jr. Las Flores 456' },
+];
+
+var modulos = {
+  inventario: '/inventario',
+  clientes: '/clientes',
+  agenda: '/agenda',
+  facturacion: '/facturacion',
+  mascotas: '/mascotas',
+};
+
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
@@ -62,6 +87,10 @@ function formatCurrency(val) {
   return 'S/ ' + Number(val).toLocaleString('es-PE', { minimumFractionDigits: 2 });
 }
 
+function formatFechaDisplay(d) {
+  return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 function Dashboard() {
   var navigate = useNavigate();
   var [resumen, setResumen] = useState(null);
@@ -69,15 +98,60 @@ function Dashboard() {
   var [citasHoy, setCitasHoy] = useState([]);
   var [invResumen, setInvResumen] = useState([]);
   var [proxVencer, setProxVencer] = useState([]);
-  var [fechaSeleccionada] = useState(new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }));
+  var [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
+  var [clinicaSeleccionada, setClinicaSeleccionada] = useState(sucursales[0]);
+  var [mostrarCalendario, setMostrarCalendario] = useState(false);
+  var [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
+  var [mostrarClinicas, setMostrarClinicas] = useState(false);
+  var [notificaciones, setNotificaciones] = useState(notificacionesMock);
+
+  var notificacionesNoLeidas = notificaciones.filter(function (n) { return !n.leida; });
+
+  var refCalendario = useRef(null);
+  var refNotificaciones = useRef(null);
+  var refClinicas = useRef(null);
+
+  function fetchData() {
+    var params = {};
+    params.fecha = fechaSeleccionada.toISOString().split('T')[0];
+    params.clinica = clinicaSeleccionada.id;
+
+    API.get('/dashboard/resumen', { params: params }).then(function (r) { setResumen(r.data); }).catch(function () {});
+    API.get('/dashboard/ventas', { params: params }).then(function (r) { setVentas(r.data); }).catch(function () {});
+    API.get('/citas/hoy', { params: params }).then(function (r) { setCitasHoy(r.data); }).catch(function () {});
+    API.get('/dashboard/inventario/resumen', { params: params }).then(function (r) { setInvResumen(r.data); }).catch(function () {});
+    API.get('/dashboard/inventario/proximos-a-vencer', { params: params }).then(function (r) { setProxVencer(r.data); }).catch(function () {});
+  }
 
   useEffect(function () {
-    API.get('/dashboard/resumen').then(function (r) { setResumen(r.data); }).catch(function () {});
-    API.get('/dashboard/ventas').then(function (r) { setVentas(r.data); }).catch(function () {});
-    API.get('/citas/hoy').then(function (r) { setCitasHoy(r.data); }).catch(function () {});
-    API.get('/dashboard/inventario/resumen').then(function (r) { setInvResumen(r.data); }).catch(function () {});
-    API.get('/dashboard/inventario/proximos-a-vencer').then(function (r) { setProxVencer(r.data); }).catch(function () {});
+    fetchData();
+  }, [fechaSeleccionada, clinicaSeleccionada]);
+
+  useEffect(function () {
+    function handleClickOutside(e) {
+      if (refCalendario.current && !refCalendario.current.contains(e.target)) setMostrarCalendario(false);
+      if (refNotificaciones.current && !refNotificaciones.current.contains(e.target)) setMostrarNotificaciones(false);
+      if (refClinicas.current && !refClinicas.current.contains(e.target)) setMostrarClinicas(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return function () { document.removeEventListener('mousedown', handleClickOutside); };
   }, []);
+
+  function handleDateChange(d) {
+    setFechaSeleccionada(d);
+    setMostrarCalendario(false);
+  }
+
+  function handleNotificacionClick(n) {
+    setNotificaciones(notificaciones.map(function (x) { return x.id === n.id ? Object.assign({}, x, { leida: true }) : x; }));
+    setMostrarNotificaciones(false);
+    if (modulos[n.modulo]) navigate(modulos[n.modulo]);
+  }
+
+  function handleSeleccionarClinica(s) {
+    setClinicaSeleccionada(s);
+    setMostrarClinicas(false);
+  }
 
   var totalVentas = ventas.reduce(function (sum, v) { return sum + (v.ventas || 0); }, 0);
   var totalProductos = invResumen.reduce(function (sum, c) { return sum + (c.valor || 0); }, 0);
@@ -89,16 +163,78 @@ function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{'\u00A1'}Bienvenido, Dr. Juan! {'\uD83D\uDC4B'}</h1>
           <p className="text-sm text-gray-500 dark:text-[#909090] mt-0.5">Aquí tienes un resumen de la actividad de tu clínica hoy.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600 dark:text-[#A0A0A0] bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg px-3 py-2">{fechaSeleccionada}</span>
-          <button className="relative p-2.5 rounded-lg border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
-            <svg className="w-5 h-5 text-gray-500 dark:text-[#909090]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">3</span>
-          </button>
-          <select className="rounded-lg border border-gray-200 dark:border-[#333] bg-white dark:bg-[#2C2C2C] px-3 py-2 text-sm text-gray-700 dark:text-[#D0D0D0]">
-            <option>VetCare Clínica</option>
-            <option>VetCare Centro</option>
-          </select>
+        <div className="flex items-center gap-3 relative">
+          <div className="relative" ref={refCalendario}>
+            <button onClick={function () { setMostrarCalendario(!mostrarCalendario); setMostrarNotificaciones(false); setMostrarClinicas(false); }} className="flex items-center gap-2 text-sm text-gray-600 dark:text-[#A0A0A0] bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+              {formatFechaDisplay(fechaSeleccionada)}
+            </button>
+            {mostrarCalendario && (
+              <div className="absolute right-0 top-full mt-2 z-50 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-2xl shadow-xl p-3">
+                <MaterialDatePicker value={fechaSeleccionada} onChange={handleDateChange} />
+              </div>
+            )}
+          </div>
+
+          <div className="relative" ref={refNotificaciones}>
+            <button onClick={function () { setMostrarNotificaciones(!mostrarNotificaciones); setMostrarCalendario(false); setMostrarClinicas(false); }} className="relative p-2.5 rounded-lg border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <svg className="w-5 h-5 text-gray-500 dark:text-[#909090]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
+              {notificacionesNoLeidas.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold">{notificacionesNoLeidas.length}</span>
+              )}
+            </button>
+            {mostrarNotificaciones && (
+              <div className="absolute right-0 top-full mt-2 z-50 w-80 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-[#333]">
+                  <p className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">Notificaciones</p>
+                  <p className="text-[11px] text-gray-400 dark:text-[#808080]">{notificacionesNoLeidas.length} sin leer</p>
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {notificaciones.length === 0 ? (
+                    <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-6">No hay notificaciones</p>
+                  ) : (
+                    notificaciones.map(function (n) {
+                      return (
+                        <button key={n.id} onClick={function () { handleNotificacionClick(n); }} className={'w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors border-b border-gray-50 dark:border-[#2C2C2C] last:border-0 cursor-pointer ' + (!n.leida ? 'bg-[#5F7B65]/5 dark:bg-[#5F7B65]/10' : '')}>
+                          <div className={'h-2 w-2 rounded-full mt-1.5 shrink-0 ' + (!n.leida ? 'bg-[#5F7B65]' : 'bg-transparent')} />
+                          <div className="flex-1 min-w-0">
+                            <p className={'text-xs leading-relaxed ' + (!n.leida ? 'font-semibold text-gray-800 dark:text-[#E0E0E0]' : 'text-gray-600 dark:text-[#909090]')}>{n.mensaje}</p>
+                            <p className="text-[10px] text-gray-400 dark:text-[#808080] mt-0.5 capitalize">Módulo: {n.modulo}</p>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <button onClick={function () { setNotificaciones(notificaciones.map(function (x) { return Object.assign({}, x, { leida: true }); })); }} className="w-full text-center text-xs font-semibold text-[#5F7B65] py-2.5 border-t border-gray-100 dark:border-[#333] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Marcar todas como leídas</button>
+              </div>
+            )}
+          </div>
+
+          <div className="relative" ref={refClinicas}>
+            <button onClick={function () { setMostrarClinicas(!mostrarClinicas); setMostrarCalendario(false); setMostrarNotificaciones(false); }} className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[#333] bg-white dark:bg-[#2C2C2C] px-3 py-2 text-sm text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#333] transition-colors cursor-pointer min-w-[140px]">
+              <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+              <span className="flex-1 text-left truncate">{clinicaSeleccionada.nombre}</span>
+              <svg className={'w-4 h-4 text-gray-400 transition-transform ' + (mostrarClinicas ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            </button>
+            {mostrarClinicas && (
+              <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-2xl shadow-xl overflow-hidden">
+                {sucursales.map(function (s) {
+                  var activa = s.id === clinicaSeleccionada.id;
+                  return (
+                    <button key={s.id} onClick={function () { handleSeleccionarClinica(s); }} className={'w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors border-b border-gray-50 dark:border-[#2C2C2C] last:border-0 cursor-pointer ' + (activa ? 'bg-[#5F7B65]/5 dark:bg-[#5F7B65]/10' : '')}>
+                      <div className={'h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold ' + (activa ? 'bg-[#5F7B65] text-white' : 'bg-gray-100 dark:bg-[#333] text-gray-500 dark:text-[#909090]')}>{s.nombre.charAt(0)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className={'text-sm ' + (activa ? 'font-semibold text-gray-800 dark:text-[#E0E0E0]' : 'text-gray-700 dark:text-[#D0D0D0]')}>{s.nombre}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-[#808080] truncate">{s.direccion}</p>
+                      </div>
+                      {activa && <svg className="w-4 h-4 text-[#5F7B65]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -252,7 +388,7 @@ function Dashboard() {
 
       <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
         <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
-          <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">Pacientes Más Atendidos</h3>
+          <h3 className="text-sm font-bold text-gray-800 dark:[#E0E0E0] mb-4">Pacientes Más Atendidos</h3>
           <div className="space-y-3">
             {topMascotas.map(function (m, i) {
               var porcentaje = (m.visitas / 5) * 100;
