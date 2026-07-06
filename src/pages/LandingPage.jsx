@@ -1,18 +1,17 @@
 import { useNavigate } from 'react-router-dom';
-import heroImg from '../assets/hero.png';
 
 var PRIMARY = '#5F7B65';
 var DARK = '#1E293B';
 var GRAY = '#64748B';
 var BG = '#F9FAFB';
 
-var navLinks = ['Inicio', 'Características', 'Precios', 'Noticias'];
+var navLinks = ['Inicio', 'Caracter\u00EDsticas', 'Precios', 'Noticias'];
 
 var features = [
-  { icon: '📅', title: '40% menos citas perdidas', desc: 'Reservas online y recordatorios automáticos.' },
-  { icon: '🏥', title: 'Hasta 3 horas menos en tareas administrativas', desc: 'La IA completa historias clínicas.' },
-  { icon: '📦', title: 'Inventario actualizado automáticamente', desc: 'Menos errores de stock.' },
-  { icon: '📊', title: 'Decisiones más rápidas con datos en tiempo real', desc: 'Reportes claros para todo el equipo.' },
+  { icon: '\uD83D\uDCC5', title: '40% menos citas perdidas', desc: 'Reservas online y recordatorios autom\u00E1ticos.' },
+  { icon: '\uD83C\uDFE5', title: 'Hasta 3 horas menos en tareas administrativas', desc: 'La IA completa historias cl\u00EDnicas.' },
+  { icon: '\uD83D\uDCE6', title: 'Inventario actualizado autom\u00E1ticamente', desc: 'Menos errores de stock.' },
+  { icon: '\uD83D\uDCA8', title: 'Decisiones m\u00E1s r\u00E1pidas con datos en tiempo real', desc: 'Reportes claros para todo el equipo.' },
 ];
 
 function Navbar() {
@@ -41,7 +40,7 @@ function Navbar() {
 
       <div className="flex items-center gap-3">
         <button onClick={function () { navigate('/login'); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors cursor-pointer" style={{ backgroundColor: '#FFFFFF', borderColor: '#D1D5DB', color: DARK }}>
-          Iniciar sesión
+          Iniciar sesi\u00F3n
         </button>
         <button onClick={function () { navigate('/contacto'); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors cursor-pointer" style={{ backgroundColor: PRIMARY }}>
           Agenda una demo
@@ -59,11 +58,11 @@ function Hero() {
       <div className="grid md:grid-cols-2 gap-12 items-center w-full">
         <div className="space-y-6">
           <span className="inline-block text-xs font-bold tracking-[0.15em] px-4 py-2 rounded-full" style={{ backgroundColor: '#F1F5F9', color: PRIMARY }}>
-            EL SOFTWARE VETERINARIO QUE TU CLÍNICA NECESITA
+            EL SOFTWARE VETERINARIO QUE TU CL\u00CDNICA NECESITA
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight" style={{ color: DARK }}>
-            Gestiona todas las áreas de tu veterinaria desde un solo lugar
+          <h1 className="text-4xl md:text-5xl font-bold leading-tixt" style={{ color: DARK }}>
+            Gestiona todas las \u00E1reas de tu veterinaria desde un solo lugar
           </h1>
 
           <p className="text-lg" style={{ color: GRAY }}>
@@ -80,7 +79,7 @@ function Hero() {
 
         <div className="flex justify-center">
           <div className="bg-white rounded-xl shadow-2xl p-3 max-w-lg">
-            <img src={heroImg} alt="VetControl 360 Dashboard" className="w-full rounded-lg" />
+            <img src="/logo-login.png" alt="VetControl 360" className="w-full rounded-lg" />
           </div>
         </div>
       </div>
@@ -92,7 +91,7 @@ function Features() {
   return (
     <section className="px-8 py-20 max-w-7xl mx-auto w-full">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: DARK }}>
-        Una veterinaria más organizada — y un equipo que ama lo que hace.
+        Una veterinaria m\u00E1s organizada \u2014 y un equipo que ama lo que hace.
       </h2>
       <div className="grid md:grid-cols-4 gap-6">
         {features.map(function (f, i) {
@@ -109,23 +108,17 @@ function Features() {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="flex-none px-8 py-8 text-center">
-      <p className="text-sm font-medium" style={{ color: GRAY }}>
-        Miles de clínicas y hospitales veterinarios ya confían en VetControl 360.
-      </p>
-    </footer>
-  );
-}
-
 function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: BG }}>
       <Navbar />
       <Hero />
       <Features />
-      <Footer />
+      <footer className="flex-none px-8 py-8 text-center">
+        <p className="text-sm font-medium" style={{ color: GRAY }}>
+          Miles de cl\u00EDnicas y hospitales veterinarios ya conf\u00EDan en VetControl 360.
+        </p>
+      </footer>
     </div>
   );
 }
