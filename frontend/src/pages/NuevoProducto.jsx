@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import NuevoProveedorModal from '../components/NuevoProveedorModal';
@@ -12,10 +12,18 @@ var PROVEEDORES_INICIALES = [
   { id: 6, nombre: 'Kong' },
 ];
 
+var FORMATOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+var MAX_SIZE = 5 * 1024 * 1024;
+
 function NuevoProducto() {
   const navigate = useNavigate();
+  var fileInputRef = useRef(null);
   var [proveedores, setProveedores] = useState(PROVEEDORES_INICIALES);
   var [showModalProveedor, setShowModalProveedor] = useState(false);
+  var [imagenPreview, setImagenPreview] = useState(null);
+  var [imagenNombre, setImagenNombre] = useState('');
+  var [imagenError, setImagenError] = useState('');
+  var [dragOver, setDragOver] = useState(false);
   const [form, setForm] = useState({
     nombre: '', categoria: '', sku: '', tipo: '', presentacion: '', unidad: '', descripcion: '',
     proveedor: '', precioCompra: '', precioVenta: '', margen: '',
@@ -41,7 +49,52 @@ function NuevoProducto() {
     setProveedores(function (prev) { return prev.concat(nuevo); });
   }
 
-  const inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
+  var validarYPrevisualizar = useCallback(function (file) {
+    setImagenError('');
+    if (!file) return;
+    if (!FORMATOS_PERMITIDOS.includes(file.type)) {
+      setImagenError('Formato no permitido. Usa JPG, PNG o WEBP.');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setImagenError('La imagen supera los 5MB.');
+      return;
+    }
+    setImagenNombre(file.name);
+    var reader = new FileReader();
+    reader.onload = function (e) { setImagenPreview(e.target.result); };
+    reader.readAsDataURL(file);
+  }, []);
+
+  function handleFileSelect(e) {
+    var file = e.target.files[0];
+    if (file) validarYPrevisualizar(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    var file = e.dataTransfer.files[0];
+    if (file) validarYPrevisualizar(file);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    setDragOver(true);
+  }
+
+  function handleDragLeave() {
+    setDragOver(false);
+  }
+
+  function handleRemoveImage() {
+    setImagenPreview(null);
+    setImagenNombre('');
+    setImagenError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  const inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#3A3A3A] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
   const labelClass = "block text-sm font-medium text-gray-700 dark:text-[#B0B0B0] mb-1.5";
   const selectClass = inputClass + " appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10 dark:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23909090%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E')]";
 
@@ -67,7 +120,7 @@ function NuevoProducto() {
             <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">Nuevo Producto</h1>
           </div>
         </div>
-        <button onClick={() => navigate('/inventario')} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
+        <button onClick={() => navigate('/inventario')} className="flex items-center gap-2 rounded-xl border border-gray-300 dark:border-[#3A3A3A] bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
           Volver a Productos
         </button>
@@ -75,7 +128,7 @@ function NuevoProducto() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-6">
         <div className="col-span-9 space-y-5">
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-6">
             <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-bold">1</span>
               Información General
@@ -151,7 +204,7 @@ function NuevoProducto() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-6">
             <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-bold">2</span>
               Proveedor y Precios
@@ -193,7 +246,7 @@ function NuevoProducto() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-6">
             <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-bold">3</span>
               Inventario
@@ -224,7 +277,7 @@ function NuevoProducto() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-6">
             <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0] mb-5 flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-bold">4</span>
               Información Adicional
@@ -269,11 +322,11 @@ function NuevoProducto() {
           </div>
 
           <div className="flex items-center gap-4 pt-2">
-            <button type="button" onClick={() => navigate('/inventario')} className="px-6 py-3 border border-gray-300 dark:border-[#404040] rounded-xl text-gray-700 dark:text-[#D0D0D0] font-medium hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer flex items-center gap-2">
+            <button type="button" onClick={() => navigate('/inventario')} className="px-6 py-3 border border-gray-300 dark:border-[#3A3A3A] rounded-xl text-gray-700 dark:text-[#D0D0D0] font-medium hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
               Cancelar
             </button>
-            <button type="submit" className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer">
+            <button type="submit" className="flex-1 py-3 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
               Guardar Producto
             </button>
@@ -281,20 +334,40 @@ function NuevoProducto() {
         </div>
 
         <div className="col-span-3 space-y-5">
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-6">
             <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-4">Subir imagen</h3>
-            <div className="border-2 border-dashed border-gray-200 dark:border-[#404040] rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
-              <svg className="w-12 h-12 text-gray-300 dark:text-[#606060] mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Zm16.5-7.5A2.25 2.25 0 0 0 18 15.75M6.75 6.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
-              </svg>
-              <button type="button" className="px-4 py-2 bg-white dark:bg-[#2C2C2C] border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#333] transition-colors cursor-pointer">
-                Seleccionar archivo
-              </button>
-              <p className="text-xs text-gray-400 dark:text-[#808080] mt-2 text-center">Formatos: JPG, PNG (Máx. 2MB)</p>
-            </div>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileSelect} className="hidden" />
+            {imagenPreview ? (
+              <div className="relative">
+                <img src={imagenPreview} alt="Vista previa" className="w-full h-40 object-cover rounded-xl border border-gray-200 dark:border-[#3A3A3A]" />
+                <p className="text-xs text-gray-500 dark:text-[#909090] mt-2 text-center truncate">{imagenNombre}</p>
+                <button type="button" onClick={handleRemoveImage} className="mt-2 w-full rounded-lg border border-red-300 dark:border-red-700 bg-white dark:bg-[#2C2C2C] px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
+                  Quitar imagen
+                </button>
+              </div>
+            ) : (
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={function () { if (fileInputRef.current) fileInputRef.current.click(); }}
+                className={'border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ' + (dragOver ? 'border-[#5F7B65] bg-[#5F7B65]/5' : 'border-gray-300 dark:border-[#3A3A3A] hover:border-[#5F7B65] hover:bg-[#5F7B65]/5')}
+              >
+                <svg className="w-12 h-12 text-gray-300 dark:text-[#606060] mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Zm16.5-7.5A2.25 2.25 0 0 0 18 15.75M6.75 6.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                </svg>
+                <p className="text-sm font-medium text-gray-600 dark:text-[#A0A0A0] mb-1">Arrastra tu imagen aquí</p>
+                <p className="text-xs text-gray-400 dark:text-[#808080] mb-3">o haz clic para seleccionar</p>
+                <button type="button" className="px-4 py-2 bg-white dark:bg-[#2C2C2C] border border-gray-300 dark:border-[#3A3A3A] rounded-lg text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#333] transition-colors cursor-pointer">
+                  Seleccionar archivo
+                </button>
+                <p className="text-xs text-gray-400 dark:text-[#808080] mt-2 text-center">Formatos: JPG, PNG, WEBP (Máx. 5MB)</p>
+              </div>
+            )}
+            {imagenError && <p className="text-xs text-red-500 mt-2">{imagenError}</p>}
           </div>
 
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-100 dark:border-[#333] p-5">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm border border-gray-200 dark:border-[#333] p-5">
             <h3 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0] mb-3">Resumen del Producto</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Categoría:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium">{form.categoria || '—'}</span></div>
