@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { FiSun, FiMoon } from 'react-icons/fi';
+import Logo from './Logo';
 
 var menuGroups = [
   {
@@ -79,12 +80,7 @@ function AppLayout() {
       <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-sidebar)' }}>
         <div className="p-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white/15 shrink-0">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#7FA889] rounded-full flex items-center justify-center">
-                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-              </div>
-            </div>
+            <Logo size={40} />
             <div>
               <h1 className="text-white text-lg font-bold leading-tight">VetControl</h1>
               <p className="text-emerald-300 text-[11px] font-medium">360</p>

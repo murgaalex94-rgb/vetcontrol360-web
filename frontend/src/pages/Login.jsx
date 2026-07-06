@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
+import Logo from '../components/Logo';
 import API from '../services/axiosConfig';
 
 function Login() {
@@ -93,10 +94,8 @@ function Login() {
       <div className="w-full lg:w-1/2 bg-white dark:bg-[#121212] flex items-center justify-center p-8 relative">
         <div className="w-full max-w-sm">
           <div className="flex flex-col items-center mb-8">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#5F7B65]/10 mb-4">
-              <svg className="w-8 h-8 text-[#5F7B65]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Z" />
-              </svg>
+            <div className="mb-4">
+              <Logo size={64} />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Iniciar Sesión</h1>
             <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Ingresa tus credenciales para continuar</p>
