@@ -7,12 +7,18 @@ function Login() {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    var newErrors = {};
+    if (!username.trim()) newErrors.username = 'El usuario es obligatorio';
+    if (!password.trim()) newErrors.password = 'La contraseña es obligatoria';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
     setLoading(true);
     try {
       const { data } = await API.post('/auth/login', { username, password });
@@ -103,30 +109,32 @@ function Login() {
               <label className="block text-sm font-medium text-gray-900 dark:text-[#E0E0E0] mb-1.5">Usuario</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg">👤</span>
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50/50 dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] text-sm" placeholder="Usuario" required />
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className={'w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50/50 dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] text-sm ' + (errors.username ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-[#404040]')} placeholder="Usuario" />
               </div>
+              {errors.username && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.username}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-[#E0E0E0] mb-1.5">Contraseña</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg">🔒</span>
-                <input type={showPass ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50/50 dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] text-sm" placeholder="Contraseña" required />
+                <input type={showPass ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className={'w-full pl-11 pr-11 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50/50 dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 dark:placeholder-[#808080] text-sm ' + (errors.password ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-[#404040]')} placeholder="Contraseña" />
                 <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-lg cursor-pointer">
                   {showPass ? '👁️' : '🙈'}
                 </button>
               </div>
+              {errors.password && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{errors.password}</p>}
             </div>
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-[#404040] text-[#5F7B65] focus:ring-emerald-500 bg-white dark:bg-[#2C2C2C]" />
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-[#404040] accent-[#5F7B65] focus:ring-emerald-500 bg-white dark:bg-[#2C2C2C]" />
                 <span className="text-sm text-gray-500 dark:text-[#909090]">Recordarme</span>
               </label>
               <button type="button" className="text-sm font-medium text-[#5F7B65] dark:text-[#7FA389] hover:text-[#5F7B65]/80 dark:hover:text-[#7FA389]/80 transition-colors cursor-pointer">¿Olvidaste tu contraseña?</button>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer text-sm">
+            <button type="submit" disabled={loading} className="w-full bg-[#5F7B65] hover:bg-[#4D6B53] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer text-sm">
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
@@ -137,7 +145,7 @@ function Login() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-[#333]" />
           </div>
 
-          <button type="button" className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+          <button type="button" onClick={function () { console.log('Redirigiendo a Google...'); }} className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
