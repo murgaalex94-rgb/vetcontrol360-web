@@ -1,7 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { FiSun, FiMoon } from 'react-icons/fi';
-import Logo from './Logo';
 
 var menuGroups = [
   {
@@ -80,7 +79,7 @@ function AppLayout() {
       <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-sidebar)' }}>
         <div className="p-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <Logo size={40} />
+            <img src="/logo-login.png" alt="VetControl 360" className="w-10 h-10 rounded-lg object-cover" />
             <div>
               <h1 className="text-white text-lg font-bold leading-tight">VetControl</h1>
               <p className="text-emerald-300 text-[11px] font-medium">360</p>
