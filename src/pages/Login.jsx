@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
-import Logo from '../components/Logo';
 import API from '../services/axiosConfig';
 
 function Login() {
@@ -41,18 +40,8 @@ function Login() {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center" style={{ backgroundImage: "url('https://i.pinimg.com/1200x/eb/41/b5/eb41b535f9551bbf6f73ddd90e742b2b.jpg')" }}>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#5F7B65]/60 via-[#5F7B65]/30 to-[#5F7B65]/70" />
-
-        <div className="absolute top-8 left-8 flex items-center gap-3 z-10">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Z" /></svg>
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white tracking-tight">VetControl 360</p>
-            <p className="text-[10px] text-white/70 -mt-0.5">El sistema completo para la gestión de tu clínica veterinaria</p>
-          </div>
-        </div>
+      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center contrast-125" style={{ backgroundImage: "url('https://i.pinimg.com/1200x/eb/41/b5/eb41b535f9551bbf6f73ddd90e742b2b.jpg')" }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#5F7B65]/40 via-[#5F7B65]/20 to-[#5F7B65]/50" />
 
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-12">
           <p className="text-sm font-medium text-white/80 tracking-wide uppercase">Bienvenido a</p>
@@ -95,7 +84,7 @@ function Login() {
         <div className="w-full max-w-sm">
           <div className="flex flex-col items-center mb-8">
             <div className="mb-6">
-              <img src="/logo-login.png" alt="VetControl 360" className="w-40 h-auto" />
+              <img src="/logo-login.png" alt="VetControl 360" className="w-44 h-auto" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-[#E0E0E0]">Iniciar Sesión</h1>
             <p className="text-sm text-gray-500 dark:text-[#909090] mt-1">Ingresa tus credenciales para continuar</p>
