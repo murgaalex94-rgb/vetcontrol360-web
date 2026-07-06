@@ -40,12 +40,12 @@ function Login() {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center contrast-125" style={{ backgroundImage: "url('https://i.pinimg.com/1200x/eb/41/b5/eb41b535f9551bbf6f73ddd90e742b2b.jpg')" }}>
+      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center contrast-110" style={{ backgroundImage: "url('https://i.pinimg.com/1200x/eb/41/b5/eb41b535f9551bbf6f73ddd90e742b2b.jpg')" }}>
         <div className="absolute inset-0 bg-gradient-to-b from-[#5F7B65]/40 via-[#5F7B65]/20 to-[#5F7B65]/50" />
 
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-12">
-          <h1 className="text-5xl font-bold text-white">VetControl 360</h1>
-          <p className="text-base text-white/80 mt-3 text-center max-w-sm leading-relaxed">
+          <h1 className="text-5xl font-bold text-white drop-shadow-md">VetControl 360</h1>
+          <p className="text-base text-white/80 mt-3 text-center max-w-sm leading-relaxed drop-shadow-md">
             Sistema de Gestión Veterinaria
           </p>
         </div>
