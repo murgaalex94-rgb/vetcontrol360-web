@@ -6,7 +6,12 @@ var DARK = '#1E293B';
 var GRAY = '#64748B';
 var BG = '#F9FAFB';
 
-var navLinks = ['Inicio', 'Características', 'Precios', 'Noticias'];
+var navLinks = [
+  { label: 'Inicio', href: '#inicio' },
+  { label: 'Características', href: '#caracteristicas' },
+  { label: 'Precios', href: '#precios' },
+  { label: 'Noticias', href: '#' },
+];
 
 var features = [
   { icon: '📅', title: '40% menos citas perdidas', desc: 'Reservas online y recordatorios automáticos.' },
@@ -32,8 +37,8 @@ function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         {navLinks.map(function (link) {
           return (
-            <a key={link} href="#" className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: DARK }}>
-              {link}
+            <a key={link.label} href={link.href} className="text-sm font-medium transition-colors hover:opacity-80" style={{ color: DARK }}>
+              {link.label}
             </a>
           );
         })}
@@ -65,7 +70,7 @@ function Hero() {
   var navigate = useNavigate();
 
   return (
-    <section className="flex-1 flex items-center px-8 max-w-7xl mx-auto w-full">
+    <section id="inicio" className="flex-1 flex items-center px-8 max-w-7xl mx-auto w-full">
       <div className="grid md:grid-cols-2 gap-12 items-center w-full">
         <div className="space-y-6">
           <span className="inline-block text-xs font-bold tracking-[0.15em] px-4 py-2 rounded-full" style={{ backgroundColor: '#F1F5F9', color: PRIMARY }}>
@@ -98,7 +103,7 @@ function Hero() {
 
 function Features() {
   return (
-    <section className="px-8 py-20 max-w-7xl mx-auto w-full">
+    <section id="caracteristicas" className="px-8 py-20 max-w-7xl mx-auto w-full">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: DARK }}>
         Una veterinaria más organizada — y un equipo que ama lo que hace.
       </h2>
@@ -117,12 +122,52 @@ function Features() {
   );
 }
 
+function Pricing() {
+  return (
+    <section id="precios" className="px-8 py-20 max-w-7xl mx-auto w-full">
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: DARK }}>
+        Planes para cada clínica
+      </h2>
+      <p className="text-lg text-center mb-12" style={{ color: GRAY }}>
+        Desde clínicas pequeñas hasta grandes hospitales.
+      </p>
+      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {[
+          { name: 'Básico', price: 'Gratis', desc: 'Para empezar', features: ['Hasta 50 pacientes', '1 veterinario', 'Agenda básica'] },
+          { name: 'Profesional', price: 'S/ 89', desc: '/mes', features: ['Pacientes ilimitados', 'Hasta 5 veterinarios', 'Historial clínico IA', 'Reportes'] },
+          { name: 'Enterprise', price: 'S/ 199', desc: '/mes', features: ['Todo lo de Profesional', 'Personal ilimitado', 'API, inventario, facturación', 'Soporte prioritario'] },
+        ].map(function (plan, i) {
+          return (
+            <div key={i} className={'rounded-2xl p-6 border transition-shadow ' + (i === 1 ? 'shadow-xl border-[#5F7B65] scale-105' : 'shadow-sm border-gray-100 hover:shadow-md')} style={{ backgroundColor: '#FFFFFF' }}>
+              <h3 className="text-lg font-bold mb-1" style={{ color: DARK }}>{plan.name}</h3>
+              <p className="text-sm mb-4" style={{ color: GRAY }}>{plan.desc}</p>
+              <p className="text-3xl font-bold mb-6" style={{ color: DARK }}>
+                {plan.price}
+                <span className="text-sm font-normal" style={{ color: GRAY }}> {plan.desc}</span>
+              </p>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map(function (f, j) {
+                  return <li key={j} className="flex items-center gap-2 text-sm" style={{ color: GRAY }}><span className="text-emerald-500">✓</span>{f}</li>;
+                })}
+              </ul>
+              <button className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer" style={{ backgroundColor: i === 1 ? '#5F7B65' : '#F1F5F9', color: i === 1 ? '#FFFFFF' : DARK }}>
+                {i === 0 ? 'Comenzar' : 'Contratar'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: BG }}>
       <Navbar />
       <Hero />
       <Features />
+      <Pricing />
       <footer className="flex-none px-8 py-8 text-center">
         <p className="text-sm font-medium" style={{ color: GRAY }}>
           Miles de clínicas y hospitales veterinarios ya confían en VetControl 360.
