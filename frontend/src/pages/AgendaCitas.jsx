@@ -1,19 +1,19 @@
-﻿import { useState, useEffect, Fragment } from 'react';
+﻿import { useState, useEffect, Fragment, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 var DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 var MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 var NOMBRE_DIA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-function getWeekDays() {
-  var today = new Date();
-  var dayOfWeek = today.getDay();
-  var monday = new Date(today);
-  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+function getWeekDays(fromDate) {
+  var d = fromDate ? new Date(fromDate) : new Date();
+  var dayOfWeek = d.getDay();
+  var monday = new Date(d);
+  monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7));
   return Array.from({ length: 7 }, function (_, i) {
-    var d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return { dia: d.getDate(), nombre: DIAS_SEMANA[i], mes: MESES[d.getMonth()], fecha: d };
+    var day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    return { dia: day.getDate(), nombre: DIAS_SEMANA[i], mes: MESES[day.getMonth()], fecha: day };
   });
 }
 
@@ -21,20 +21,20 @@ var HORAS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 var ALTURA_HORA = 64;
 
 var citasMock = [
-  { id: 1, mascota: 'Max', emoji: '🐕', fecha: 29, horaInicio: '09:00', horaFin: '09:30', tipo: 'Consulta General' },
-  { id: 2, mascota: 'Luna', emoji: '🐈', fecha: 29, horaInicio: '11:00', horaFin: '11:30', tipo: 'Vacunación' },
-  { id: 3, mascota: 'Simba', emoji: '🐈', fecha: 30, horaInicio: '10:00', horaFin: '10:30', tipo: 'Consulta General' },
-  { id: 4, mascota: 'Firulai', emoji: '🐕', fecha: 1, horaInicio: '08:30', horaFin: '09:00', tipo: 'Consulta General' },
-  { id: 5, mascota: 'Mora', emoji: '🐈', fecha: 1, horaInicio: '10:30', horaFin: '11:00', tipo: 'Desparasitación' },
-  { id: 6, mascota: 'Kira', emoji: '🐈', fecha: 2, horaInicio: '09:00', horaFin: '09:45', tipo: 'Consulta General' },
-  { id: 7, mascota: 'Coco', emoji: '🐈', fecha: 2, horaInicio: '13:00', horaFin: '13:30', tipo: 'Consulta General' },
-  { id: 8, mascota: 'Simba', emoji: '🐈', fecha: 3, horaInicio: '10:30', horaFin: '11:00', tipo: 'Vacunación' },
-  { id: 9, mascota: 'Toby', emoji: '🐕', fecha: 3, horaInicio: '16:00', horaFin: '16:30', tipo: 'Desparasitación' },
-  { id: 10, mascota: 'Bobby', emoji: '🐈', fecha: 4, horaInicio: '13:00', horaFin: '13:45', tipo: 'Consulta General' },
-  { id: 11, mascota: 'Bella', emoji: '🐕', fecha: 4, horaInicio: '15:00', horaFin: '15:30', tipo: 'Control' },
-  { id: 12, mascota: 'Peluché', emoji: '🐕', fecha: 5, horaInicio: '12:30', horaFin: '13:00', tipo: 'Desparasitación' },
-  { id: 13, mascota: 'Nala', emoji: '🐕', fecha: 5, horaInicio: '13:30', horaFin: '14:00', tipo: 'Consulta General' },
-  { id: 14, mascota: 'Rocky', emoji: '🐕', fecha: 5, horaInicio: '15:30', horaFin: '16:00', tipo: 'Control' },
+  { id: 1, mascota: 'Max', emoji: '🐕', fecha: 29, horaInicio: '09:00', horaFin: '09:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Revisión general de rutina', notas: 'Paciente presenta buen estado general. Se recomienda análisis de sangre.' },
+  { id: 2, mascota: 'Luna', emoji: '🐈', fecha: 29, horaInicio: '11:00', horaFin: '11:30', tipo: 'Vacunación', veterinario: 'Dra. Ana Torres', motivo: 'Vacuna polivalente', notas: 'Segunda dosis. Programar refuerzo en 21 días.' },
+  { id: 3, mascota: 'Simba', emoji: '🐈', fecha: 30, horaInicio: '10:00', horaFin: '10:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Dolor abdominal', notas: 'Posible indigestión. Dieta blanda por 48hs.' },
+  { id: 4, mascota: 'Firulai', emoji: '🐕', fecha: 1, horaInicio: '08:30', horaFin: '09:00', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Control post-operatorio', notas: 'Herida quirúrgica cicatriza correctamente.' },
+  { id: 5, mascota: 'Mora', emoji: '🐈', fecha: 1, horaInicio: '10:30', horaFin: '11:00', tipo: 'Desparasitación', veterinario: 'Dr. Juan Pérez', motivo: 'Desparasitación mensual', notas: 'Aplicar tópica. Próxima dosis en 30 días.' },
+  { id: 6, mascota: 'Kira', emoji: '🐈', fecha: 2, horaInicio: '09:00', horaFin: '09:45', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Revisión general', notas: 'Paciente presenta sobrepeso. Recomendar dieta.' },
+  { id: 7, mascota: 'Coco', emoji: '🐈', fecha: 2, horaInicio: '13:00', horaFin: '13:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Mal aliento', notas: 'Posible problema dental. Derivar a especialista.' },
+  { id: 8, mascota: 'Simba', emoji: '🐈', fecha: 3, horaInicio: '10:30', horaFin: '11:00', tipo: 'Vacunación', veterinario: 'Dra. Ana Torres', motivo: 'Vacuna antirrábica', notas: 'Dosis anual. Sin reacciones adversas observadas.' },
+  { id: 9, mascota: 'Toby', emoji: '🐕', fecha: 3, horaInicio: '16:00', horaFin: '16:30', tipo: 'Desparasitación', veterinario: 'Dr. Juan Pérez', motivo: 'Desparasitación trimestral', notas: 'Administrar vía oral después de comer.' },
+  { id: 10, mascota: 'Bobby', emoji: '🐈', fecha: 4, horaInicio: '13:00', horaFin: '13:45', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Pérdida de apetito', notas: 'Realizar análisis de sangre y ecografía abdominal.' },
+  { id: 11, mascota: 'Bella', emoji: '🐕', fecha: 4, horaInicio: '15:00', horaFin: '15:30', tipo: 'Control', veterinario: 'Dr. Juan Pérez', motivo: 'Control de peso', notas: 'Ha perdido 0.5kg desde última visita. Continuar dieta.' },
+  { id: 12, mascota: 'Peluché', emoji: '🐕', fecha: 5, horaInicio: '12:30', horaFin: '13:00', tipo: 'Desparasitación', veterinario: 'Dra. Ana Torres', motivo: 'Desparasitación mensual', notas: 'Aplicar vía oral.' },
+  { id: 13, mascota: 'Nala', emoji: '🐕', fecha: 5, horaInicio: '13:30', horaFin: '14:00', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Revisión general', notas: 'Paciente en buen estado. Vacunas al día.' },
+  { id: 14, mascota: 'Rocky', emoji: '🐕', fecha: 5, horaInicio: '15:30', horaFin: '16:00', tipo: 'Control', veterinario: 'Dra. Ana Torres', motivo: 'Control de alergia', notas: 'Reducir dosis de antihistamínico según evolución.' },
 ];
 
 var tipoColores = {
@@ -56,18 +56,39 @@ function AgendaCitas() {
   var [vista, setVista] = useState('semana');
   var [ahora, setAhora] = useState(new Date());
   var [citas] = useState(citasMock);
-  var [semanaActual, setSemanaActual] = useState(getWeekDays);
-  var [diaSeleccionado, setDiaSeleccionado] = useState(new Date().getDate());
+  var [fechaEnfoque, setFechaEnfoque] = useState(new Date());
+  var [citaSeleccionada, setCitaSeleccionada] = useState(null);
+  var [miniMes, setMiniMes] = useState(new Date().getMonth());
+  var [miniAño, setMiniAño] = useState(new Date().getFullYear());
+  var [scrollCitaId, setScrollCitaId] = useState(null);
+  var scrollRef = useRef(null);
 
   useEffect(function () {
     var timer = setInterval(function () { setAhora(new Date()); }, 60000);
     return function () { clearInterval(timer); };
   }, []);
 
+  useEffect(function () {
+    if (scrollCitaId !== null && scrollRef.current) {
+      var cita = citas.find(function (c) { return c.id === scrollCitaId; });
+      if (cita) {
+        var top = horaToPx(cita.horaInicio);
+        scrollRef.current.scrollTop = Math.max(0, top - 80);
+      }
+      setScrollCitaId(null);
+    }
+  }, [scrollCitaId, citas]);
+
+  var semanaActual = getWeekDays(fechaEnfoque);
+  var diaSeleccionado = fechaEnfoque.getDate();
   var diaActual = new Date().getDate();
   var currentTop = Math.max(0, (ahora.getHours() - 8) * ALTURA_HORA + (ahora.getMinutes() / 60) * ALTURA_HORA);
 
   var rangoFecha = (function () {
+    if (vista === 'dia') {
+      var df = fechaEnfoque;
+      return df.getDate() + ' de ' + MESES[df.getMonth()] + ', ' + df.getFullYear();
+    }
     var p = semanaActual[0].fecha;
     var u = semanaActual[6].fecha;
     var mismoMes = p.getMonth() === u.getMonth();
@@ -78,28 +99,109 @@ function AgendaCitas() {
   })();
 
   var hoyDate = new Date();
-  var mesActual = hoyDate.getMonth();
-  var añoActual = hoyDate.getFullYear();
+  var mesActual = fechaEnfoque.getMonth();
+  var añoActual = fechaEnfoque.getFullYear();
   var diasEnMes = new Date(añoActual, mesActual + 1, 0).getDate();
   var diasConCitas = new Set(citas.map(function (c) { return c.fecha; }));
 
   function getDayInfo(diaNum) {
     var found = semanaActual.find(function (s) { return s.dia === diaNum; });
     if (found) return found;
-    var f = new Date();
+    var f = new Date(fechaEnfoque);
     f.setDate(diaNum);
     return { dia: diaNum, nombre: NOMBRE_DIA[f.getDay()], mes: MESES[f.getMonth()] };
   }
 
   function irAHoy() {
-    setSemanaActual(getWeekDays());
+    var hoy = new Date();
+    setFechaEnfoque(hoy);
+    setMiniMes(hoy.getMonth());
+    setMiniAño(hoy.getFullYear());
     setVista('semana');
-    setDiaSeleccionado(new Date().getDate());
+  }
+
+  function navegarAnterior() {
+    if (vista === 'dia') {
+      var d = new Date(fechaEnfoque);
+      d.setDate(d.getDate() - 1);
+      setFechaEnfoque(d);
+    } else if (vista === 'semana') {
+      var w = new Date(fechaEnfoque);
+      w.setDate(w.getDate() - 7);
+      setFechaEnfoque(w);
+    } else {
+      var m = new Date(fechaEnfoque);
+      m.setMonth(m.getMonth() - 1);
+      setFechaEnfoque(m);
+    }
+  }
+
+  function navegarSiguiente() {
+    if (vista === 'dia') {
+      var d = new Date(fechaEnfoque);
+      d.setDate(d.getDate() + 1);
+      setFechaEnfoque(d);
+    } else if (vista === 'semana') {
+      var w = new Date(fechaEnfoque);
+      w.setDate(w.getDate() + 7);
+      setFechaEnfoque(w);
+    } else {
+      var m = new Date(fechaEnfoque);
+      m.setMonth(m.getMonth() + 1);
+      setFechaEnfoque(m);
+    }
+  }
+
+  function miniMesAnterior() {
+    if (miniMes === 0) { setMiniMes(11); setMiniAño(miniAño - 1); }
+    else { setMiniMes(miniMes - 1); }
+  }
+
+  function miniMesSiguiente() {
+    if (miniMes === 11) { setMiniMes(0); setMiniAño(miniAño + 1); }
+    else { setMiniMes(miniMes + 1); }
+  }
+
+  function seleccionarFecha(dia, mes, año) {
+    var d = new Date(año, mes, dia);
+    setFechaEnfoque(d);
+    setVista('dia');
+  }
+
+  function seleccionarCita(cita) {
+    var hoy = new Date();
+    var mesRef = hoy.getMonth();
+    var añoRef = hoy.getFullYear();
+    if (cita.fecha < hoy.getDate() && cita.fecha <= 5 && hoy.getDate() > 20) {
+      mesRef = mesRef + 1;
+      if (mesRef > 11) { mesRef = 0; añoRef = añoRef + 1; }
+    }
+    if (cita.fecha > 20 && hoy.getDate() <= 5) {
+      mesRef = mesRef - 1;
+      if (mesRef < 0) { mesRef = 11; añoRef = añoRef - 1; }
+    }
+    var d = new Date(añoRef, mesRef, cita.fecha);
+    setFechaEnfoque(d);
+    setVista('dia');
+    setScrollCitaId(cita.id);
+  }
+
+  function irAMesView() {
+    setVista('mes');
   }
 
   var numCols = vista === 'dia' ? 1 : 7;
   var columnas = vista === 'dia' ? [getDayInfo(diaSeleccionado)] : semanaActual;
   var gridTemplate = '70px repeat(' + numCols + ', 1fr)';
+
+  var proximasCitas = citas.slice().sort(function (a, b) {
+    if (a.fecha !== b.fecha) return a.fecha - b.fecha;
+    return a.horaInicio.localeCompare(b.horaInicio);
+  }).slice(0, 5);
+
+  var miniDiasEnMes = new Date(miniAño, miniMes + 1, 0).getDate();
+  var miniPrimerDia = new Date(miniAño, miniMes, 1);
+  var miniOffset = (miniPrimerDia.getDay() + 6) % 7;
 
   function getBorderColor(tipo) {
     if (tipo === 'Consulta General') return '#22c55e';
@@ -120,6 +222,13 @@ function AgendaCitas() {
     if (tipo === 'Vacunación') return '#6b21a8';
     if (tipo === 'Desparasitación') return '#1d4ed8';
     return '#c2410c';
+  }
+
+  function getDotColor(tipo) {
+    if (tipo === 'Consulta General') return 'bg-green-500';
+    if (tipo === 'Vacunación') return 'bg-purple-500';
+    if (tipo === 'Desparasitación') return 'bg-blue-500';
+    return 'bg-orange-500';
   }
 
   return (
@@ -150,11 +259,11 @@ function AgendaCitas() {
 
       <div className="flex-none flex items-center justify-between px-6 mb-4">
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
+          <button onClick={navegarAnterior} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
             <svg className="w-4 h-4 text-gray-600 dark:text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
           </button>
           <h2 className="text-base font-bold text-gray-800 dark:text-[#E0E0E0]">{rangoFecha}</h2>
-          <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
+          <button onClick={navegarSiguiente} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
             <svg className="w-4 h-4 text-gray-600 dark:text-[#A0A0A0]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
           </button>
         </div>
@@ -200,7 +309,7 @@ function AgendaCitas() {
                 })}
               </div>
 
-              <div className="relative flex-1 overflow-y-auto">
+              <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
                 <div style={{ display: 'grid', gridTemplateColumns: gridTemplate }}>
                   {HORAS.slice(0, -1).map(function (h) {
                     return (
@@ -231,6 +340,7 @@ function AgendaCitas() {
                   return (
                     <div
                       key={cita.id}
+                      onClick={function () { setCitaSeleccionada(cita); }}
                       className="absolute z-20 shadow-sm rounded-md p-1.5 cursor-pointer hover:shadow-md transition-shadow"
                       style={{
                         top: top + 2,
@@ -248,7 +358,7 @@ function AgendaCitas() {
                   );
                 })}
 
-                {currentTop > 0 && (
+                {currentTop > 0 && vista === 'semana' && (
                   <div className="absolute left-[70px] right-0 border-t-2 border-red-400 z-30 pointer-events-none" style={{ top: currentTop }}>
                     <div className="absolute -left-1 -top-2 w-3 h-3 bg-red-400 rounded-full"></div>
                     <span className="absolute text-[10px] font-bold text-red-400 bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded" style={{ left: '-62px', top: '-12px' }}>{ahora.getHours().toString().padStart(2,'0')}:{ahora.getMinutes().toString().padStart(2,'0')}</span>
@@ -292,7 +402,7 @@ function AgendaCitas() {
                   return (
                     <button
                       key={i}
-                      onClick={function () { setDiaSeleccionado(d); setVista('dia'); }}
+                      onClick={function () { seleccionarFecha(d, mesActual, añoActual); }}
                       className={'flex flex-col items-center justify-start pt-2 pb-1 rounded-lg transition-colors cursor-pointer hover:bg-gray-100 dark:bg-[#2C2C2C] ' + (esHoy ? 'border border-[#5F7B65]' : '') + (esSeleccionado ? ' bg-[#5F7B65]/10' : '')}
                     >
                       <span className={'text-xs font-bold ' + (esHoy ? 'bg-[#5F7B65] text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-700 dark:text-[#D0D0D0]')}>{d}</span>
@@ -308,11 +418,11 @@ function AgendaCitas() {
         <div className="col-span-3 space-y-4">
           <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#333] shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <button className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
+              <button onClick={miniMesAnterior} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
                 <svg className="w-4 h-4 text-gray-500 dark:text-[#909090]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
               </button>
-              <h4 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">{MESES[mesActual]} {añoActual}</h4>
-              <button className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
+              <h4 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">{MESES[miniMes]} {miniAño}</h4>
+              <button onClick={miniMesSiguiente} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
                 <svg className="w-4 h-4 text-gray-500 dark:text-[#909090]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
               </button>
             </div>
@@ -320,11 +430,17 @@ function AgendaCitas() {
               {['Lu','Ma','Mi','Ju','Vi','Sá','Do'].map(function (d) { return <span key={d} className="text-gray-400 dark:text-[#808080] py-1 text-[10px]">{d}</span>; })}
             </div>
             <div className="grid grid-cols-7 gap-0 text-center">
-              {Array.from({length: diasEnMes}, function (_, i) {
-                var d = i + 1;
-                var isToday = d === hoyDate.getDate();
+              {Array.from({length: miniOffset + miniDiasEnMes}, function (_, i) {
+                if (i < miniOffset) return <span key={'e-' + i} />;
+                var d = i - miniOffset + 1;
+                var isToday = d === hoyDate.getDate() && miniMes === hoyDate.getMonth() && miniAño === hoyDate.getFullYear();
+                var isSelected = d === fechaEnfoque.getDate() && miniMes === fechaEnfoque.getMonth() && miniAño === fechaEnfoque.getFullYear();
                 return (
-                  <span key={d} className={'text-xs py-1 ' + (isToday ? 'bg-[#5F7B65] text-white rounded-full w-6 h-6 mx-auto flex items-center justify-center text-[10px]' : 'text-gray-700 dark:text-[#D0D0D0]')}>{d}</span>
+                  <button
+                    key={d}
+                    onClick={function () { seleccionarFecha(d, miniMes, miniAño); }}
+                    className={'text-xs py-1 mx-auto cursor-pointer hover:font-bold ' + (isToday ? 'bg-[#5F7B65] text-white rounded-full w-6 h-6 flex items-center justify-center text-[10px]' : isSelected ? 'bg-[#5F7B65]/20 text-[#5F7B65] rounded-full w-6 h-6 flex items-center justify-center font-bold' : 'text-gray-700 dark:text-[#D0D0D0]')}
+                  >{d}</button>
                 );
               })}
             </div>
@@ -333,21 +449,18 @@ function AgendaCitas() {
           <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#333] shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">Próximas Citas</h4>
-              <button className="text-xs text-emerald-600 font-semibold cursor-pointer">Ver todas</button>
+              <button onClick={irAHoy} className="text-xs text-emerald-600 font-semibold cursor-pointer">Ver todas</button>
             </div>
             <div className="space-y-3">
-              {[
-                { hora: '11:30', mascota: 'Peluché 🐕', tipo: 'Vacunación', dot: 'bg-purple-500' },
-                { hora: '16:00', mascota: 'Kira 🐈', tipo: 'Control', dot: 'bg-orange-500' },
-              ].map(function (c, i) {
+              {proximasCitas.map(function (c) {
                 return (
-                  <div key={i} className="flex items-start justify-between">
+                  <div key={c.id} onClick={function () { seleccionarCita(c); }} className="flex items-start justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2C2C2C] rounded-lg p-1 -mx-1 transition-colors">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className={'w-2 h-2 rounded-full ' + c.dot}></span>
-                        <span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{c.mascota}</span>
+                        <span className={'w-2 h-2 rounded-full ' + getDotColor(c.tipo)}></span>
+                        <span className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{c.emoji} {c.mascota}</span>
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-[#808080] ml-3.5">{c.hora}</p>
+                      <p className="text-xs text-gray-400 dark:text-[#808080] ml-3.5">{c.horaInicio}</p>
                     </div>
                     <span className="text-[10px] text-gray-400 dark:text-[#808080]">{c.tipo}</span>
                   </div>
@@ -388,6 +501,46 @@ function AgendaCitas() {
           </div>
         </div>
       </div>
+
+      {citaSeleccionada && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={function () { setCitaSeleccionada(null); }}>
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl border border-gray-200 dark:border-[#333] w-full max-w-md mx-4 overflow-hidden" onClick={function (e) { e.stopPropagation(); }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#333]">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{citaSeleccionada.emoji}</span>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-[#E0E0E0]">{citaSeleccionada.mascota}</h3>
+                  <p className="text-sm text-gray-500 dark:text-[#909090]">{citaSeleccionada.horaInicio} - {citaSeleccionada.horaFin}</p>
+                </div>
+              </div>
+              <button onClick={function () { setCitaSeleccionada(null); }} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] cursor-pointer">
+                <svg className="w-5 h-5 text-gray-500 dark:text-[#909090]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Tipo de Cita</p>
+                <p className={'text-sm font-medium mt-0.5 ' + (citaSeleccionada.tipo === 'Consulta General' ? 'text-green-700 dark:text-green-400' : citaSeleccionada.tipo === 'Vacunación' ? 'text-purple-700 dark:text-purple-400' : citaSeleccionada.tipo === 'Desparasitación' ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400')}>{citaSeleccionada.tipo}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Motivo</p>
+                <p className="text-sm text-gray-700 dark:text-[#D0D0D0] mt-0.5">{citaSeleccionada.motivo}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Veterinario</p>
+                <p className="text-sm text-gray-700 dark:text-[#D0D0D0] mt-0.5">{citaSeleccionada.veterinario}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 dark:text-[#909090] uppercase tracking-wider">Notas</p>
+                <p className="text-sm text-gray-700 dark:text-[#D0D0D0] mt-0.5">{citaSeleccionada.notas}</p>
+              </div>
+            </div>
+            <div className="px-6 py-3 bg-gray-50 dark:bg-[#2C2C2C] border-t border-gray-200 dark:border-[#333] flex justify-end gap-2">
+              <button onClick={function () { setCitaSeleccionada(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-[#404040] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] cursor-pointer">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
