@@ -41,7 +41,7 @@ function Login() {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=1000')" }}>
+      <div className="hidden lg:flex w-1/2 relative bg-cover bg-center" style={{ backgroundImage: "url('https://i.pinimg.com/1200x/eb/41/b5/eb41b535f9551bbf6f73ddd90e742b2b.jpg')" }}>
         <div className="absolute inset-0 bg-gradient-to-b from-[#5F7B65]/60 via-[#5F7B65]/30 to-[#5F7B65]/70" />
 
         <div className="absolute top-8 left-8 flex items-center gap-3 z-10">
