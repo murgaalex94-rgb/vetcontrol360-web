@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiLock, FiEye, FiEyeOff, FiX } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import API from '../services/axiosConfig';
 
@@ -11,6 +11,10 @@ function Login() {
   const [error, setError] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [showGooglePopup, setShowGooglePopup] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -37,6 +41,24 @@ function Login() {
       setLoading(false);
     }
   };
+
+  function handleForgotSubmit() {
+    if (!forgotEmail.trim()) return;
+    setForgotSuccess(true);
+    setTimeout(function () {
+      setShowForgotModal(false);
+      setForgotSuccess(false);
+      setForgotEmail('');
+    }, 2000);
+  }
+
+  function handleGoogleClick() {
+    console.log('Redirigiendo a Google OAuth...');
+    setShowGooglePopup(true);
+    setTimeout(function () {
+      setShowGooglePopup(false);
+    }, 2000);
+  }
 
   return (
     <div className="flex h-screen w-full">
@@ -92,7 +114,7 @@ function Login() {
                 <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-[#404040] accent-[#5F7B65] focus:ring-emerald-500 bg-white dark:bg-[#2C2C2C]" />
                 <span className="text-sm text-gray-500 dark:text-[#909090]">Recordarme</span>
               </label>
-              <button type="button" className="text-sm font-medium text-[#5F7B65] dark:text-[#7FA389] hover:text-[#5F7B65]/80 dark:hover:text-[#7FA389]/80 transition-colors cursor-pointer">¿Olvidaste tu contraseña?</button>
+              <button type="button" onClick={function () { setShowForgotModal(true); }} className="text-sm font-medium text-[#5F7B65] dark:text-[#7FA389] hover:text-[#5F7B65]/80 dark:hover:text-[#7FA389]/80 transition-colors cursor-pointer">¿Olvidaste tu contraseña?</button>
             </div>
 
             <button type="submit" disabled={loading} className="w-full bg-[#5F7B65] hover:bg-[#4D6B53] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer text-sm">
@@ -106,14 +128,14 @@ function Login() {
             <div className="flex-1 h-px bg-gray-200 dark:bg-[#333]" />
           </div>
 
-          <button type="button" onClick={function () { console.log('Redirigiendo a Google...'); }} className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+          <button type="button" onClick={handleGoogleClick} className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg text-sm font-medium text-gray-900 dark:text-[#E0E0E0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
             <FcGoogle className="w-5 h-5" />
             Continuar con Google
           </button>
 
           <p className="text-center mt-6 text-sm">
             <span className="text-gray-500 dark:text-[#909090]">¿No tienes una cuenta? </span>
-            <span className="text-[#5F7B65] dark:text-[#7FA389] font-medium cursor-pointer hover:text-[#5F7B65]/80 dark:hover:text-[#7FA389]/80">Contacta al administrador</span>
+            <a href="mailto:admin@vetcontrol360.com" className="text-[#5F7B65] dark:text-[#7FA389] font-medium hover:text-[#5F7B65]/80 dark:hover:text-[#7FA389]/80">Contacta al administrador</a>
           </p>
         </div>
 
@@ -124,6 +146,40 @@ function Login() {
           </div>
         </div>
       </div>
+
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 relative">
+            <button onClick={function () { setShowForgotModal(false); setForgotSuccess(false); setForgotEmail(''); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+              <FiX className="w-5 h-5" />
+            </button>
+            {!forgotSuccess ? (
+              <>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0] mb-2">Recuperar Contraseña</h2>
+                <p className="text-sm text-gray-500 dark:text-[#909090] mb-5">Ingresa tu correo electrónico registrado y te enviaremos las instrucciones.</p>
+                <input type="email" value={forgotEmail} onChange={function (e) { setForgotEmail(e.target.value); }} placeholder="correo@ejemplo.com" className="w-full px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-gray-50/50 dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 text-sm mb-4" />
+                <button onClick={handleForgotSubmit} className="w-full bg-[#5F7B65] hover:bg-[#4D6B53] text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer text-sm">Enviar instrucciones</button>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-[#5F7B65]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-[#5F7B65]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-[#E0E0E0]">Se han enviado las instrucciones a tu correo</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showGooglePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-xl px-8 py-6 flex items-center gap-4">
+            <div className="w-5 h-5 border-2 border-[#5F7B65] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-700 dark:text-[#D0D0D0]">Simulando autenticación con Google...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
