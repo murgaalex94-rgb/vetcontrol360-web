@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 var PRIMARY = '#5F7B65';
+var PRIMARY_DARK = '#4A6250';
 var DARK = '#1E293B';
 var GRAY = '#64748B';
 var BG = '#F9FAFB';
@@ -50,6 +51,86 @@ function Navbar() {
   );
 }
 
+function HeroVisual() {
+  return (
+    <div className="relative w-full max-w-xl mx-auto">
+      <div className="rounded-2xl shadow-2xl overflow-hidden bg-white border border-gray-200">
+        <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between text-xs">
+          <span>[1] Clinica Veterinaria DogMan</span>
+          <div className="flex gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-400"></span>
+            <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
+            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+          </div>
+        </div>
+        <div className="flex h-[360px] w-full">
+          <div className="w-14 shrink-0 flex flex-col items-center py-4 gap-3" style={{ backgroundColor: PRIMARY_DARK }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: PRIMARY }}>
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </div>
+            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
+            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
+            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
+            <div className="mt-auto w-6 h-6 bg-white/20 rounded-lg"></div>
+          </div>
+          <div className="flex-1 flex flex-col p-3 bg-gray-50">
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="bg-white rounded-lg p-2 flex flex-col">
+                <span className="text-[9px] font-semibold text-gray-400 uppercase">Ventas</span>
+                <span className="text-sm font-bold text-gray-800">60929.18</span>
+                <div className="flex items-end gap-0.5 h-8 mt-1">
+                  {[0.3,0.5,0.2,0.7,0.4,0.6,0.8,0.35,0.55,0.25,0.45,0.65].map(function (h, i) {
+                    return <div key={i} className="flex-1 bg-emerald-400 rounded-t" style={{ height: Math.round(h * 100) + '%' }} />;
+                  })}
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-2">
+                <span className="text-[9px] font-semibold text-gray-400 uppercase">Sala espera</span>
+                <span className="text-lg font-bold text-gray-800 block mt-1">0</span>
+              </div>
+              <div className="bg-white rounded-lg p-2">
+                <span className="text-[9px] font-semibold text-gray-400 uppercase">Citas hoy</span>
+                <span className="text-lg font-bold text-gray-800 block mt-1">0</span>
+              </div>
+            </div>
+            <div className="flex-1 bg-white rounded-lg p-3">
+              <span className="text-[9px] font-semibold text-gray-400 uppercase block mb-2">Citas por dia</span>
+              <div className="flex items-end gap-1 h-24">
+                {[0.2,0.4,0.15,0.6,0.3,0.5,0.7,0.25,0.45,0.35,0.55,0.65].map(function (h, i) {
+                  return <div key={i} className="flex-1 bg-indigo-300 rounded-t" style={{ height: Math.round(h * 100) + '%' }} />;
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="absolute top-12 -left-6 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '0s' }}>
+        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x2705;</div>
+        <div>
+          <p className="text-xs font-bold text-gray-800">Cita confirmada</p>
+          <p className="text-[10px] text-gray-400">Luna &bull; 10:30 a.m.</p>
+        </div>
+      </div>
+      <div className="absolute top-48 -left-8 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1.5s' }}>
+        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x1F916;</div>
+        <div>
+          <p className="text-xs font-bold text-gray-800">IA mejor&oacute; la historia cl&iacute;nica</p>
+          <p className="text-[10px] text-gray-400">en 4 segundos</p>
+        </div>
+      </div>
+      <div className="absolute top-32 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '2.5s' }}>
+        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x1F514;</div>
+        <div>
+          <p className="text-xs font-bold text-gray-800">Recordatorio enviado</p>
+          <p className="text-[10px] text-gray-400">3 tutores</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Hero() {
   var navigate = useNavigate();
 
@@ -78,9 +159,7 @@ function Hero() {
         </div>
 
         <div className="flex justify-center">
-          <div className="bg-white rounded-xl shadow-2xl p-3 max-w-lg">
-            <img src="/logo-login.png" alt="VetControl 360" className="w-full rounded-lg" />
-          </div>
+          <HeroVisual />
         </div>
       </div>
     </section>
