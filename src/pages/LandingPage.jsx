@@ -6,13 +6,13 @@ var DARK = '#1E293B';
 var GRAY = '#64748B';
 var BG = '#F9FAFB';
 
-var navLinks = ['Inicio', 'Caracter\u00EDsticas', 'Precios', 'Noticias'];
+var navLinks = ['Inicio', 'Características', 'Precios', 'Noticias'];
 
 var features = [
-  { icon: '\uD83D\uDCC5', title: '40% menos citas perdidas', desc: 'Reservas online y recordatorios autom\u00E1ticos.' },
-  { icon: '\uD83C\uDFE5', title: 'Hasta 3 horas menos en tareas administrativas', desc: 'La IA completa historias cl\u00EDnicas.' },
-  { icon: '\uD83D\uDCE6', title: 'Inventario actualizado autom\u00E1ticamente', desc: 'Menos errores de stock.' },
-  { icon: '\uD83D\uDCA8', title: 'Decisiones m\u00E1s r\u00E1pidas con datos en tiempo real', desc: 'Reportes claros para todo el equipo.' },
+  { icon: '📅', title: '40% menos citas perdidas', desc: 'Reservas online y recordatorios automáticos.' },
+  { icon: '🏥', title: 'Hasta 3 horas menos en tareas administrativas', desc: 'La IA completa historias clínicas.' },
+  { icon: '📦', title: 'Inventario actualizado automáticamente', desc: 'Menos errores de stock.' },
+  { icon: '📊', title: 'Decisiones más rápidas con datos en tiempo real', desc: 'Reportes claros para todo el equipo.' },
 ];
 
 function Navbar() {
@@ -41,7 +41,7 @@ function Navbar() {
 
       <div className="flex items-center gap-3">
         <button onClick={function () { navigate('/login'); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors cursor-pointer" style={{ backgroundColor: '#FFFFFF', borderColor: '#D1D5DB', color: DARK }}>
-          Iniciar sesi\u00F3n
+          Iniciar sesión
         </button>
         <button onClick={function () { navigate('/contacto'); }} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors cursor-pointer" style={{ backgroundColor: PRIMARY }}>
           Agenda una demo
@@ -53,79 +53,9 @@ function Navbar() {
 
 function HeroVisual() {
   return (
-    <div className="relative w-full max-w-xl mx-auto">
-      <div className="rounded-2xl shadow-2xl overflow-hidden bg-white border border-gray-200">
-        <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between text-xs">
-          <span>[1] Clinica Veterinaria DogMan</span>
-          <div className="flex gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-400"></span>
-            <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-            <span className="w-2 h-2 rounded-full bg-green-400"></span>
-          </div>
-        </div>
-        <div className="flex h-[360px] w-full">
-          <div className="w-14 shrink-0 flex flex-col items-center py-4 gap-3" style={{ backgroundColor: PRIMARY_DARK }}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: PRIMARY }}>
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            </div>
-            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
-            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
-            <div className="w-6 h-6 bg-white/20 rounded-lg"></div>
-            <div className="mt-auto w-6 h-6 bg-white/20 rounded-lg"></div>
-          </div>
-          <div className="flex-1 flex flex-col p-3 bg-gray-50">
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="bg-white rounded-lg p-2 flex flex-col">
-                <span className="text-[9px] font-semibold text-gray-400 uppercase">Ventas</span>
-                <span className="text-sm font-bold text-gray-800">60929.18</span>
-                <div className="flex items-end gap-0.5 h-8 mt-1">
-                  {[0.3,0.5,0.2,0.7,0.4,0.6,0.8,0.35,0.55,0.25,0.45,0.65].map(function (h, i) {
-                    return <div key={i} className="flex-1 bg-emerald-400 rounded-t" style={{ height: Math.round(h * 100) + '%' }} />;
-                  })}
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-2">
-                <span className="text-[9px] font-semibold text-gray-400 uppercase">Sala espera</span>
-                <span className="text-lg font-bold text-gray-800 block mt-1">0</span>
-              </div>
-              <div className="bg-white rounded-lg p-2">
-                <span className="text-[9px] font-semibold text-gray-400 uppercase">Citas hoy</span>
-                <span className="text-lg font-bold text-gray-800 block mt-1">0</span>
-              </div>
-            </div>
-            <div className="flex-1 bg-white rounded-lg p-3">
-              <span className="text-[9px] font-semibold text-gray-400 uppercase block mb-2">Citas por dia</span>
-              <div className="flex items-end gap-1 h-24">
-                {[0.2,0.4,0.15,0.6,0.3,0.5,0.7,0.25,0.45,0.35,0.55,0.65].map(function (h, i) {
-                  return <div key={i} className="flex-1 bg-indigo-300 rounded-t" style={{ height: Math.round(h * 100) + '%' }} />;
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="absolute top-12 -left-6 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '0s' }}>
-        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x2705;</div>
-        <div>
-          <p className="text-xs font-bold text-gray-800">Cita confirmada</p>
-          <p className="text-[10px] text-gray-400">Luna &bull; 10:30 a.m.</p>
-        </div>
-      </div>
-      <div className="absolute top-48 -left-8 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1.5s' }}>
-        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x1F916;</div>
-        <div>
-          <p className="text-xs font-bold text-gray-800">IA mejor&oacute; la historia cl&iacute;nica</p>
-          <p className="text-[10px] text-gray-400">en 4 segundos</p>
-        </div>
-      </div>
-      <div className="absolute top-32 right-0 bg-white rounded-xl shadow-lg border border-gray-100 p-3 flex items-center gap-2 z-10 animate-bounce" style={{ animationDuration: '4s', animationDelay: '2.5s' }}>
-        <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center text-xs">&#x1F514;</div>
-        <div>
-          <p className="text-xs font-bold text-gray-800">Recordatorio enviado</p>
-          <p className="text-[10px] text-gray-400">3 tutores</p>
-        </div>
+    <div className="w-full max-w-xl mx-auto">
+      <div className="bg-white rounded-xl shadow-2xl p-3 max-w-lg mx-auto border border-gray-100">
+        <img src="/logo-login.png" alt="VetControl 360 Dashboard" className="w-full rounded-lg" />
       </div>
     </div>
   );
@@ -139,11 +69,11 @@ function Hero() {
       <div className="grid md:grid-cols-2 gap-12 items-center w-full">
         <div className="space-y-6">
           <span className="inline-block text-xs font-bold tracking-[0.15em] px-4 py-2 rounded-full" style={{ backgroundColor: '#F1F5F9', color: PRIMARY }}>
-            EL SOFTWARE VETERINARIO QUE TU CL\u00CDNICA NECESITA
+            EL SOFTWARE VETERINARIO QUE TU CLÍNICA NECESITA
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold leading-tixt" style={{ color: DARK }}>
-            Gestiona todas las \u00E1reas de tu veterinaria desde un solo lugar
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight" style={{ color: DARK }}>
+            Gestiona todas las áreas de tu veterinaria desde un solo lugar
           </h1>
 
           <p className="text-lg" style={{ color: GRAY }}>
@@ -170,7 +100,7 @@ function Features() {
   return (
     <section className="px-8 py-20 max-w-7xl mx-auto w-full">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" style={{ color: DARK }}>
-        Una veterinaria m\u00E1s organizada \u2014 y un equipo que ama lo que hace.
+        Una veterinaria más organizada — y un equipo que ama lo que hace.
       </h2>
       <div className="grid md:grid-cols-4 gap-6">
         {features.map(function (f, i) {
@@ -195,7 +125,7 @@ function LandingPage() {
       <Features />
       <footer className="flex-none px-8 py-8 text-center">
         <p className="text-sm font-medium" style={{ color: GRAY }}>
-          Miles de cl\u00EDnicas y hospitales veterinarios ya conf\u00EDan en VetControl 360.
+          Miles de clínicas y hospitales veterinarios ya confían en VetControl 360.
         </p>
       </footer>
     </div>
