@@ -2,6 +2,7 @@ import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import NuevoProveedorModal from '../components/NuevoProveedorModal';
+import API from '../services/axiosConfig';
 
 function generarCodigoProveedor(id) {
   var anio = new Date().getFullYear();
@@ -326,8 +327,8 @@ function ProveedoresPage() {
                           <button onClick={function () { setShowModalDetalle(prov); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                           </button>
-                          <button className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer" title="Editar">✏️</button>
-                          <button className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer" title="Eliminar">🗑️</button>
+                          <button onClick={function () { var nuevoEstado = prov.estado === 'Activo' ? 'Inactivo' : 'Activo'; if (confirm('¿Cambiar estado a ' + nuevoEstado + '?')) { setProveedores(proveedores.map(function (p) { return p.id === prov.id ? Object.assign({}, p, { estado: nuevoEstado }) : p; })); } }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer" title="Cambiar estado">✏️</button>
+                          <button onClick={function () { if (confirm('¿Eliminar proveedor ' + prov.nombre + '?')) { setProveedores(proveedores.filter(function (p) { return p.id !== prov.id; })); } }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer" title="Eliminar">🗑️</button>
                         </div>
                       </td>
                     </tr>

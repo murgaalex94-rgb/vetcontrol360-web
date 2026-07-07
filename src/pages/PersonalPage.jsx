@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import API from '../services/axiosConfig';
 
 function generarCodigoPersonal(index) {
   var year = new Date().getFullYear();
@@ -63,12 +64,13 @@ function ModalDetallesPersonal({ empleado, onClose }) {
   );
 }
 
-function NuevoPersonalModal({ onClose }) {
+function NuevoPersonalModal({ onClose, onGuardar }) {
   var [form, setForm] = useState({ nombres: '', apellidos: '', dni: '', telefono: '', email: '', password: '', confirmPassword: '', rol: 'Veterinario', estado: 'Activo' });
   var [showPassword, setShowPassword] = useState(false);
   var [showConfirmPassword, setShowConfirmPassword] = useState(false);
   var [foto, setFoto] = useState(null);
   var [dragOver, setDragOver] = useState(false);
+  var [saving, setSaving] = useState(false);
 
   var passwordsMatch = form.password === form.confirmPassword;
   var hasRequiredFields = form.nombres.trim() && form.apellidos.trim() && form.dni.trim() && form.email.trim() && form.password.trim() && form.confirmPassword.trim();
@@ -80,7 +82,22 @@ function NuevoPersonalModal({ onClose }) {
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onClose();
+    setSaving(true);
+    var rolMap = { Veterinario: 1, Asistente: 2, Administrativo: 3 };
+    API.post('/usuarios', {
+      nombreCompleto: form.nombres + ' ' + form.apellidos,
+      username: form.email.split('@')[0],
+      email: form.email,
+      password: form.password,
+      idRol: rolMap[form.rol] || 1,
+      estado: form.estado,
+    }).then(function (res) {
+      if (onGuardar) onGuardar(res.data);
+      onClose();
+    }).catch(function (err) {
+      console.error('Error al crear usuario:', err);
+      alert('Error al crear el usuario.');
+    }).finally(function () { setSaving(false); });
   }
 
   function handleFotoDrop(e) {
@@ -224,7 +241,7 @@ function NuevoPersonalModal({ onClose }) {
 
         <div className="flex items-center justify-end gap-3 p-6 pt-2">
           <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={handleSubmit} disabled={!canSubmit} className={'px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer ' + (!canSubmit ? 'opacity-50 cursor-not-allowed' : '')} style={{ backgroundColor: '#5F7B65' }}>Guardar Personal</button>
+          <button onClick={handleSubmit} disabled={!canSubmit || saving} className={'px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer ' + ((!canSubmit || saving) ? 'opacity-50 cursor-not-allowed' : '')} style={{ backgroundColor: '#5F7B65' }}>{saving ? 'Guardando...' : 'Guardar Personal'}</button>
         </div>
       </div>
     </div>
@@ -415,6 +432,26 @@ function PersonalPage() {
   });
   var porPagina = 5;
 
+  var rolMapReverse = { 1: 'Veterinario', 2: 'Asistente', 3: 'Administrativo' };
+
+  useEffect(function () {
+    API.get('/usuarios').then(function (res) {
+      var mapped = res.data.map(function (u, i) {
+        return {
+          id: u.id,
+          codigo: generarCodigoPersonal(u.id),
+          nombre: u.nombreCompleto,
+          cargo: rolMapReverse[u.idRol] || 'Veterinario',
+          email: u.email || '',
+          telefono: u.telefono || '',
+          estado: u.estado || 'Activo',
+          fechaIngreso: u.fechaCreacion ? u.fechaCreacion.slice(0, 10) : '2024-01-01',
+        };
+      });
+      if (mapped.length > 0) setEmpleados(mapped);
+    }).catch(function () {});
+  }, []);
+
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
     return lista.filter(function (e) {
@@ -440,13 +477,29 @@ function PersonalPage() {
   var totalAdmin = empleados.filter(function (e) { return e.cargo === 'Administrativo'; }).length;
 
   function handleGuardarEmpleado(id, datos) {
-    setEmpleados(empleados.map(function (e) {
-      return e.id === id ? Object.assign({}, e, datos) : e;
-    }));
+    var rolMap = { Veterinario: 1, Asistente: 2, Administrativo: 3 };
+    API.put('/usuarios/' + id, {
+      nombreCompleto: datos.nombre,
+      email: datos.email,
+      idRol: rolMap[datos.cargo] || 1,
+      estado: datos.estado,
+    }).then(function () {
+      setEmpleados(empleados.map(function (e) {
+        return e.id === id ? Object.assign({}, e, datos) : e;
+      }));
+    }).catch(function (err) {
+      console.error('Error al actualizar usuario:', err);
+      alert('Error al guardar cambios.');
+    });
   }
 
   function handleEliminarEmpleado(id) {
-    setEmpleados(empleados.filter(function (e) { return e.id !== id; }));
+    API.delete('/usuarios/' + id).then(function () {
+      setEmpleados(empleados.filter(function (e) { return e.id !== id; }));
+    }).catch(function (err) {
+      console.error('Error al eliminar usuario:', err);
+      alert('Error al eliminar el usuario.');
+    });
   }
 
   function exportarExcel() {
@@ -624,7 +677,7 @@ function PersonalPage() {
         </div>
       </div>
 
-      {showModalNuevo && <NuevoPersonalModal onClose={function () { setShowModalNuevo(false); }} />}
+      {showModalNuevo && <NuevoPersonalModal onClose={function () { setShowModalNuevo(false); }} onGuardar={function (nuevo) { setEmpleados(empleados.concat([{ id: nuevo.id, codigo: generarCodigoPersonal(nuevo.id), nombre: nuevo.nombreCompleto, cargo: rolMapReverse[nuevo.idRol] || 'Veterinario', email: nuevo.email || '', telefono: '', estado: nuevo.estado || 'Activo', fechaIngreso: new Date().toISOString().slice(0, 10) }])); }} />}
       {showModalDetalles && <ModalDetallesPersonal empleado={showModalDetalles} onClose={function () { setShowModalDetalles(null); }} />}
       {showModalEditar && <ModalEditarPersonal empleado={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarEmpleado} />}
       {showModalEliminar && <ModalEliminarPersonal empleado={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminarEmpleado} />}
