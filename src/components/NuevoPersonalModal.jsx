@@ -3,27 +3,44 @@ import API from '../services/axiosConfig';
 
 var MAPA_ROL_ID = { Administrativo: 1, Veterinario: 2, Asistente: 3 };
 
+function splitNombreCompleto(nombreCompleto) {
+  var parts = (nombreCompleto || '').trim().split(/\s+/);
+  if (parts.length >= 4) {
+    return { nombres: parts.slice(0, 2).join(' '), apellidos: parts.slice(2).join(' ') };
+  }
+  if (parts.length === 3) {
+    return { nombres: parts[0], apellidos: parts.slice(1).join(' ') };
+  }
+  if (parts.length === 2) {
+    return { nombres: parts[0], apellidos: parts[1] };
+  }
+  return { nombres: parts[0] || '', apellidos: '' };
+}
+
 function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar }) {
+  var nameParts = modoEdicion ? splitNombreCompleto(data.nombre) : { nombres: '', apellidos: '' };
+
   var init = modoEdicion
     ? {
-        nombres: (data.nombre || '').split(' ')[0] || '',
-        apellidos: (data.nombre || '').split(' ').slice(1).join(' ') || '',
+        nombres: nameParts.nombres,
+        apellidos: nameParts.apellidos,
         dni: data.dni || '',
         telefono: data.telefono || '',
         email: data.email || '',
+        usuario: data.usuario || '',
         password: '',
         confirmPassword: '',
         rol: data.cargo || 'Veterinario',
         estado: data.estado || 'Activo',
       }
-    : { nombres: '', apellidos: '', dni: '', telefono: '', email: '', password: '', confirmPassword: '', rol: 'Veterinario', estado: 'Activo' };
+    : { nombres: '', apellidos: '', dni: '', telefono: '', email: '', usuario: '', password: '', confirmPassword: '', rol: 'Veterinario', estado: 'Activo' };
 
   var [form, setForm] = useState(init);
   var [showPassword, setShowPassword] = useState(false);
   var [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   var passwordsMatch = form.password === form.confirmPassword;
-  var hasRequired = form.nombres.trim() && form.apellidos.trim() && form.email.trim();
+  var hasRequired = form.nombres.trim() && form.apellidos.trim() && form.email.trim() && form.usuario.trim();
   if (!modoEdicion) hasRequired = hasRequired && form.password.trim() && form.confirmPassword.trim();
   var canSubmit = hasRequired && (modoEdicion || passwordsMatch);
 
@@ -36,6 +53,7 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
     if (modoEdicion) {
       var payload = {
         nombreCompleto: (form.nombres + ' ' + form.apellidos).trim(),
+        usuario: form.usuario,
         idRol: MAPA_ROL_ID[form.rol] || 2,
         activo: form.estado === 'Activo',
       };
@@ -44,7 +62,7 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
       onClose();
     } else {
       API.post('/usuarios', {
-        usuario: form.email,
+        usuario: form.usuario,
         password: form.password,
         nombreCompleto: (form.nombres + ' ' + form.apellidos).trim(),
         idRol: MAPA_ROL_ID[form.rol] || 2,
@@ -73,21 +91,21 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Nombres *</label>
-              <input type="text" name="nombres" value={form.nombres} onChange={handleChange} className={inputClass} placeholder="Ej: Juan Carlos" />
+              <input type="text" name="nombres" value={form.nombres} onChange={handleChange} className={inputClass} placeholder="Ej: Nadir Jared" />
             </div>
             <div>
               <label className={labelClass}>Apellidos *</label>
-              <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} className={inputClass} placeholder="Ej: Pérez López" />
+              <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} className={inputClass} placeholder="Ej: Miranda Garcia" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>DNI</label>
-              <input type="text" name="dni" value={form.dni} onChange={handleChange} className={inputClass} placeholder="Ej: 12345678" />
+              <label className={labelClass}>Usuario *</label>
+              <input type="text" name="usuario" value={form.usuario} onChange={handleChange} className={inputClass} placeholder="Ej: nmiranda" />
             </div>
             <div>
-              <label className={labelClass}>Teléfono</label>
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="Ej: +51 999 123 456" />
+              <label className={labelClass}>DNI</label>
+              <input type="text" name="dni" value={form.dni} onChange={handleChange} className={inputClass} placeholder="Ej: 12345678" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -95,6 +113,12 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
               <label className={labelClass}>Email *</label>
               <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="correo@vetcontrol.com" />
             </div>
+            <div>
+              <label className={labelClass}>Teléfono</label>
+              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="Ej: +51 999 123 456" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>{modoEdicion ? 'Contraseña (opcional)' : 'Contraseña *'}</label>
               <div className="relative">
@@ -108,8 +132,6 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
                 </button>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Confirmar Contraseña {modoEdicion ? '(opcional)' : '*'}</label>
               <div className="relative">
@@ -126,6 +148,8 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
                 <p className="mt-1 text-xs text-red-500">Las contraseñas no coinciden</p>
               )}
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Rol *</label>
               <select name="rol" value={form.rol} onChange={handleChange} className={inputClass}>
@@ -134,13 +158,13 @@ function NuevoPersonalModal({ onClose, onCreado, modoEdicion, data, onGuardar })
                 <option value="Administrativo">Administrativo</option>
               </select>
             </div>
-          </div>
-          <div>
-            <label className={labelClass}>Estado</label>
-            <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
+            <div>
+              <label className={labelClass}>Estado</label>
+              <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 p-6 pt-2">

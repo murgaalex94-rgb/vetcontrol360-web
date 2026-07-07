@@ -18,6 +18,7 @@ function apiToEmpleado(u, i) {
     id: u.id,
     codigo: generarCodigoPersonal(i),
     nombre: u.nombreCompleto,
+    usuario: u.usuario || '',
     cargo: MAPA_ROL[u.idRol] || 'Veterinario',
     estado: u.activo ? 'Activo' : 'Inactivo',
     email: '',
