@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MaterialDatePicker from '../components/MaterialDatePicker';
 import API from '../services/axiosConfig';
-
-const clientes = [
-  { id: 1, nombre: 'Juan Pérez García', telefono: '987 654 321' },
-  { id: 2, nombre: 'María López Ruiz', telefono: '912 345 678' },
-  { id: 3, nombre: 'Carlos Torres Vega', telefono: '923 456 789' },
-];
-
-const mascotas = [
-  { id: 1, nombre: 'Max', especie: 'Perro', raza: 'Golden Retriever', edad: '3 años', peso: '28.5 kg', clienteId: 1, foto: 'https://placehold.co/100x100/E6F7F6/0D9488?text=Max' },
-  { id: 2, nombre: 'Luna', especie: 'Gato', raza: 'Siamés', edad: '2 años', peso: '4.2 kg', clienteId: 2, foto: 'https://placehold.co/100x100/E6F7F6/0D9488?text=Luna' },
-  { id: 3, nombre: 'Rocky', especie: 'Perro', raza: 'Labrador', edad: '5 años', peso: '32 kg', clienteId: 3, foto: 'https://placehold.co/100x100/E6F7F6/0D9488?text=Rocky' },
-  { id: 4, nombre: 'Kira', especie: 'Gato', raza: 'Persa', edad: '4 años', peso: '3.8 kg', clienteId: 1, foto: 'https://placehold.co/100x100/E6F7F6/0D9488?text=Kira' },
-];
+import MaterialDatePicker from '../components/MaterialDatePicker';
 
 const tiposCita = [
   { id: 1, nombre: 'Consulta General', color: 'bg-green-500' },
@@ -31,13 +18,6 @@ const duraciones = [
   { value: '60', label: '1 hora' },
   { value: '90', label: '1 hora 30 min' },
   { value: '120', label: '2 horas' },
-];
-
-const veterinarios = [
-  { id: 1, nombre: 'Dra. María García', especialidad: 'Medicina General', foto: 'https://i.pravatar.cc/150?img=5' },
-  { id: 2, nombre: 'Dr. Carlos López', especialidad: 'Cirugía', foto: 'https://i.pravatar.cc/150?img=12' },
-  { id: 3, nombre: 'Dr. Roberto Sánchez', especialidad: 'Dermatología', foto: 'https://i.pravatar.cc/150?img=15' },
-  { id: 4, nombre: 'Dra. Ana Martínez', especialidad: 'Medicina Felina', foto: 'https://i.pravatar.cc/150?img=9' },
 ];
 
 const consultorios = [
@@ -65,17 +45,25 @@ var ETIQUETAS = {
 
 function NuevaCita() {
   const navigate = useNavigate();
-  const [apiClientes, setApiClientes] = useState([]);
-  const [apiMascotas, setApiMascotas] = useState([]);
-  const [saving, setSaving] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [mascotas, setMascotas] = useState([]);
+  const [veterinarios, setVeterinarios] = useState([]);
   const [form, setForm] = useState({
-    clienteId: '', mascotaId: '', tipoCita: '', fecha: '', hora: '08:00', motivo: '', duracion: '30',
+    clienteId: '', mascotaId: '', tipoCita: '', fecha: '', hora: '', motivo: '', duracion: '30',
     veterinarioId: '', consultorioId: '', notas: '', recordatorio: true, whatsapp: true, email: true,
   });
   const [motivoCount, setMotivoCount] = useState(0);
   const [notasCount, setNotasCount] = useState(0);
   const [errores, setErrores] = useState({});
   const [tocados, setTocados] = useState({});
+
+  useEffect(function () {
+    API.get('/clientes').then(function (res) { setClientes(res.data); }).catch(function () {});
+    API.get('/mascotas').then(function (res) { setMascotas(res.data); }).catch(function () {});
+    API.get('/usuarios').then(function (res) {
+      setVeterinarios(res.data.filter(function (u) { return u.idRol === 2; }));
+    }).catch(function () {});
+  }, []);
 
   function validarCampo(nombre, valor) {
     if (CAMPOS_REQUERIDOS.indexOf(nombre) !== -1 && !valor) {
@@ -115,51 +103,45 @@ function NuevaCita() {
     return Object.keys(nuevos).length === 0;
   }
 
+  function parseFecha(fechaStr) {
+    var parts = fechaStr.split('/');
+    if (parts.length === 3) return parts[2] + '-' + parts[1] + '-' + parts[0];
+    return fechaStr;
+  }
+
   function handleSaveAndNotify(e) {
     e.preventDefault();
     if (!validarTodo()) return;
 
-    var tipoCitaNombre = (tiposCita.find(function (t) { return t.id === Number(form.tipoCita); }) || {}).nombre || form.tipoCita;
-    var vetNombre = (veterinarios.find(function (v) { return v.id === Number(form.veterinarioId); }) || {}).nombre || '';
-    var consultNombre = (consultorios.find(function (c) { return c.id === Number(form.consultorioId); }) || {}).nombre || '';
+    var tipoSel = tiposCita.find(function (t) { return t.id === Number(form.tipoCita); });
+    var vetSel = veterinarios.find(function (v) { return v.id === Number(form.veterinarioId); });
+    var consultSel = consultorios.find(function (c) { return c.id === Number(form.consultorioId); });
 
-    var body = {
+    var payload = {
       cliente: { id: Number(form.clienteId) },
       mascota: { id: Number(form.mascotaId) },
-      tipoCita: tipoCitaNombre,
-      fecha: form.fecha,
-      hora: form.hora ? form.hora + ':00' : null,
+      tipoCita: tipoSel ? tipoSel.nombre : '',
+      fecha: parseFecha(form.fecha),
+      hora: form.hora || '09:00',
       motivo: form.motivo,
       duracion: Number(form.duracion),
-      veterinario: vetNombre,
-      consultorio: consultNombre,
-      notas: form.notas || null,
+      veterinario: vetSel ? vetSel.nombreCompleto : '',
+      consultorio: consultSel ? consultSel.nombre : '',
+      notas: form.notas || '',
       recordatorio: form.recordatorio,
       whatsapp: form.whatsapp,
       email: form.email,
-      estado: 'Programada',
     };
 
-    setSaving(true);
-    API.post('/citas', body).then(function () {
+    API.post('/citas', payload).then(function () {
       navigate('/agenda');
-    }).catch(function (err) {
-      console.error('Error al guardar cita:', err);
-      alert('Error al guardar la cita. Intente nuevamente.');
-    }).finally(function () {
-      setSaving(false);
+    }).catch(function () {
+      alert('Error al guardar la cita');
     });
   }
 
-  useEffect(function () {
-    var cancel = false;
-    API.get('/clientes').then(function (res) { if (!cancel) setApiClientes(res.data); }).catch(function () {});
-    API.get('/mascotas').then(function (res) { if (!cancel) setApiMascotas(res.data); }).catch(function () {});
-    return function () { cancel = true; };
-  }, []);
-
-  const mascotaSel = (apiMascotas.length ? apiMascotas : mascotas).find((m) => m.id === Number(form.mascotaId));
-  const clienteSel = (apiClientes.length ? apiClientes : clientes).find((c) => c.id === Number(form.clienteId));
+  const mascotaSel = mascotas.find((m) => m.id === Number(form.mascotaId));
+  const clienteSel = clientes.find((c) => c.id === Number(form.clienteId));
   const tipoSel = tiposCita.find((t) => t.id === Number(form.tipoCita));
   const vetSel = veterinarios.find((v) => v.id === Number(form.veterinarioId));
   const consultSel = consultorios.find((c) => c.id === Number(form.consultorioId));
@@ -219,7 +201,7 @@ function NuevaCita() {
                 <label className={labelClass}>Cliente (Dueño) *</label>
                 <select name="clienteId" value={form.clienteId} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('clienteId')}>
                   <option value="">Seleccionar cliente</option>
-                  {(apiClientes.length ? apiClientes : clientes).map(function (c) { return <option key={c.id} value={c.id}>{c.nombre}</option>; })}
+                  {clientes.map(function (c) { return <option key={c.id} value={c.id}>{c.nombre} {c.apellidos || ''}</option>; })}
                 </select>
                 {clienteSel && <p className="text-xs text-gray-400 dark:text-[#808080] mt-1.5 pl-1">{clienteSel.telefono}</p>}
                 {mostrarError('clienteId')}
@@ -231,14 +213,14 @@ function NuevaCita() {
                 </div>
                 <select name="mascotaId" value={form.mascotaId} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('mascotaId')}>
                   <option value="">Seleccionar mascota</option>
-                  {(apiMascotas.length ? apiMascotas : mascotas).map(function (m) { return <option key={m.id} value={m.id}>{m.nombre} - {m.raza || m.especie}</option>; })}
+                  {mascotas.map(function (m) { return <option key={m.id} value={m.id}>{m.nombre} - {m.raza || ''}</option>; })}
                 </select>
                 {mascotaSel && (
                   <div className="flex items-center gap-3 mt-3 p-2 rounded-lg bg-gray-50 dark:bg-[#2C2C2C]">
-                    {mascotaSel.foto && <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-9 h-9 rounded-full" />}
+                    <div className="w-9 h-9 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-xs font-bold">{mascotaSel.nombre[0]}</div>
                     <div className="text-xs text-gray-500 dark:text-[#909090]">
                       <p className="font-semibold text-gray-700 dark:text-[#B0B0B0]">{mascotaSel.nombre}</p>
-                      <p>{mascotaSel.raza || mascotaSel.especie}{mascotaSel.edad ? ' · ' + mascotaSel.edad : ''}{mascotaSel.peso ? ' · ' + mascotaSel.peso : ''}</p>
+                      <p>{mascotaSel.raza || ''} · {mascotaSel.especie || ''}</p>
                     </div>
                   </div>
                 )}
@@ -257,7 +239,7 @@ function NuevaCita() {
                 <label className={labelClass}>Tipo de Cita *</label>
                 <select name="tipoCita" value={form.tipoCita} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('tipoCita')}>
                   <option value="">Seleccionar tipo</option>
-                  {tiposCita.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                  {tiposCita.map(function (t) { return <option key={t.id} value={t.id}>{t.nombre}</option>; })}
                 </select>
                 {tipoSel && (
                   <div className="flex items-center gap-2 mt-2">
@@ -268,15 +250,16 @@ function NuevaCita() {
                 {mostrarError('tipoCita')}
               </div>
               <div>
+                <label className={labelClass}>Fecha *</label>
                 <MaterialDatePicker value={form.fecha} onChange={function (val) { handleChange({ target: { name: 'fecha', value: val } }); }} label="Fecha *" placeholder="DD/MM/YYYY" />
                 {mostrarError('fecha')}
               </div>
-              <div>
-                <label className={labelClass}>Hora *</label>
-                <input type="time" name="hora" value={form.hora} onChange={handleChange} onBlur={manejarBlur} required className={claseInputConError('hora')} />
-              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Hora</label>
+                <input type="time" name="hora" value={form.hora} onChange={handleChange} className={inputClass} />
+              </div>
               <div>
                 <label className={labelClass}>Motivo de la Cita *</label>
                 <div className="relative">
@@ -285,10 +268,12 @@ function NuevaCita() {
                 </div>
                 {mostrarError('motivo')}
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
                 <label className={labelClass}>Duración Estimada</label>
                 <select name="duracion" value={form.duracion} onChange={handleChange} className={selectClass}>
-                  {duraciones.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                  {duraciones.map(function (d) { return <option key={d.value} value={d.value}>{d.label}</option>; })}
                 </select>
               </div>
             </div>
@@ -310,14 +295,13 @@ function NuevaCita() {
                 <label className={labelClass}>Veterinario *</label>
                 <select name="veterinarioId" value={form.veterinarioId} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('veterinarioId')}>
                   <option value="">Seleccionar veterinario</option>
-                  {veterinarios.map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}
+                  {veterinarios.map(function (v) { return <option key={v.id} value={v.id}>{v.nombreCompleto}</option>; })}
                 </select>
                 {vetSel && (
                   <div className="flex items-center gap-3 mt-3 p-2 rounded-lg bg-gray-50 dark:bg-[#2C2C2C]">
-                    <img src={vetSel.foto} alt={vetSel.nombre} className="w-8 h-8 rounded-full" />
+                    <div className="w-8 h-8 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-xs font-bold">{(vetSel.nombreCompleto || '?')[0]}</div>
                     <div className="text-xs">
-                      <p className="font-semibold text-gray-700 dark:text-[#B0B0B0]">{vetSel.nombre}</p>
-                      <p className="text-gray-400 dark:text-[#808080]">{vetSel.especialidad}</p>
+                      <p className="font-semibold text-gray-700 dark:text-[#B0B0B0]">{vetSel.nombreCompleto}</p>
                     </div>
                   </div>
                 )}
@@ -327,7 +311,7 @@ function NuevaCita() {
                 <label className={labelClass}>Consultorio / Sala *</label>
                 <select name="consultorioId" value={form.consultorioId} onChange={handleChange} required className={selectClass}>
                   <option value="">Seleccionar consultorio</option>
-                  {consultorios.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  {consultorios.map(function (c) { return <option key={c.id} value={c.id}>{c.nombre}</option>; })}
                 </select>
                 {consultSel && (
                   <p className={'text-xs mt-1.5 pl-1 ' + (consultSel.disponible ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500')}>
@@ -387,9 +371,9 @@ function NuevaCita() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
               Cancelar
             </button>
-            <button type="submit" disabled={!formularioCompleto || saving} className={'flex-1 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer ' + ((formularioCompleto && !saving) ? 'bg-[#5F7B65] hover:bg-[#4E6553] text-white' : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed')}>
+            <button type="submit" disabled={!formularioCompleto} className={'flex-1 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer ' + (formularioCompleto ? 'bg-[#5F7B65] hover:bg-[#4E6553] text-white' : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-              {saving ? 'Guardando...' : 'Guardar Cita'}
+              Guardar Cita
             </button>
           </div>
         </div>
@@ -401,9 +385,9 @@ function NuevaCita() {
               <div className="flex flex-col items-center text-center border-b border-gray-100 dark:border-[#333] pb-4">
                 {mascotaSel ? (
                   <>
-                    {mascotaSel.foto ? <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-emerald-100" /> : <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 ring-2 ring-emerald-100"><span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{mascotaSel.nombre?.charAt(0)}</span></div>}
+                    <div className="w-20 h-20 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-2xl font-bold mb-3">{mascotaSel.nombre[0]}</div>
                     <p className="text-base font-bold text-gray-800 dark:text-[#E0E0E0]">{mascotaSel.nombre}</p>
-                    <p className="text-xs text-gray-400 dark:text-[#808080]">{mascotaSel.raza || mascotaSel.especie}{mascotaSel.edad ? ' · ' + mascotaSel.edad : ''}{mascotaSel.peso ? ' · ' + mascotaSel.peso : ''}</p>
+                    <p className="text-xs text-gray-400 dark:text-[#808080]">{mascotaSel.raza || ''} · {mascotaSel.especie || ''}</p>
                   </>
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-[#2C2C2C] flex items-center justify-center mb-3">
@@ -418,10 +402,11 @@ function NuevaCita() {
                 <div className="border-t border-gray-100 dark:border-[#333]" />
                 <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Tipo de Cita:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium flex items-center gap-1.5">{tipoSel ? <><span className={'w-2 h-2 rounded-full ' + tipoSel.color} />{tipoSel.nombre}</> : '—'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Fecha:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium">{form.fecha || '—'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Hora:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium">{form.hora || '—'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Motivo:</span><span className="text-gray-800 dark:text-[#E0E0E0] text-right max-w-[180px] truncate">{form.motivo || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Duración:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{duraciones.find((d) => d.value === form.duracion)?.label || '—'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Duración:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{duraciones.find(function (d) { return d.value === form.duracion; })?.label || '—'}</span></div>
                 <div className="border-t border-gray-100 dark:border-[#333]" />
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Veterinario:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium">{vetSel?.nombre || '—'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Veterinario:</span><span className="text-gray-800 dark:text-[#E0E0E0] font-medium">{vetSel?.nombreCompleto || '—'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Consultorio:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{consultSel?.nombre || '—'}</span></div>
               </div>
             </div>
