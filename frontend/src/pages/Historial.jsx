@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import API from '../services/axiosConfig';
+import NuevaConsultaModal from '../components/NuevaConsultaModal';
 
 const tabs = ['Consultas', 'Historial Clínico', 'Vacunas', 'Desparasitaciones', 'Archivos', 'Laboratorio'];
 
@@ -25,6 +26,7 @@ function Historial() {
   const [consultas, setConsultas] = useState([]);
   const [detalle, setDetalle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showNuevaConsulta, setShowNuevaConsulta] = useState(false);
 
   useEffect(function () {
     API.get('/mascotas/' + mascotaId).then(function (res) { setMascota(res.data); });
@@ -235,7 +237,7 @@ function Historial() {
           <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-5 space-y-3">
             <h4 className="text-sm font-bold text-gray-800 dark:text-[#E0E0E0]">Acciones Rápidas</h4>
             <div className="space-y-2">
-              <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">Nueva Consulta</button>
+              <button onClick={function () { setShowNuevaConsulta(true); }} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">Nueva Consulta</button>
               <button className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">Nueva Receta</button>
               <button className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">Solicitar Examen</button>
               <button className="w-full py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer">Subir Archivo</button>
@@ -248,6 +250,7 @@ function Historial() {
           </div>
         </div>
       </div>
+      {showNuevaConsulta && mascota && <NuevaConsultaModal mascotaId={mascota.id} onClose={function () { setShowNuevaConsulta(false); }} onSaved={function () { API.get('/consultas-medicas?mascotaId=' + mascota.id).then(function (res) { setConsultas(res.data); }); }} />}
     </div>
   );
 }

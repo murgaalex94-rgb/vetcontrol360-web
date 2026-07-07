@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import API from '../services/axiosConfig';
 
-function NuevaConsultaModal({ onClose }) {
+function NuevaConsultaModal({ onClose, mascotaId, onSaved }) {
   var now = new Date();
   var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
@@ -25,8 +26,21 @@ function NuevaConsultaModal({ onClose }) {
   }
 
   function handleSubmit() {
-    console.log('Nueva Consulta:', JSON.stringify(form, null, 2));
-    onClose();
+    var payload = {
+      mascotaId: Number(mascotaId),
+      fecha: form.fecha + 'T' + form.hora + ':00',
+      tipo: form.tipoConsulta,
+      motivo: form.motivo,
+      anamnesis: form.sintomas,
+      diagnostico: JSON.stringify([form.diagnostico]),
+      tratamiento: JSON.stringify(form.tratamiento ? [{ medicamento: form.tratamiento, dosis: '', frecuencia: '', via: '' }] : []),
+      observaciones: form.notas,
+      estado: 'Completada',
+    };
+    API.post('/consultas-medicas', payload).then(function () {
+      if (onSaved) onSaved();
+      onClose();
+    });
   }
 
   var inputClass = 'w-full rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-800 dark:text-[#E0E0E0] transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20';

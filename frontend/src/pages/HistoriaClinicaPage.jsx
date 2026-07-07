@@ -330,7 +330,7 @@ function HistoriaClinicaPage() {
         )}
       </div>
 
-      {showModal && <NuevaConsultaModal onClose={function () { setShowModal(false); }} />}
+      {showModal && mascota && <NuevaConsultaModal mascotaId={mascota.id} onClose={function () { setShowModal(false); }} onSaved={function () { API.get('/consultas-medicas?mascotaId=' + mascota.id).then(function (res) { setConsultas(res.data); }); }} />}
     </div>
   );
 }

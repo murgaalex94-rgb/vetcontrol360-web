@@ -557,6 +557,16 @@ function AgendaCitas() {
               </div>
             </div>
             <div className="px-6 py-3 bg-gray-50 dark:bg-[#2C2C2C] border-t border-gray-200 dark:border-[#333] flex justify-end gap-2">
+              <button onClick={function () {
+                if (!window.confirm('¿Cancelar esta cita?')) return;
+                API.put('/citas/' + citaSeleccionada.id, { estado: 'Cancelada' }).then(function () {
+                  API.get('/citas').then(function (res) {
+                    var mapped = (res.data || []).filter(function (c) { return c.estado !== 'Cancelada'; }).map(transformCita);
+                    setCitas(mapped);
+                    setCitaSeleccionada(null);
+                  });
+                });
+              }} className="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 cursor-pointer">Cancelar Cita</button>
               <button onClick={function () { setCitaSeleccionada(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-[#404040] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2C2C2C] cursor-pointer">Cerrar</button>
             </div>
           </div>
