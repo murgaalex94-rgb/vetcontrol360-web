@@ -326,13 +326,20 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
 }
 
 function ModalEditarPersonal({ empleado, onClose, onGuardar }) {
+  var nombreParts = (empleado.nombre || '').split(' ');
+  var nombreInicial = nombreParts[0] || '';
+  var apellidoInicial = nombreParts.slice(1).join(' ') || '';
+
   var [form, setForm] = useState({
-    nombre: empleado.nombre || '',
+    nombres: nombreInicial,
+    apellidos: apellidoInicial,
+    dni: empleado.dni || '',
     telefono: empleado.telefono || '',
     email: empleado.email || '',
-    cargo: empleado.cargo || 'Veterinario',
+    rol: empleado.cargo || 'Veterinario',
     estado: empleado.estado || 'Activo',
   });
+
   var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65]';
   var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#D0D0D0] mb-1';
 
@@ -349,30 +356,40 @@ function ModalEditarPersonal({ empleado, onClose, onGuardar }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4" onClick={function (e) { e.stopPropagation(); }}>
         <div className="flex items-center justify-between p-6 pb-0">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Editar Empleado</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Editar Personal</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#333] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
         <div className="p-6 space-y-4">
-          <div>
-            <label className={labelClass}>Nombre Completo</label>
-            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={inputClass} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Nombres *</label>
+              <input type="text" name="nombres" value={form.nombres} onChange={handleChange} className={inputClass} placeholder="Nombres" />
+            </div>
+            <div>
+              <label className={labelClass}>Apellidos *</label>
+              <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} className={inputClass} placeholder="Apellidos" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>DNI</label>
+              <input type="text" name="dni" value={form.dni} onChange={handleChange} className={inputClass} placeholder="12345678" />
+            </div>
             <div>
               <label className={labelClass}>Teléfono</label>
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} />
+              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} placeholder="999 888 777" />
             </div>
-            <div>
-              <label className={labelClass}>Email</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} />
-            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Correo Electrónico *</label>
+            <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="correo@ejemplo.com" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Cargo / Rol</label>
-              <select name="cargo" value={form.cargo} onChange={handleChange} className={inputClass}>
+              <label className={labelClass}>Rol *</label>
+              <select name="rol" value={form.rol} onChange={handleChange} className={inputClass}>
                 <option value="Veterinario">Veterinario</option>
                 <option value="Asistente">Asistente</option>
                 <option value="Administrativo">Administrativo</option>
@@ -466,8 +483,8 @@ function PersonalPage() {
 
   function handleGuardarEmpleado(id, datos) {
     var payload = {
-      nombreCompleto: datos.nombre,
-      idRol: MAPA_ROL_ID[datos.cargo] || 2,
+      nombreCompleto: (datos.nombres + ' ' + datos.apellidos).trim(),
+      idRol: MAPA_ROL_ID[datos.rol] || 2,
       activo: datos.estado === 'Activo',
     };
     API.put('/usuarios/' + id, payload).then(function () {
