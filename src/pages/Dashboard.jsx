@@ -90,7 +90,8 @@ function formatFechaDisplay(d) {
 
 function Dashboard() {
   var navigate = useNavigate();
-  var nombreUsuario = localStorage.getItem('userName') || localStorage.getItem('nombreCompleto') || 'Invitado';
+  var userData = JSON.parse(localStorage.getItem('user') || '{}');
+  var nombreUsuario = userData.nombreCompleto || 'Usuario';
   var [resumen, setResumen] = useState(null);
   var [ventas, setVentas] = useState([]);
   var [citasHoy, setCitasHoy] = useState([]);
@@ -149,7 +150,7 @@ function Dashboard() {
     <div className="flex flex-col h-full gap-6">
       <div className="flex-none flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{'\u00A1'}Bienvenido{nombreUsuario !== 'Invitado' ? ', ' + nombreUsuario : ''}! {'\uD83D\uDC4B'}</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-[#E0E0E0]">{'\u00A1'}Bienvenido, {nombreUsuario}! {'\uD83D\uDC4B'}</h1>
           <p className="text-sm text-gray-500 dark:text-[#909090] mt-0.5">Aquí tienes un resumen de la actividad de tu clínica hoy.</p>
         </div>
         <div className="flex items-center gap-3 relative">

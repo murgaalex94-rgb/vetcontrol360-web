@@ -61,8 +61,9 @@ function SidebarLink({ to, label, icono }) {
 function AppLayout() {
   var navigate = useNavigate();
   var { theme, toggleTheme } = useTheme();
-  var nombre = localStorage.getItem('userName') || localStorage.getItem('nombreCompleto') || 'Invitado';
-  var rol = localStorage.getItem('userRole') || (localStorage.getItem('idRol') === '1' ? 'Administrador' : localStorage.getItem('idRol') ? 'Veterinario' : '');
+  var userData = JSON.parse(localStorage.getItem('user') || '{}');
+  var nombre = userData.nombreCompleto || localStorage.getItem('userName') || 'Invitado';
+  var rol = userData.role || localStorage.getItem('userRole') || '';
   var iniciales = nombre.split(' ').map(function (p) { return p[0]; }).join('').substring(0, 2).toUpperCase();
 
   function handleLogout() {

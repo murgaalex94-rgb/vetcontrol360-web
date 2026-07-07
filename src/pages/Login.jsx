@@ -33,6 +33,7 @@ function Login() {
       const role = roleMap[data.idRol] || data.user?.rol || 'Veterinario';
       localStorage.setItem('userName', name);
       localStorage.setItem('userRole', role);
+      localStorage.setItem('user', JSON.stringify({ nombreCompleto: name, idRol: data.idRol, role: role }));
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Credenciales inválidas');
