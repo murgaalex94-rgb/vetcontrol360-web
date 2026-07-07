@@ -1,14 +1,7 @@
 import { useState } from 'react';
+import API from '../services/axiosConfig';
 
-var _nextProveedorId = 6;
-
-function generarCodigoProveedor(id) {
-  var anio = new Date().getFullYear();
-  var num = String(id).padStart(4, '0');
-  return 'PRO-' + anio + '-' + num;
-}
-
-function NuevoProveedorModal({ onClose, onProveedorCreado }) {
+function NuevoProveedorModal({ onClose, onCreado }) {
   var [form, setForm] = useState({ nombre: '', ruc: '', rubro: 'Medicamentos', telefono: '', email: '', direccion: '', estado: 'Activo' });
 
   function handleChange(e) {
@@ -16,10 +9,7 @@ function NuevoProveedorModal({ onClose, onProveedorCreado }) {
   }
 
   function handleSubmit() {
-    var id = _nextProveedorId++;
-    var nuevo = {
-      id: id,
-      codigo: generarCodigoProveedor(id),
+    API.post('/proveedores', {
       nombre: form.nombre,
       ruc: form.ruc,
       rubro: form.rubro,
@@ -27,9 +17,12 @@ function NuevoProveedorModal({ onClose, onProveedorCreado }) {
       email: form.email,
       direccion: form.direccion,
       estado: form.estado,
-    };
-    if (onProveedorCreado) onProveedorCreado(nuevo);
-    onClose();
+    }).then(function () {
+      if (onCreado) onCreado();
+      onClose();
+    }).catch(function () {
+      alert('Error al crear el proveedor');
+    });
   }
 
   var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
@@ -39,7 +32,7 @@ function NuevoProveedorModal({ onClose, onProveedorCreado }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4">
         <div className="flex items-center justify-between p-6 pb-0">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Nuevo Proveedor</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:[#E0E0E0]">Nuevo Proveedor</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] text-gray-400 dark:text-[#808080] hover:text-gray-600 dark:hover:text-[#A0A0A0] transition-colors cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -78,23 +71,22 @@ function NuevoProveedorModal({ onClose, onProveedorCreado }) {
             <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="Ej: ventas@empresa.com" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Dirección</label>
-              <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} placeholder="Ej: Av. Salud 123, Lima" />
-            </div>
-            <div>
-              <label className={labelClass}>Estado</label>
-              <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
+          <div>
+            <label className={labelClass}>Dirección</label>
+            <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} placeholder="Ej: Av. Salud 123, Lima" />
+          </div>
+
+          <div>
+            <label className={labelClass}>Estado</label>
+            <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-6 pt-2">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
           <button onClick={handleSubmit} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Proveedor</button>
         </div>
       </div>

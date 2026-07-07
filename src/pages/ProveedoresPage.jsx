@@ -1,22 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import NuevoProveedorModal from '../components/NuevoProveedorModal';
-import API from '../services/axiosConfig';
 
 function generarCodigoProveedor(id) {
   var anio = new Date().getFullYear();
   var num = String(id).padStart(4, '0');
   return 'PRO-' + anio + '-' + num;
 }
-
-var proveedoresMockInit = [
-  { id: 1, codigo: generarCodigoProveedor(1), nombre: 'Vet Pharma', ruc: '20123456789', rubro: 'Medicamentos', telefono: '+51 999 111 222', email: 'ventas@vetpharma.com', estado: 'Activo', direccion: 'Av. Salud 123, Lima' },
-  { id: 2, codigo: generarCodigoProveedor(2), nombre: 'Agrovet', ruc: '20987654321', rubro: 'Alimentos', telefono: '+51 999 333 444', email: 'pedidos@agrovet.com', estado: 'Activo', direccion: 'Jr. Veterinary 456, Arequipa' },
-  { id: 3, codigo: generarCodigoProveedor(3), nombre: 'Pet Care', ruc: '20567891234', rubro: 'Accesorios', telefono: '+51 999 555 666', email: 'info@petcare.com', estado: 'Activo', direccion: 'Calle Mascotas 789, Cusco' },
-  { id: 4, codigo: generarCodigoProveedor(4), nombre: 'AnimalHealth', ruc: '20432167890', rubro: 'Medicamentos', telefono: '+51 999 777 888', email: 'ventas@animalhealth.com', estado: 'Inactivo', direccion: 'Av. Veterinaria 321, Trujillo' },
-  { id: 5, codigo: generarCodigoProveedor(5), nombre: 'NutriPet', ruc: '20678912345', rubro: 'Alimentos', telefono: '+51 999 999 000', email: 'contacto@nutripet.com', estado: 'Activo', direccion: 'Calle Nutrición 654, Lima' },
-];
 
 var coloresRubro = { Medicamentos: 'bg-blue-50 text-blue-700', Alimentos: 'bg-amber-50 text-amber-700', Accesorios: 'bg-purple-50 text-purple-700', Servicios: 'bg-gray-50 text-gray-700' };
 
@@ -55,6 +47,101 @@ function ModalDetalleProveedor({ proveedor, onClose }) {
         </div>
         <div className="p-6 pt-0">
           <button onClick={onClose} className="w-full py-2.5 border border-gray-300 dark:border-[#404040] rounded-xl text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalEditarProveedor({ proveedor, onClose, onGuardar }) {
+  var [form, setForm] = useState({ nombre: proveedor.nombre || '', ruc: proveedor.ruc || '', rubro: proveedor.rubro || 'Medicamentos', telefono: proveedor.telefono || '', email: proveedor.email || '', direccion: proveedor.direccion || '', estado: proveedor.estado || 'Activo' });
+
+  function handleChange(e) {
+    setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
+  }
+
+  function handleSubmit() {
+    onGuardar(proveedor.id, form);
+    onClose();
+  }
+
+  var inputClass = 'w-full rounded-lg border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-4 py-2.5 text-sm text-gray-900 dark:text-[#E0E0E0] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500';
+  var labelClass = 'block text-sm font-medium text-gray-700 dark:text-[#C0C0C0] mb-1';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-2xl mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="flex items-center justify-between p-6 pb-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">Editar Proveedor</h2>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] text-gray-400 dark:text-[#808080] hover:text-gray-600 transition-colors cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Nombre Proveedor *</label>
+              <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>RUC *</label>
+              <input type="text" name="ruc" value={form.ruc} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Rubro</label>
+              <select name="rubro" value={form.rubro} onChange={handleChange} className={inputClass}>
+                <option value="Medicamentos">Medicamentos</option>
+                <option value="Alimentos">Alimentos</option>
+                <option value="Accesorios">Accesorios</option>
+                <option value="Servicios">Servicios</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Teléfono</label>
+              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Email</label>
+            <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Dirección</label>
+            <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Estado</label>
+            <select name="estado" value={form.estado} onChange={handleChange} className={inputClass}>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-3 p-6 pt-0">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={handleSubmit} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalEliminarProveedor({ proveedor, onClose, onConfirmar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-sm mx-4" onClick={function (e) { e.stopPropagation(); }}>
+        <div className="p-6 text-center">
+          <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+            <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0] mb-1">¿Eliminar proveedor?</h3>
+          <p className="text-sm text-gray-500 dark:text-[#909090]">¿Estás seguro de eliminar a <span className="font-semibold text-gray-900 dark:text-[#E0E0E0]">{proveedor.nombre}</span>? Esta acción no se puede deshacer.</p>
+        </div>
+        <div className="flex gap-3 p-6 pt-0">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={function () { onConfirmar(proveedor.id); onClose(); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors cursor-pointer">Eliminar</button>
         </div>
       </div>
     </div>
@@ -133,10 +220,8 @@ function ModalFiltroAvanzado({ open, onClose, filtrosActuales, onAplicar }) {
   );
 }
 
-
-
 function ProveedoresPage() {
-  var [proveedores, setProveedores] = useState(proveedoresMockInit);
+  var [proveedores, setProveedores] = useState([]);
   var [busqueda, setBusqueda] = useState('');
   var [filtroEstado, setFiltroEstado] = useState('Todos');
   var [filtroRubro, setFiltroRubro] = useState('Todos');
@@ -145,17 +230,44 @@ function ProveedoresPage() {
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', rubro: 'Todos', estado: 'Todos' });
   var [showModalDetalle, setShowModalDetalle] = useState(null);
+  var [showModalEditar, setShowModalEditar] = useState(null);
+  var [showModalEliminar, setShowModalEliminar] = useState(null);
   var porPagina = 5;
 
-  function handleProveedorCreado(nuevo) {
-    setProveedores(function (prev) { return prev.concat(nuevo); });
+  function cargarProveedores() {
+    API.get('/proveedores').then(function (res) {
+      setProveedores(res.data);
+    }).catch(function () {
+      setProveedores([]);
+    });
+  }
+
+  useEffect(function () { cargarProveedores(); }, []);
+
+  function handleProveedorCreado() {
+    cargarProveedores();
+    setShowModal(false);
+  }
+
+  function handleGuardarProveedor(id, datos) {
+    API.put('/proveedores/' + id, datos).then(function () {
+      cargarProveedores();
+    }).catch(function () {
+      alert('Error al actualizar el proveedor');
+    });
+  }
+
+  function handleEliminarProveedor(id) {
+    API.delete('/proveedores/' + id).then(function () {
+      cargarProveedores();
+    }).catch(function () {
+      alert('Error al eliminar el proveedor');
+    });
   }
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
     return lista.filter(function (p) {
-      if (f.fechaDesde) return false;
-      if (f.fechaHasta) return false;
       if (f.rubro !== 'Todos' && p.rubro !== f.rubro) return false;
       if (f.estado !== 'Todos' && p.estado !== f.estado) return false;
       return true;
@@ -163,7 +275,7 @@ function ProveedoresPage() {
   }
 
   var filtradosBase = proveedores.filter(function (p) {
-    var coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || p.ruc.includes(busqueda) || p.rubro.toLowerCase().includes(busqueda.toLowerCase()) || p.codigo.toLowerCase().includes(busqueda.toLowerCase());
+    var coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.ruc || '').includes(busqueda) || (p.rubro || '').toLowerCase().includes(busqueda.toLowerCase()) || (p.codigo || '').toLowerCase().includes(busqueda.toLowerCase());
     var coincideEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
     var coincideRubro = filtroRubro === 'Todos' || p.rubro === filtroRubro;
     return coincideBusqueda && coincideEstado && coincideRubro;
@@ -327,8 +439,12 @@ function ProveedoresPage() {
                           <button onClick={function () { setShowModalDetalle(prov); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                           </button>
-                          <button onClick={function () { var nuevoEstado = prov.estado === 'Activo' ? 'Inactivo' : 'Activo'; if (confirm('¿Cambiar estado a ' + nuevoEstado + '?')) { setProveedores(proveedores.map(function (p) { return p.id === prov.id ? Object.assign({}, p, { estado: nuevoEstado }) : p; })); } }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors cursor-pointer" title="Cambiar estado">✏️</button>
-                          <button onClick={function () { if (confirm('¿Eliminar proveedor ' + prov.nombre + '?')) { setProveedores(proveedores.filter(function (p) { return p.id !== prov.id; })); } }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors cursor-pointer" title="Eliminar">🗑️</button>
+                          <button onClick={function () { setShowModalEditar(prov); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Editar">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                          </button>
+                          <button onClick={function () { setShowModalEliminar(prov); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors cursor-pointer" title="Eliminar">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -350,8 +466,10 @@ function ProveedoresPage() {
         </div>
       </div>
 
-      {showModal && <NuevoProveedorModal onClose={function () { setShowModal(false); }} onProveedorCreado={handleProveedorCreado} />}
+      {showModal && <NuevoProveedorModal onClose={function () { setShowModal(false); }} onCreado={handleProveedorCreado} />}
       {showModalDetalle && <ModalDetalleProveedor proveedor={showModalDetalle} onClose={function () { setShowModalDetalle(null); }} />}
+      {showModalEditar && <ModalEditarProveedor proveedor={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarProveedor} />}
+      {showModalEliminar && <ModalEliminarProveedor proveedor={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminarProveedor} />}
       <ModalFiltroAvanzado open={showModalFiltro} onClose={function () { setShowModalFiltro(false); }} filtrosActuales={filtrosAvanzados} onAplicar={setFiltrosAvanzados} />
     </div>
   );
