@@ -33,6 +33,7 @@ function NuevaFactura() {
   const [estadoPago, setEstadoPago] = useState('Pagada');
   const [observaciones, setObservaciones] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [saving, setSaving] = useState(false);
   const [items, setItems] = useState([
     { id: 1, descripcion: 'Consulta General', categoria: 'Servicios', cantidad: 1, precio: 80, descuento: 0 },
     { id: 2, descripcion: 'Vacuna Antirrábica', categoria: 'Medicamentos', cantidad: 1, precio: 60, descuento: 0 },
@@ -48,6 +49,50 @@ function NuevaFactura() {
   const subtotalNeto = subtotalBruto - descuentoTotal;
   const igv = subtotalNeto * 0.18;
   const totalPagar = subtotalNeto + igv;
+
+  function emitirFactura() {
+    setSaving(true);
+    API.post('/facturas', {
+      numero: numFactura,
+      fecha: fecha,
+      cliente: clienteSeleccionado ? clienteSeleccionado.nombre : '',
+      telefono: clienteSeleccionado ? clienteSeleccionado.telefono : '',
+      mascota: mascotaSeleccionada ? mascotaSeleccionada.nombre : '',
+      raza: mascotaSeleccionada ? mascotaSeleccionada.raza : '',
+      total: totalPagar,
+      estado: estadoPago,
+      metodoPago: metodoPago,
+    }).then(function () {
+      navigate('/facturacion');
+    }).catch(function (err) {
+      console.error('Error al emitir factura:', err);
+      alert('Error al emitir la factura. Intente nuevamente.');
+    }).finally(function () {
+      setSaving(false);
+    });
+  }
+
+  function guardarBorrador() {
+    setSaving(true);
+    API.post('/facturas', {
+      numero: numFactura,
+      fecha: fecha,
+      cliente: clienteSeleccionado ? clienteSeleccionado.nombre : '',
+      telefono: clienteSeleccionado ? clienteSeleccionado.telefono : '',
+      mascota: mascotaSeleccionada ? mascotaSeleccionada.nombre : '',
+      raza: mascotaSeleccionada ? mascotaSeleccionada.raza : '',
+      total: totalPagar,
+      estado: 'Pendiente',
+      metodoPago: metodoPago,
+    }).then(function () {
+      navigate('/facturacion');
+    }).catch(function (err) {
+      console.error('Error al guardar borrador:', err);
+      alert('Error al guardar el borrador.');
+    }).finally(function () {
+      setSaving(false);
+    });
+  }
 
   function addItem() {
     setItems([...items, { id: nextId++, descripcion: busqueda || 'Nuevo Producto', categoria: 'Servicios', cantidad: 1, precio: 0, descuento: 0 }]);
@@ -249,11 +294,11 @@ function NuevaFactura() {
             <button onClick={() => navigate('/facturacion')} className="rounded-xl border border-gray-300 dark:border-[#404040] bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-[#D0D0D0] transition-colors hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer">
               Cancelar
             </button>
-            <button className="rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer">
-              Guardar Borrador
+            <button onClick={guardarBorrador} disabled={saving} className="rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-[#2C2C2C] px-5 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 disabled:opacity-50 cursor-pointer">
+              {saving ? 'Guardando...' : 'Guardar Borrador'}
             </button>
-            <button className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
-              Emitir Factura
+            <button onClick={emitirFactura} disabled={saving} className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-50 cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
+              {saving ? 'Emitiendo...' : 'Emitir Factura'}
             </button>
           </div>
         </div>
