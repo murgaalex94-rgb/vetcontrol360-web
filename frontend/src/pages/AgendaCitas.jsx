@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, Fragment, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API from '../services/axiosConfig';
 
 var DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 var MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -20,22 +21,29 @@ function getWeekDays(fromDate) {
 var HORAS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 var ALTURA_HORA = 64;
 
-var citasMock = [
-  { id: 1, mascota: 'Max', emoji: '🐕', fecha: 29, horaInicio: '09:00', horaFin: '09:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Revisión general de rutina', notas: 'Paciente presenta buen estado general. Se recomienda análisis de sangre.' },
-  { id: 2, mascota: 'Luna', emoji: '🐈', fecha: 29, horaInicio: '11:00', horaFin: '11:30', tipo: 'Vacunación', veterinario: 'Dra. Ana Torres', motivo: 'Vacuna polivalente', notas: 'Segunda dosis. Programar refuerzo en 21 días.' },
-  { id: 3, mascota: 'Simba', emoji: '🐈', fecha: 30, horaInicio: '10:00', horaFin: '10:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Dolor abdominal', notas: 'Posible indigestión. Dieta blanda por 48hs.' },
-  { id: 4, mascota: 'Firulai', emoji: '🐕', fecha: 1, horaInicio: '08:30', horaFin: '09:00', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Control post-operatorio', notas: 'Herida quirúrgica cicatriza correctamente.' },
-  { id: 5, mascota: 'Mora', emoji: '🐈', fecha: 1, horaInicio: '10:30', horaFin: '11:00', tipo: 'Desparasitación', veterinario: 'Dr. Juan Pérez', motivo: 'Desparasitación mensual', notas: 'Aplicar tópica. Próxima dosis en 30 días.' },
-  { id: 6, mascota: 'Kira', emoji: '🐈', fecha: 2, horaInicio: '09:00', horaFin: '09:45', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Revisión general', notas: 'Paciente presenta sobrepeso. Recomendar dieta.' },
-  { id: 7, mascota: 'Coco', emoji: '🐈', fecha: 2, horaInicio: '13:00', horaFin: '13:30', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Mal aliento', notas: 'Posible problema dental. Derivar a especialista.' },
-  { id: 8, mascota: 'Simba', emoji: '🐈', fecha: 3, horaInicio: '10:30', horaFin: '11:00', tipo: 'Vacunación', veterinario: 'Dra. Ana Torres', motivo: 'Vacuna antirrábica', notas: 'Dosis anual. Sin reacciones adversas observadas.' },
-  { id: 9, mascota: 'Toby', emoji: '🐕', fecha: 3, horaInicio: '16:00', horaFin: '16:30', tipo: 'Desparasitación', veterinario: 'Dr. Juan Pérez', motivo: 'Desparasitación trimestral', notas: 'Administrar vía oral después de comer.' },
-  { id: 10, mascota: 'Bobby', emoji: '🐈', fecha: 4, horaInicio: '13:00', horaFin: '13:45', tipo: 'Consulta General', veterinario: 'Dra. Ana Torres', motivo: 'Pérdida de apetito', notas: 'Realizar análisis de sangre y ecografía abdominal.' },
-  { id: 11, mascota: 'Bella', emoji: '🐕', fecha: 4, horaInicio: '15:00', horaFin: '15:30', tipo: 'Control', veterinario: 'Dr. Juan Pérez', motivo: 'Control de peso', notas: 'Ha perdido 0.5kg desde última visita. Continuar dieta.' },
-  { id: 12, mascota: 'Peluché', emoji: '🐕', fecha: 5, horaInicio: '12:30', horaFin: '13:00', tipo: 'Desparasitación', veterinario: 'Dra. Ana Torres', motivo: 'Desparasitación mensual', notas: 'Aplicar vía oral.' },
-  { id: 13, mascota: 'Nala', emoji: '🐕', fecha: 5, horaInicio: '13:30', horaFin: '14:00', tipo: 'Consulta General', veterinario: 'Dr. Juan Pérez', motivo: 'Revisión general', notas: 'Paciente en buen estado. Vacunas al día.' },
-  { id: 14, mascota: 'Rocky', emoji: '🐕', fecha: 5, horaInicio: '15:30', horaFin: '16:00', tipo: 'Control', veterinario: 'Dra. Ana Torres', motivo: 'Control de alergia', notas: 'Reducir dosis de antihistamínico según evolución.' },
-];
+function transformCita(c) {
+  var fecha = new Date(c.fecha + 'T' + c.hora);
+  var h = Number(c.hora.split(':')[0]);
+  var m = Number(c.hora.split(':')[1]);
+  var inicioMin = h * 60 + m;
+  var finMin = inicioMin + (c.duracion || 30);
+  var hFin = String(Math.floor(finMin / 60)).padStart(2, '0');
+  var mFin = String(finMin % 60).padStart(2, '0');
+  var especie = (c.mascota && c.mascota.especie) || '';
+  var emoji = especie.toLowerCase().indexOf('gato') !== -1 ? '🐈' : '🐕';
+  return {
+    id: c.id,
+    mascota: (c.mascota && c.mascota.nombre) || 'Mascota',
+    emoji: emoji,
+    fecha: fecha.getDate(),
+    horaInicio: String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'),
+    horaFin: hFin + ':' + mFin,
+    tipo: c.tipoCita || 'Consulta General',
+    veterinario: c.veterinario || '',
+    motivo: c.motivo || '',
+    notas: c.notas || '',
+  };
+}
 
 var tipoColores = {
   'Consulta General': { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-l-green-500', text: 'text-green-700 dark:text-green-400' },
@@ -55,7 +63,8 @@ function AgendaCitas() {
   var navigate = useNavigate();
   var [vista, setVista] = useState('semana');
   var [ahora, setAhora] = useState(new Date());
-  var [citas] = useState(citasMock);
+  var [citas, setCitas] = useState([]);
+  var [loadingCitas, setLoadingCitas] = useState(true);
   var [fechaEnfoque, setFechaEnfoque] = useState(new Date());
   var [citaSeleccionada, setCitaSeleccionada] = useState(null);
   var [miniMes, setMiniMes] = useState(new Date().getMonth());
@@ -66,6 +75,15 @@ function AgendaCitas() {
   useEffect(function () {
     var timer = setInterval(function () { setAhora(new Date()); }, 60000);
     return function () { clearInterval(timer); };
+  }, []);
+
+  useEffect(function () {
+    API.get('/citas').then(function (res) {
+      setCitas(res.data.map(transformCita));
+      setLoadingCitas(false);
+    }).catch(function () {
+      setLoadingCitas(false);
+    });
   }, []);
 
   useEffect(function () {
@@ -193,7 +211,7 @@ function AgendaCitas() {
   var columnas = vista === 'dia' ? [getDayInfo(diaSeleccionado)] : semanaActual;
   var gridTemplate = '70px repeat(' + numCols + ', 1fr)';
 
-  var proximasCitas = citas.slice().sort(function (a, b) {
+  var proximasCitas = loadingCitas ? [] : citas.slice().sort(function (a, b) {
     if (a.fecha !== b.fecha) return a.fecha - b.fecha;
     return a.horaInicio.localeCompare(b.horaInicio);
   }).slice(0, 5);
@@ -451,7 +469,11 @@ function AgendaCitas() {
               <button onClick={irAHoy} className="text-xs text-emerald-600 font-semibold cursor-pointer">Ver todas</button>
             </div>
             <div className="space-y-3">
-              {proximasCitas.map(function (c) {
+              {loadingCitas ? (
+                <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-3">Cargando citas...</p>
+              ) : proximasCitas.length === 0 ? (
+                <p className="text-xs text-gray-400 dark:text-[#808080] text-center py-3">No hay citas programadas</p>
+              ) : proximasCitas.map(function (c) {
                 return (
                   <div key={c.id} onClick={function () { seleccionarCita(c); }} className="flex items-start justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2C2C2C] rounded-lg p-1 -mx-1 transition-colors">
                     <div>

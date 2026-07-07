@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @layer base {
   :root {
     --color-surface: #F9FAFB;
@@ -10,11 +8,6 @@
     --color-primary: #5F7B65;
     --color-primary-hover: #4A6250;
     --color-primary-light: #E8F0E9;
-    --color-text: #111827;
-    --color-text-secondary: #6B7280;
-    --color-text-muted: #9CA3AF;
-    --color-border: #E5E7EB;
-    --color-border-light: #F3F4F6;
   }
   .dark {
     --color-surface: #121212;
@@ -23,32 +16,15 @@
     --color-primary: #7FA389;
     --color-primary-hover: #6B8D73;
     --color-primary-light: #2C3A2E;
-    --color-text: #E0E0E0;
-    --color-text-secondary: #A0A0A0;
-    --color-text-muted: #808080;
-    --color-border: #333333;
-    --color-border-light: #2A2A2A;
   }
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--color-surface);
-  color: var(--color-text);
+  color: #111827;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-@layer utilities {
-  .bg-surface { background-color: var(--color-surface); }
-  .bg-card { background-color: var(--color-card); }
-  .bg-primary { background-color: var(--color-primary); }
-  .bg-primary-light { background-color: var(--color-primary-light); }
-  .text-main { color: var(--color-text); }
-  .text-secondary { color: var(--color-text-secondary); }
-  .text-muted { color: var(--color-text-muted); }
-  .border-default { border-color: var(--color-border); }
-  .border-light { border-color: var(--color-border-light); }
+.dark body {
+  color: #E0E0E0;
 }

@@ -336,7 +336,9 @@ function FacturacionPage() {
                       </tr>
                     );
                   })}
-                  {facturasPagina.length === 0 && (
+                  {loading ? (
+                    <tr><td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">Cargando facturas...</td></tr>
+                  ) : facturasPagina.length === 0 && (
                     <tr>
                       <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-400 dark:text-[#808080]">No se encontraron facturas con los filtros aplicados.</td>
                     </tr>
