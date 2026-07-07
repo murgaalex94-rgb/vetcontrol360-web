@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import NuevaConsultaModal from '../components/NuevaConsultaModal';
 
-var ITEMS_PER_PAGE = 5;
+var ITEMS_PER_PAGE = 10;
 
 function HistoriaClinicaPage() {
   var navigate = useNavigate();

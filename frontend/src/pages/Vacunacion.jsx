@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 
-var ITEMS_PER_PAGE = 8;
+var ITEMS_PER_PAGE = 10;
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';

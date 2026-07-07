@@ -236,7 +236,7 @@ function ProveedoresPage() {
   var [showModalDetalle, setShowModalDetalle] = useState(null);
   var [showModalEditar, setShowModalEditar] = useState(null);
   var [showModalEliminar, setShowModalEliminar] = useState(null);
-  var porPagina = 5;
+  var porPagina = 10;
 
   function cargarProveedores() {
     API.get('/proveedores').then(function (res) {

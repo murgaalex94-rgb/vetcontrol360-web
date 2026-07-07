@@ -4,7 +4,7 @@ import NuevoClienteModal from '../components/NuevoClienteModal';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import * as XLSX from 'xlsx';
 
-var ITEMS_PER_PAGE = 5;
+var ITEMS_PER_PAGE = 10;
 
 function generarCodigoCliente(id) {
   var year = new Date().getFullYear();

@@ -67,7 +67,7 @@ var acciones = ['Todas', 'Actualizó', 'Creó', 'Eliminó', 'Login', 'Login Fall
 var severidades = ['Todas', 'Info', 'Éxito', 'Advertencia', 'Crítico', 'Fallido'];
 var estadosFiltro = ['Todos', 'Exitoso', 'Fallido'];
 
-var ITEMS_PER_PAGE = 8;
+var ITEMS_PER_PAGE = 10;
 
 function AuditoriaPage() {
   var [registros, setRegistros] = useState([]);

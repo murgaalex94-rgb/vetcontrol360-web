@@ -10,7 +10,7 @@ const rolStyles = {
 
 var rolNameMap = { 1: 'Administrador', 2: 'Administrador', 3: 'Veterinario', 4: 'Asistente', 5: 'Recepcionista' };
 
-var ITEMS_PER_PAGE = 6;
+var ITEMS_PER_PAGE = 10;
 
 function NuevoUsuarioModal({ open, onClose, onCreado }) {
   const [form, setForm] = useState({

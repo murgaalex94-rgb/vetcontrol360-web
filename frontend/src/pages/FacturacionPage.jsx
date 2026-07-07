@@ -25,7 +25,7 @@ var facturasMock = [
 
 var estadoStyles = { Pagada: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', Pendiente: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300', Anulada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' };
 var pagoStyles = { Efectivo: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300', Tarjeta: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300', Yape: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300' };
-var ITEMS_PER_PAGE = 8;
+var ITEMS_PER_PAGE = 10;
 
 var ventasDiarias = [
   { dia: '17', ventas: 2100 }, { dia: '18', ventas: 1800 }, { dia: '19', ventas: 2600 },

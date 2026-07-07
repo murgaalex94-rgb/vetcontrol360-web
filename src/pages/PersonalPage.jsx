@@ -195,7 +195,7 @@ function PersonalPage() {
   }
 
   useEffect(function () { cargarEmpleados(); }, []);
-  var porPagina = 5;
+  var porPagina = 10;
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;

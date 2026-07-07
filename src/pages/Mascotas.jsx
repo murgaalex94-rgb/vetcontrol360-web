@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import * as XLSX from 'xlsx';
 
-var ITEMS_PER_PAGE = 5;
+var ITEMS_PER_PAGE = 10;
 
 function generarCodigoMascota(id) {
   var year = new Date().getFullYear();
