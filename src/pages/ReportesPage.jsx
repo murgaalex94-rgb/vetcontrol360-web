@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
+import API from '../services/axiosConfig';
 
 var reportesIniciales = [
   { id: 1, tipo: 'Ventas', fecha: '2026-07-03', titulo: 'Reporte de Ventas - Julio 2026', formato: 'PDF' },
@@ -13,61 +14,17 @@ var reportesIniciales = [
   { id: 5, tipo: 'Inventario', fecha: '2026-06-29', titulo: 'Reporte de Stock Bajo', formato: 'Excel' },
 ];
 
-var ventasData = [
-  { mes: 'Ene', ventas: 4200 }, { mes: 'Feb', ventas: 5800 }, { mes: 'Mar', ventas: 4900 },
-  { mes: 'Abr', ventas: 7200 }, { mes: 'May', ventas: 6100 }, { mes: 'Jun', ventas: 8400 }, { mes: 'Jul', ventas: 7800 },
-];
-
-var inventarioData = [
-  { nombre: 'Medicamentos', value: 45 }, { nombre: 'Alimentos', value: 30 }, { nombre: 'Accesorios', value: 15 }, { nombre: 'Otros', value: 10 },
-];
-
 var coloresPie = ['#5F7B65', '#10B981', '#6366F1', '#F59E0B'];
 var tipoIcono = { Ventas: '💰', Clientes: '👥', Mascotas: '🐾', Citas: '📅', Inventario: '📦' };
 
-function datosSimulados(tipo) {
+function datosReales(tipo) {
   switch (tipo) {
-    case 'Ventas':
-      return [
-        { Fecha: '2026-07-01', Monto: 1250.00, Cliente: 'Juan Pérez', 'Método': 'Tarjeta' },
-        { Fecha: '2026-07-02', Monto: 890.50, Cliente: 'María López', 'Método': 'Efectivo' },
-        { Fecha: '2026-07-03', Monto: 2100.00, Cliente: 'Carlos Ruiz', 'Método': 'Yape' },
-        { Fecha: '2026-07-04', Monto: 670.00, Cliente: 'Ana Torres', 'Método': 'Tarjeta' },
-        { Fecha: '2026-07-05', Monto: 1450.00, Cliente: 'Pedro Sánchez', 'Método': 'Efectivo' },
-      ];
-    case 'Clientes':
-      return [
-        { Nombre: 'Juan Pérez', Mascota: 'Max', Teléfono: '999-111-222', 'Última Visita': '2026-06-28' },
-        { Nombre: 'María López', Mascota: 'Luna', Teléfono: '999-333-444', 'Última Visita': '2026-07-01' },
-        { Nombre: 'Carlos Ruiz', Mascota: 'Rocky', Teléfono: '999-555-666', 'Última Visita': '2026-07-02' },
-        { Nombre: 'Ana Torres', Mascota: 'Mimi', Teléfono: '999-777-888', 'Última Visita': '2026-06-30' },
-      ];
-    case 'Mascotas':
-      return [
-        { Nombre: 'Max', Especie: 'Canino', Raza: 'Labrador', Edad: 3, Dueño: 'Juan Pérez' },
-        { Nombre: 'Luna', Especie: 'Felino', Raza: 'Siames', Edad: 2, Dueño: 'María López' },
-        { Nombre: 'Rocky', Especie: 'Canino', Raza: 'Pastor Alemán', Edad: 5, Dueño: 'Carlos Ruiz' },
-        { Nombre: 'Mimi', Especie: 'Felino', Raza: 'Persa', Edad: 4, Dueño: 'Ana Torres' },
-        { Nombre: 'Toby', Especie: 'Canino', Raza: 'Beagle', Edad: 1, Dueño: 'Pedro Sánchez' },
-      ];
-    case 'Citas':
-      return [
-        { Fecha: '2026-07-05', Hora: '09:00', Mascota: 'Max', Veterinario: 'Dr. García', Estado: 'Confirmada' },
-        { Fecha: '2026-07-05', Hora: '10:30', Mascota: 'Luna', Veterinario: 'Dr. García', Estado: 'Confirmada' },
-        { Fecha: '2026-07-06', Hora: '11:00', Mascota: 'Rocky', Veterinario: 'Dra. Torres', Estado: 'Pendiente' },
-        { Fecha: '2026-07-06', Hora: '15:00', Mascota: 'Mimi', Veterinario: 'Dr. García', Estado: 'Confirmada' },
-        { Fecha: '2026-07-07', Hora: '08:30', Mascota: 'Toby', Veterinario: 'Dra. Torres', Estado: 'Pendiente' },
-      ];
-    case 'Inventario':
-      return [
-        { Producto: 'Amoxicilina', Stock: 45, 'Stock Mínimo': 20, Precio: 35.00, Proveedor: 'Vet Pharma' },
-        { Producto: 'Royal Canin 15kg', Stock: 12, 'Stock Mínimo': 10, Precio: 180.00, Proveedor: 'Royal Canin' },
-        { Producto: 'Vacuna Triple', Stock: 8, 'Stock Mínimo': 15, Precio: 65.00, Proveedor: 'Zoetis' },
-        { Producto: 'Collar Ajustable', Stock: 30, 'Stock Mínimo': 5, Precio: 25.00, Proveedor: 'Kong' },
-        { Producto: 'Shampoo Medicado', Stock: 3, 'Stock Mínimo': 10, Precio: 42.00, Proveedor: 'Bayer' },
-      ];
-    default:
-      return [];
+    case 'Ventas': return API.get('/facturas').then(function (r) { return r.data.map(function (f) { return { Fecha: f.fecha, Monto: f.total, Cliente: f.cliente, 'Método': f.metodoPago }; }); });
+    case 'Clientes': return API.get('/clientes').then(function (r) { return r.data.map(function (c) { return { Nombre: c.nombre, Teléfono: c.telefono || '—', Correo: c.email || '—', 'Estado': c.estado || 'Activo' }; }); });
+    case 'Mascotas': return API.get('/mascotas').then(function (r) { return r.data.map(function (m) { return { Nombre: m.nombre, Especie: m.especie, Raza: m.raza, Dueño: m.cliente?.nombre || '—' }; }); });
+    case 'Citas': return API.get('/citas').then(function (r) { return r.data.map(function (c) { return { Fecha: c.fecha, Hora: c.hora || '—', Mascota: c.mascota?.nombre || '—', Veterinario: c.veterinario || '—', Estado: c.estado || 'Programada' }; }); });
+    case 'Inventario': return API.get('/productos').then(function (r) { return r.data.map(function (p) { return { Producto: p.nombre, Stock: p.stockActual, 'Stock Mínimo': p.stockMinimo, Precio: p.precioVenta }; }); });
+    default: return Promise.resolve([]);
   }
 }
 
@@ -79,14 +36,14 @@ function descargarPDF(reporte) {
     doc.setFontSize(10);
     doc.text('Generado: ' + reporte.fecha + ' | Tipo: ' + reporte.tipo, 14, 28);
 
-    var data = datosSimulados(reporte.tipo);
-    if (data.length > 0) {
-      var headers = Object.keys(data[0]);
-      var rows = data.map(function (r) { return headers.map(function (h) { return r[h]; }); });
-      autoTable(doc, { head: [headers], body: rows, startY: 34, theme: 'grid', styles: { fontSize: 8 } });
-    }
-
-    doc.save(reporte.titulo.replace(/\s+/g, '_') + '.pdf');
+    datosReales(reporte.tipo).then(function (data) {
+      if (data.length > 0) {
+        var headers = Object.keys(data[0]);
+        var rows = data.map(function (r) { return headers.map(function (h) { return r[h]; }); });
+        autoTable(doc, { head: [headers], body: rows, startY: 34, theme: 'grid', styles: { fontSize: 8 } });
+      }
+      doc.save(reporte.titulo.replace(/\s+/g, '_') + '.pdf');
+    });
   } catch (e) {
     console.error('Error al generar PDF:', e);
     alert('Error al generar PDF: ' + e.message);
@@ -94,17 +51,16 @@ function descargarPDF(reporte) {
 }
 
 function descargarExcel(reporte) {
-  var wb = XLSX.utils.book_new();
-  var data = datosSimulados(reporte.tipo);
-  var ws = XLSX.utils.json_to_sheet(data);
-  XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-  XLSX.writeFile(wb, reporte.titulo.replace(/\s+/g, '_') + '.xlsx');
+  datosReales(reporte.tipo).then(function (data) {
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+    XLSX.writeFile(wb, reporte.titulo.replace(/\s+/g, '_') + '.xlsx');
+  });
 }
 
 function NuevoReporteModal({ onClose, onGenerar }) {
   var [form, setForm] = useState({ tipo: 'Ventas', fechaDesde: '', fechaHasta: '' });
-
-  var hoy = new Date().toISOString().split('T')[0];
 
   function handleChange(e) {
     setForm(Object.assign({}, form, { [e.target.name]: e.target.value }));
@@ -170,6 +126,21 @@ function ReportesPage() {
   var [tipoReporte, setTipoReporte] = useState('Ventas');
   var [reporteSeleccionado, setReporteSeleccionado] = useState(null);
   var [showModal, setShowModal] = useState(false);
+  var [ventasData, setVentasData] = useState([]);
+  var [inventarioData, setInventarioData] = useState([]);
+  var [kpi, setKpi] = useState({ ventasDia: 0, pacientesAtendidos: 0, citasHoy: 0, stockBajo: 0 });
+  var [dataPreview, setDataPreview] = useState([]);
+
+  useEffect(function () {
+    API.get('/dashboard/ventas').then(function (res) { setVentasData(res.data); });
+    API.get('/dashboard/inventario/resumen').then(function (res) { setInventarioData(res.data); });
+    API.get('/dashboard/resumen').then(function (res) { setKpi(res.data); });
+  }, []);
+
+  useEffect(function () {
+    if (!reporteSeleccionado) { setDataPreview([]); return; }
+    datosReales(reporteSeleccionado.tipo).then(function (data) { setDataPreview(data); });
+  }, [reporteSeleccionado]);
 
   function agregarReporte(datos) {
     var nuevo = {
@@ -200,9 +171,9 @@ function ReportesPage() {
 
     var kpiData = [
       { Indicador: 'Reportes Generados', Valor: reportes.length },
-      { Indicador: 'Ventas Totales', Valor: 'S/. 44,400' },
-      { Indicador: 'Pacientes Atendidos', Valor: 284 },
-      { Indicador: 'Citas Programadas', Valor: 56 },
+      { Indicador: 'Ventas Totales', Valor: 'S/. ' + kpi.ventasDia.toLocaleString() },
+      { Indicador: 'Pacientes Atendidos', Valor: kpi.pacientesAtendidos },
+      { Indicador: 'Citas Programadas', Valor: kpi.citasHoy },
     ];
     var wsKPI = XLSX.utils.json_to_sheet(kpiData);
     XLSX.utils.book_append_sheet(wb, wsKPI, 'Resumen KPIs');
@@ -216,8 +187,6 @@ function ReportesPage() {
     var filename = 'Reportes_' + new Date().toISOString().split('T')[0] + '.xlsx';
     XLSX.writeFile(wb, filename);
   }
-
-  var dataPreview = reporteSeleccionado ? datosSimulados(reporteSeleccionado.tipo) : [];
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -254,8 +223,8 @@ function ReportesPage() {
         <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Ventas Totales</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">S/. 44,400</p>
+              <p className="text-sm text-gray-500 dark:[#909090] font-medium">Ventas Totales</p>
+              <p className="text-2xl font-bold text-emerald-600 mt-1">S/. {kpi.ventasDia.toLocaleString()}</p>
             </div>
             <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
@@ -267,7 +236,7 @@ function ReportesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Pacientes Atendidos</p>
-              <p className="text-2xl font-bold text-purple-600 mt-1">284</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">{kpi.pacientesAtendidos}</p>
             </div>
             <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-purple-50 text-purple-600">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m7.725-9.25H5.904m7.725 0a2.25 2.25 0 0 0-2.25-2.25H5.904a2.25 2.25 0 0 0-2.25 2.25v8.25a2.25 2.25 0 0 0 2.25 2.25h2.25a2.25 2.25 0 0 0 2.25-2.25V9.75" /></svg>
@@ -278,8 +247,8 @@ function ReportesPage() {
         <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Citas Programadas</p>
-              <p className="text-2xl font-bold text-orange-600 mt-1">56</p>
+              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Stock Bajo / Sin Stock</p>
+              <p className="text-2xl font-bold text-orange-600 mt-1">{kpi.stockBajo}</p>
             </div>
             <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
