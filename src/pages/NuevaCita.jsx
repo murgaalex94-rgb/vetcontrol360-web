@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MaterialDatePicker from '../components/MaterialDatePicker';
+import API from '../services/axiosConfig';
 
 const clientes = [
   { id: 1, nombre: 'Juan Pérez García', telefono: '987 654 321' },
@@ -64,8 +65,11 @@ var ETIQUETAS = {
 
 function NuevaCita() {
   const navigate = useNavigate();
+  const [apiClientes, setApiClientes] = useState([]);
+  const [apiMascotas, setApiMascotas] = useState([]);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    clienteId: '', mascotaId: '', tipoCita: '', fecha: '', hora: '', motivo: '', duracion: '30',
+    clienteId: '', mascotaId: '', tipoCita: '', fecha: '', hora: '08:00', motivo: '', duracion: '30',
     veterinarioId: '', consultorioId: '', notas: '', recordatorio: true, whatsapp: true, email: true,
   });
   const [motivoCount, setMotivoCount] = useState(0);
@@ -115,35 +119,47 @@ function NuevaCita() {
     e.preventDefault();
     if (!validarTodo()) return;
 
-    var pass = '';
-    CAMPOS_REQUERIDOS.forEach(function (c) { if (!pass) pass = ''; });
+    var tipoCitaNombre = (tiposCita.find(function (t) { return t.id === Number(form.tipoCita); }) || {}).nombre || form.tipoCita;
+    var vetNombre = (veterinarios.find(function (v) { return v.id === Number(form.veterinarioId); }) || {}).nombre || '';
+    var consultNombre = (consultorios.find(function (c) { return c.id === Number(form.consultorioId); }) || {}).nombre || '';
 
-    console.group('=== NUEVA CITA ===');
-    console.log('Cita guardada:', form);
-    console.groupEnd();
-
-    var duracionLabel = (duraciones.find(function (d) { return d.value === form.duracion; }) || {}).label || '';
-
-    var datosParaWhatsApp = {
-      cliente: clienteSel ? clienteSel.nombre : '',
-      telefono: clienteSel ? clienteSel.telefono : '',
-      mascota: mascotaSel ? mascotaSel.nombre : '',
+    var body = {
+      cliente: { id: Number(form.clienteId) },
+      mascota: { id: Number(form.mascotaId) },
+      tipoCita: tipoCitaNombre,
       fecha: form.fecha,
-      hora: duracionLabel,
+      hora: form.hora ? form.hora + ':00' : null,
       motivo: form.motivo,
-      veterinario: vetSel ? vetSel.nombre : '',
+      duracion: Number(form.duracion),
+      veterinario: vetNombre,
+      consultorio: consultNombre,
+      notas: form.notas || null,
+      recordatorio: form.recordatorio,
+      whatsapp: form.whatsapp,
+      email: form.email,
+      estado: 'Programada',
     };
 
-    console.log('Datos preparados para WhatsApp:', datosParaWhatsApp);
-
-    // var mensaje = 'Hola ' + datosParaWhatsApp.cliente + ', le recordamos su cita del ' + datosParaWhatsApp.fecha + ' para ' + datosParaWhatsApp.mascota + ' con el ' + datosParaWhatsApp.veterinario + '. Motivo: ' + datosParaWhatsApp.motivo;
-    // window.open('https://wa.me/' + datosParaWhatsApp.telefono.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(mensaje), '_blank');
-
-    navigate('/agenda');
+    setSaving(true);
+    API.post('/citas', body).then(function () {
+      navigate('/agenda');
+    }).catch(function (err) {
+      console.error('Error al guardar cita:', err);
+      alert('Error al guardar la cita. Intente nuevamente.');
+    }).finally(function () {
+      setSaving(false);
+    });
   }
 
-  const mascotaSel = mascotas.find((m) => m.id === Number(form.mascotaId));
-  const clienteSel = clientes.find((c) => c.id === Number(form.clienteId));
+  useEffect(function () {
+    var cancel = false;
+    API.get('/clientes').then(function (res) { if (!cancel) setApiClientes(res.data); }).catch(function () {});
+    API.get('/mascotas').then(function (res) { if (!cancel) setApiMascotas(res.data); }).catch(function () {});
+    return function () { cancel = true; };
+  }, []);
+
+  const mascotaSel = (apiMascotas.length ? apiMascotas : mascotas).find((m) => m.id === Number(form.mascotaId));
+  const clienteSel = (apiClientes.length ? apiClientes : clientes).find((c) => c.id === Number(form.clienteId));
   const tipoSel = tiposCita.find((t) => t.id === Number(form.tipoCita));
   const vetSel = veterinarios.find((v) => v.id === Number(form.veterinarioId));
   const consultSel = consultorios.find((c) => c.id === Number(form.consultorioId));
@@ -203,7 +219,7 @@ function NuevaCita() {
                 <label className={labelClass}>Cliente (Dueño) *</label>
                 <select name="clienteId" value={form.clienteId} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('clienteId')}>
                   <option value="">Seleccionar cliente</option>
-                  {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  {(apiClientes.length ? apiClientes : clientes).map(function (c) { return <option key={c.id} value={c.id}>{c.nombre}</option>; })}
                 </select>
                 {clienteSel && <p className="text-xs text-gray-400 dark:text-[#808080] mt-1.5 pl-1">{clienteSel.telefono}</p>}
                 {mostrarError('clienteId')}
@@ -215,14 +231,14 @@ function NuevaCita() {
                 </div>
                 <select name="mascotaId" value={form.mascotaId} onChange={handleChange} onBlur={manejarBlur} required className={claseSelectConError('mascotaId')}>
                   <option value="">Seleccionar mascota</option>
-                  {mascotas.map((m) => <option key={m.id} value={m.id}>{m.nombre} - {m.raza}</option>)}
+                  {(apiMascotas.length ? apiMascotas : mascotas).map(function (m) { return <option key={m.id} value={m.id}>{m.nombre} - {m.raza || m.especie}</option>; })}
                 </select>
                 {mascotaSel && (
                   <div className="flex items-center gap-3 mt-3 p-2 rounded-lg bg-gray-50 dark:bg-[#2C2C2C]">
-                    <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-9 h-9 rounded-full" />
+                    {mascotaSel.foto && <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-9 h-9 rounded-full" />}
                     <div className="text-xs text-gray-500 dark:text-[#909090]">
                       <p className="font-semibold text-gray-700 dark:text-[#B0B0B0]">{mascotaSel.nombre}</p>
-                      <p>{mascotaSel.raza} · {mascotaSel.edad} · {mascotaSel.peso}</p>
+                      <p>{mascotaSel.raza || mascotaSel.especie}{mascotaSel.edad ? ' · ' + mascotaSel.edad : ''}{mascotaSel.peso ? ' · ' + mascotaSel.peso : ''}</p>
                     </div>
                   </div>
                 )}
@@ -254,6 +270,10 @@ function NuevaCita() {
               <div>
                 <MaterialDatePicker value={form.fecha} onChange={function (val) { handleChange({ target: { name: 'fecha', value: val } }); }} label="Fecha *" placeholder="DD/MM/YYYY" />
                 {mostrarError('fecha')}
+              </div>
+              <div>
+                <label className={labelClass}>Hora *</label>
+                <input type="time" name="hora" value={form.hora} onChange={handleChange} onBlur={manejarBlur} required className={claseInputConError('hora')} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -367,9 +387,9 @@ function NuevaCita() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
               Cancelar
             </button>
-            <button type="submit" disabled={!formularioCompleto} className={'flex-1 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer ' + (formularioCompleto ? 'bg-[#5F7B65] hover:bg-[#4E6553] text-white' : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed')}>
+            <button type="submit" disabled={!formularioCompleto || saving} className={'flex-1 py-3 font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer ' + ((formularioCompleto && !saving) ? 'bg-[#5F7B65] hover:bg-[#4E6553] text-white' : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed')}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-              Guardar Cita
+              {saving ? 'Guardando...' : 'Guardar Cita'}
             </button>
           </div>
         </div>
@@ -381,9 +401,9 @@ function NuevaCita() {
               <div className="flex flex-col items-center text-center border-b border-gray-100 dark:border-[#333] pb-4">
                 {mascotaSel ? (
                   <>
-                    <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-emerald-100" />
+                    {mascotaSel.foto ? <img src={mascotaSel.foto} alt={mascotaSel.nombre} className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-emerald-100" /> : <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3 ring-2 ring-emerald-100"><span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{mascotaSel.nombre?.charAt(0)}</span></div>}
                     <p className="text-base font-bold text-gray-800 dark:text-[#E0E0E0]">{mascotaSel.nombre}</p>
-                    <p className="text-xs text-gray-400 dark:text-[#808080]">{mascotaSel.raza} · {mascotaSel.edad} · {mascotaSel.peso}</p>
+                    <p className="text-xs text-gray-400 dark:text-[#808080]">{mascotaSel.raza || mascotaSel.especie}{mascotaSel.edad ? ' · ' + mascotaSel.edad : ''}{mascotaSel.peso ? ' · ' + mascotaSel.peso : ''}</p>
                   </>
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-[#2C2C2C] flex items-center justify-center mb-3">
