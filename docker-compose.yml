@@ -98,6 +98,3 @@ services:
       LANGUAGE: es
     volumes:
       - evolution_instances:/evolution/instances
-
-volumes:
-  evolution_instances:
