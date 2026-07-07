@@ -373,23 +373,22 @@ function Mascotas() {
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', especie: 'Todos', raza: '', estado: 'Todos' });
 
-  useEffect(function () {
-    async function loadData() {
-      try {
-        var [mascRes, cliRes] = await Promise.all([
-          API.get('/mascotas'),
-          API.get('/clientes'),
-        ]);
-        setMascotas(mascRes.data);
-        setClientes(cliRes.data);
-      } catch (err) {
-        console.error('Error cargando datos:', err);
-      } finally {
-        setLoading(false);
-      }
+  async function cargarMascotas() {
+    try {
+      var [mascRes, cliRes] = await Promise.all([
+        API.get('/mascotas'),
+        API.get('/clientes'),
+      ]);
+      setMascotas(mascRes.data);
+      setClientes(cliRes.data);
+    } catch (err) {
+      alert('Error al cargar datos: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
-    loadData();
-  }, []);
+  }
+
+  useEffect(function () { cargarMascotas(); }, []);
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
@@ -416,43 +415,12 @@ function Mascotas() {
 
   useEffect(function () { setPage(1); }, [search, especieFilter, estadoFilter, filtrosAvanzados]);
 
-  async function handleGuardarMascota(id, datos) {
-    try {
-      var body = {
-        nombre: datos.nombre,
-        especie: datos.especie,
-        raza: datos.raza,
-        sexo: datos.sexo || null,
-        fechaNacimiento: datos.fechaNacimiento || null,
-        color: datos.color || null,
-        microchip: datos.microchip || null,
-        peso: datos.peso ? Number(datos.peso) : null,
-        tipoPelaje: datos.tipoPelaje || null,
-        tamano: datos.tamano || null,
-        esterilizado: datos.esterilizado === 'si' ? true : datos.esterilizado === 'no' ? false : null,
-        estado: datos.estado || 'Activo',
-        notas: datos.notas || null,
-        cliente: datos.clienteId ? { id: Number(datos.clienteId) } : null,
-        fotoUrl: datos.fotoUrl || null,
-      };
-      var res = await API.put('/mascotas/' + id, body);
-      setMascotas(mascotas.map(function (m) {
-        if (m.id !== id) return m;
-        var cliente = clientes.find(function (c) { return c.id === Number(datos.clienteId); });
-        return Object.assign({}, res.data, { cliente: cliente || m.cliente });
-      }));
-    } catch (err) {
-      console.error('Error al actualizar mascota:', err);
-    }
+  async function handleGuardarMascota() {
+    await cargarMascotas();
   }
 
-  async function handleEliminarMascota(id) {
-    try {
-      await API.delete('/mascotas/' + id);
-      setMascotas(mascotas.filter(function (m) { return m.id !== id; }));
-    } catch (err) {
-      console.error('Error al eliminar mascota:', err);
-    }
+  async function handleEliminarMascota() {
+    await cargarMascotas();
   }
 
   function exportarExcel() {

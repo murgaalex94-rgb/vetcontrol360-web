@@ -280,13 +280,15 @@ function Clientes() {
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', mascotas: 'Todos', estado: 'Todos' });
 
-  useEffect(function () {
+  function cargarClientes() {
     setLoading(true);
     API.get('/clientes')
       .then(function (res) { setClientes(res.data); })
-      .catch(function (err) { console.error('Error al cargar clientes:', err); })
+      .catch(function (err) { alert('Error al cargar clientes: ' + (err.response?.data?.message || err.message)); })
       .finally(function () { setLoading(false); });
-  }, []);
+  }
+
+  useEffect(function () { cargarClientes(); }, []);
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
@@ -313,19 +315,15 @@ function Clientes() {
   useEffect(function () { setPage(1); }, [search, estadoFilter]);
 
   function refrescarLista() {
-    API.get('/clientes')
-      .then(function (res) { setClientes(res.data); })
-      .catch(function (err) { console.error('Error al refrescar clientes:', err); });
+    cargarClientes();
   }
 
-  function handleGuardarCliente(id, datos) {
-    setClientes(clientes.map(function (c) {
-      return c.id === id ? Object.assign({}, c, datos) : c;
-    }));
+  function handleGuardarCliente() {
+    refrescarLista();
   }
 
-  function handleEliminarCliente(id) {
-    setClientes(clientes.filter(function (c) { return c.id !== id; }));
+  function handleEliminarCliente() {
+    refrescarLista();
   }
 
   function handleNuevoCliente() {
