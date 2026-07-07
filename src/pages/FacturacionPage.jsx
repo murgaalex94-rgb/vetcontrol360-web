@@ -131,51 +131,22 @@ function FacturacionPage() {
   var [fechaHasta, setFechaHasta] = useState('');
   var [showModalFiltroAvanzado, setShowModalFiltroAvanzado] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ precioMin: '', precioMax: '', estado: '', metodoPago: '' });
-  var [accionFactura, setAccionFactura] = useState(null);
-
-  function handleEliminarFactura(id) {
-    if (!confirm('¿Anular esta factura?')) return;
-    API.delete('/facturas/' + id).then(function () {
-      setFacturas(facturas.filter(function (f) { return f.id !== id; }));
-    }).catch(function (err) {
-      console.error('Error al anular factura:', err);
-      alert('Error al anular la factura.');
-    });
-  }
-
-  function handleCambiarEstado(id, estado) {
-    API.put('/facturas/' + id, { estado: estado }).then(function () {
-      setFacturas(facturas.map(function (f) { return f.id === id ? Object.assign({}, f, { estado: estado }) : f; }));
-    }).catch(function (err) {
-      console.error('Error al actualizar factura:', err);
-      alert('Error al actualizar la factura.');
-    });
-  }
+  var [facturaDetalle, setFacturaDetalle] = useState(null);
 
   useEffect(function () {
     API.get('/facturas').then(function (res) {
       var mapped = res.data.map(function (f) {
-        return {
-          dbId: f.id,
-          numero: f.numero || ('F-' + String(f.id).padStart(6, '0')),
-          fecha: formatDate(f.fecha),
-          cliente: f.cliente,
-          telefono: f.telefono,
-          mascota: f.mascota,
-          raza: f.raza,
-          total: f.total,
-          estado: f.estado,
+        return Object.assign({}, f, {
+          fecha: f.fecha ? formatDate(f.fecha) : '—',
           pago: f.metodoPago || 'Tarjeta',
-          foto: f.foto || 'https://placehold.co/40x40/E6F7F6/0D9488?text=' + ((f.mascota || 'V')[0]),
-        };
+          foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=' + ((f.mascota || 'V')[0]),
+        });
       });
       setFacturas(mapped);
       setLoading(false);
     }).catch(function () {
       var mapped = facturasMock.map(function (f) {
         return Object.assign({}, f, {
-          dbId: f.id,
-          numero: f.numero,
           fecha: formatDate(f.fecha),
           pago: f.metodoPago,
           foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=' + f.mascota[0],
@@ -188,7 +159,7 @@ function FacturacionPage() {
 
   var facturasFiltradas = facturas.filter(function (f) {
     var text = busqueda.toLowerCase();
-    var coincideBusqueda = !text || (f.numero && f.numero.toLowerCase().includes(text)) || (f.cliente && f.cliente.toLowerCase().includes(text)) || (f.mascota && f.mascota.toLowerCase().includes(text));
+    var coincideBusqueda = !text || (f.id && f.id.toLowerCase().includes(text)) || (f.cliente && f.cliente.toLowerCase().includes(text)) || (f.mascota && f.mascota.toLowerCase().includes(text));
     var coincideEstado = filtroEstado === 'Todos' || f.estado === filtroEstado;
     var fa = filtrosAvanzados;
     var coincideMonto = (!fa.precioMin || (f.total || 0) >= Number(fa.precioMin)) && (!fa.precioMax || (f.total || 0) <= Number(fa.precioMax));
@@ -204,6 +175,22 @@ function FacturacionPage() {
 
   var totalVentas = facturas.reduce(function (sum, f) { return sum + (f.total || 0); }, 0);
   var pendientesMonto = facturas.filter(function (f) { return f.estado === 'Pendiente'; }).reduce(function (sum, f) { return sum + (f.total || 0); }, 0);
+
+  function handleAnular(id) {
+    if (!window.confirm('¿Anular esta factura?')) return;
+    API.put('/facturas/' + id, { estado: 'Anulada' }).then(function () {
+      return API.get('/facturas');
+    }).then(function (res) {
+      var mapped = res.data.map(function (f) {
+        return Object.assign({}, f, {
+          fecha: f.fecha ? formatDate(f.fecha) : '—',
+          pago: f.metodoPago || 'Tarjeta',
+          foto: 'https://placehold.co/40x40/E6F7F6/0D9488?text=' + ((f.mascota || 'V')[0]),
+        });
+      });
+      setFacturas(mapped);
+    });
+  }
 
   function handleExportar() {
     var dataExport = facturasFiltradas.map(function (f) {
@@ -340,8 +327,8 @@ function FacturacionPage() {
                 <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
                   {facturasPagina.map(function (f) {
                     return (
-                      <tr key={f.dbId || f.numero} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                        <td className="px-4 py-3 text-sm font-semibold text-gray-800 dark:text-[#E0E0E0]">{f.numero}</td>
+                      <tr key={f.id} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-800 dark:text-[#E0E0E0]">{f.numero || ('F-' + String(f.id).padStart(6, '0'))}</td>
                         <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#909090]">{f.fecha}</td>
                         <td className="px-4 py-3"><p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{f.cliente}</p><p className="text-xs text-gray-400 dark:text-[#808080]">{f.telefono}</p></td>
                         <td className="px-4 py-3"><div className="flex items-center gap-2.5"><img src={f.foto} alt={f.mascota} className="w-8 h-8 rounded-full" /><div><p className="text-sm font-medium text-gray-800 dark:text-[#E0E0E0]">{f.mascota}</p><p className="text-xs text-gray-400 dark:text-[#808080]">{f.raza}</p></div></div></td>
@@ -350,13 +337,13 @@ function FacturacionPage() {
                         <td className="px-4 py-3"><span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ' + (pagoStyles[f.pago] || 'bg-gray-100 text-gray-500 dark:bg-[#2C2C2C] dark:text-[#D0D0D0]')}>{f.pago}</span></td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={function () { setAccionFactura(f); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver Detalles">
+                            <button onClick={function () { setFacturaDetalle(f); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver Detalles">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                             </button>
-                            <button onClick={function () { handleCambiarEstado(f.dbId, f.estado === 'Pagada' ? 'Pendiente' : 'Pagada'); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Cambiar estado">
+                            <button onClick={function () { navigate('/facturacion/editar/' + f.id); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors cursor-pointer" title="Editar">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
                             </button>
-                            <button onClick={function () { handleEliminarFactura(f.dbId); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer" title="Anular">
+                            <button onClick={function () { handleAnular(f.id); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer" title="Anular">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                             </button>
                           </div>
@@ -470,41 +457,32 @@ function FacturacionPage() {
         </div>
       </div>
 
+      {facturaDetalle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={function () { setFacturaDetalle(null); }}>
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden" onClick={function (e) { e.stopPropagation(); }}>
+            <div className="flex items-center justify-between px-6 pt-6 pb-4">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">Detalle de Factura</h2>
+              <button onClick={function () { setFacturaDetalle(null); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] text-gray-400 dark:text-[#808080] cursor-pointer">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="px-6 pb-6 space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-4"><div><span className="text-gray-500 dark:text-[#909090]">N° Factura</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.numero || ('F-' + String(facturaDetalle.id).padStart(6, '0'))}</p></div><div><span className="text-gray-500 dark:text-[#909090]">Fecha</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.fecha}</p></div></div>
+              <div><span className="text-gray-500 dark:text-[#909090]">Cliente</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.cliente}</p></div>
+              <div><span className="text-gray-500 dark:text-[#909090]">Mascota</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.mascota} — {facturaDetalle.raza}</p></div>
+              <div><span className="text-gray-500 dark:text-[#909090]">Total</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">S/ {Number(facturaDetalle.total).toFixed(2)}</p></div>
+              <div className="grid grid-cols-2 gap-4"><div><span className="text-gray-500 dark:text-[#909090]">Estado</span><p><span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ' + estadoStyles[facturaDetalle.estado]}>{facturaDetalle.estado}</span></p></div><div><span className="text-gray-500 dark:text-[#909090]">Método de Pago</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.pago}</p></div></div>
+              <div><span className="text-gray-500 dark:text-[#909090]">Teléfono</span><p className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{facturaDetalle.telefono || '—'}</p></div>
+            </div>
+          </div>
+        </div>
+      )}
       <FiltroAvanzadoModal
         abierto={showModalFiltroAvanzado}
         onClose={function () { setShowModalFiltroAvanzado(false); }}
         filtros={filtrosAvanzados}
         setFiltros={setFiltrosAvanzados}
       />
-
-      {accionFactura && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={function () { setAccionFactura(null); }}>
-          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6" onClick={function (e) { e.stopPropagation(); }}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">Detalle de Factura</h2>
-              <button onClick={function () { setAccionFactura(null); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2C2C] cursor-pointer">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">N° Factura:</span><span className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{accionFactura.numero}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Fecha:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{accionFactura.fecha}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Cliente:</span><span className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{accionFactura.cliente}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Teléfono:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{accionFactura.telefono || '—'}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Mascota:</span><span className="font-semibold text-gray-800 dark:text-[#E0E0E0]">{accionFactura.mascota}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Raza:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{accionFactura.raza || '—'}</span></div>
-              <div className="border-t border-gray-200 dark:border-[#333]" />
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Total:</span><span className="text-lg font-bold text-gray-900 dark:text-[#E0E0E0]">S/ {Number(accionFactura.total).toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Estado:</span><span className={'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (estadoStyles[accionFactura.estado] || '')}>{accionFactura.estado}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-[#909090]">Pago:</span><span className="text-gray-800 dark:text-[#E0E0E0]">{accionFactura.pago}</span></div>
-            </div>
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-[#333]">
-              <button onClick={function () { setAccionFactura(null); }} className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#404040] text-sm font-medium text-gray-700 dark:text-[#C0C0C0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cerrar</button>
-              <button onClick={function () { handleEliminarFactura(accionFactura.dbId); setAccionFactura(null); }} className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors cursor-pointer">Anular Factura</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
