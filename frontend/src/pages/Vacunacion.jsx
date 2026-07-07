@@ -398,9 +398,11 @@ function Vacunacion() {
   const [esquemaEditar, setEsquemaEditar] = useState(null);
   const [esquemaEliminar, setEsquemaEliminar] = useState(null);
 
-  useEffect(function () {
+  function cargarVacunas() {
     API.get('/vacunas').then(function (res) { setVacunas(res.data); setLoading(false); }).catch(function () { setLoading(false); });
-  }, []);
+  }
+
+  useEffect(function () { cargarVacunas(); }, []);
 
   var filtered = vacunas.filter(function (v) {
     var q = search.toLowerCase();
@@ -419,15 +421,21 @@ function Vacunacion() {
   var paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   function handleGuardarEdicion() {
-    setVacunas(vacunas.map(function (v) {
-      return v.id === editVacuna.id ? Object.assign({}, v, formEdit) : v;
-    }));
-    setEditVacuna(null);
+    API.put('/vacunas/' + editVacuna.id, formEdit).then(function () {
+      cargarVacunas();
+      setEditVacuna(null);
+    }).catch(function () {
+      alert('Error al actualizar la vacuna');
+    });
   }
 
   function handleEliminar() {
-    setVacunas(vacunas.filter(function (v) { return v.id !== deleteVacuna.id; }));
-    setDeleteVacuna(null);
+    API.delete('/vacunas/' + deleteVacuna.id).then(function () {
+      cargarVacunas();
+      setDeleteVacuna(null);
+    }).catch(function () {
+      alert('Error al eliminar la vacuna');
+    });
   }
 
   function handleGuardarEsquema(id, form) {

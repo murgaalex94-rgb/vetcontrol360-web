@@ -1,11 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 
 function generarCodigoPersonal(index) {
   var year = new Date().getFullYear();
   var num = String(index + 1).padStart(4, '0');
   return 'PER-' + year + '-' + num;
+}
+
+var MAPA_ROL = { 1: 'Administrativo', 2: 'Veterinario', 3: 'Asistente', 4: 'Administrativo' };
+var MAPA_ROL_ID = { Administrativo: 1, Veterinario: 2, Asistente: 3 };
+
+function apiToEmpleado(u, i) {
+  return {
+    id: u.id,
+    codigo: generarCodigoPersonal(i),
+    nombre: u.nombreCompleto,
+    cargo: MAPA_ROL[u.idRol] || 'Veterinario',
+    estado: u.activo ? 'Activo' : 'Inactivo',
+    email: '',
+    telefono: '',
+    fechaIngreso: '',
+  };
 }
 
 function formatDate(dateStr) {
@@ -63,7 +80,7 @@ function ModalDetallesPersonal({ empleado, onClose }) {
   );
 }
 
-function NuevoPersonalModal({ onClose }) {
+function NuevoPersonalModal({ onClose, onCreado }) {
   var [form, setForm] = useState({ nombres: '', apellidos: '', dni: '', telefono: '', email: '', password: '', confirmPassword: '', rol: 'Veterinario', estado: 'Activo' });
   var [showPassword, setShowPassword] = useState(false);
   var [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -71,7 +88,7 @@ function NuevoPersonalModal({ onClose }) {
   var [dragOver, setDragOver] = useState(false);
 
   var passwordsMatch = form.password === form.confirmPassword;
-  var hasRequiredFields = form.nombres.trim() && form.apellidos.trim() && form.dni.trim() && form.email.trim() && form.password.trim() && form.confirmPassword.trim();
+  var hasRequiredFields = form.nombres.trim() && form.apellidos.trim() && form.email.trim() && form.password.trim() && form.confirmPassword.trim();
   var canSubmit = hasRequiredFields && passwordsMatch;
 
   function handleChange(e) {
@@ -80,7 +97,17 @@ function NuevoPersonalModal({ onClose }) {
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onClose();
+    API.post('/usuarios', {
+      usuario: form.email,
+      password: form.password,
+      nombreCompleto: (form.nombres + ' ' + form.apellidos).trim(),
+      idRol: MAPA_ROL_ID[form.rol] || 2,
+    }).then(function () {
+      if (onCreado) onCreado();
+      onClose();
+    }).catch(function () {
+      alert('Error al crear el usuario');
+    });
   }
 
   function handleFotoDrop(e) {
@@ -400,19 +427,17 @@ function PersonalPage() {
   var [showModalEliminar, setShowModalEliminar] = useState(null);
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaIngresoDesde: '', fechaIngresoHasta: '', edadDesde: '', edadHasta: '', estado: 'Todos' });
-  var [empleados, setEmpleados] = useState(function () {
-    var raw = [
-      { nombre: 'Dr. Juan Pérez', cargo: 'Veterinario', email: 'juan.perez@vetcontrol.com', telefono: '+51 999 123 456', estado: 'Activo', fechaIngreso: '2024-01-15' },
-      { nombre: 'María López', cargo: 'Asistente', email: 'maria.lopez@vetcontrol.com', telefono: '+51 999 234 567', estado: 'Activo', fechaIngreso: '2024-03-10' },
-      { nombre: 'Dr. Carlos García', cargo: 'Veterinario', email: 'carlos.garcia@vetcontrol.com', telefono: '+51 999 345 678', estado: 'Activo', fechaIngreso: '2023-11-20' },
-      { nombre: 'Ana Martínez', cargo: 'Administrativo', email: 'ana.martinez@vetcontrol.com', telefono: '+51 999 456 789', estado: 'Inactivo', fechaIngreso: '2025-06-01' },
-      { nombre: 'Luis Hernández', cargo: 'Asistente', email: 'luis.hernandez@vetcontrol.com', telefono: '+51 999 567 890', estado: 'Activo', fechaIngreso: '2024-08-12' },
-      { nombre: 'Dra. Sofía Ramírez', cargo: 'Veterinario', email: 'sofia.ramirez@vetcontrol.com', telefono: '+51 999 678 901', estado: 'Inactivo', fechaIngreso: '2025-02-25' },
-    ];
-    return raw.map(function (emp, i) {
-      return Object.assign({}, emp, { id: i + 1, codigo: generarCodigoPersonal(i) });
+  var [empleados, setEmpleados] = useState([]);
+
+  function cargarEmpleados() {
+    API.get('/usuarios').then(function (res) {
+      setEmpleados(res.data.map(function (u, i) { return apiToEmpleado(u, i); }));
+    }).catch(function () {
+      setEmpleados([]);
     });
-  });
+  }
+
+  useEffect(function () { cargarEmpleados(); }, []);
   var porPagina = 5;
 
   function aplicarFiltrosAvanzados(lista) {
@@ -440,13 +465,24 @@ function PersonalPage() {
   var totalAdmin = empleados.filter(function (e) { return e.cargo === 'Administrativo'; }).length;
 
   function handleGuardarEmpleado(id, datos) {
-    setEmpleados(empleados.map(function (e) {
-      return e.id === id ? Object.assign({}, e, datos) : e;
-    }));
+    var payload = {
+      nombreCompleto: datos.nombre,
+      idRol: MAPA_ROL_ID[datos.cargo] || 2,
+      activo: datos.estado === 'Activo',
+    };
+    API.put('/usuarios/' + id, payload).then(function () {
+      cargarEmpleados();
+    }).catch(function () {
+      alert('Error al actualizar el empleado');
+    });
   }
 
   function handleEliminarEmpleado(id) {
-    setEmpleados(empleados.filter(function (e) { return e.id !== id; }));
+    API.delete('/usuarios/' + id).then(function () {
+      cargarEmpleados();
+    }).catch(function () {
+      alert('Error al eliminar el empleado');
+    });
   }
 
   function exportarExcel() {
@@ -624,7 +660,7 @@ function PersonalPage() {
         </div>
       </div>
 
-      {showModalNuevo && <NuevoPersonalModal onClose={function () { setShowModalNuevo(false); }} />}
+      {showModalNuevo && <NuevoPersonalModal onClose={function () { setShowModalNuevo(false); }} onCreado={cargarEmpleados} />}
       {showModalDetalles && <ModalDetallesPersonal empleado={showModalDetalles} onClose={function () { setShowModalDetalles(null); }} />}
       {showModalEditar && <ModalEditarPersonal empleado={showModalEditar} onClose={function () { setShowModalEditar(null); }} onGuardar={handleGuardarEmpleado} />}
       {showModalEliminar && <ModalEliminarPersonal empleado={showModalEliminar} onClose={function () { setShowModalEliminar(null); }} onConfirmar={handleEliminarEmpleado} />}
