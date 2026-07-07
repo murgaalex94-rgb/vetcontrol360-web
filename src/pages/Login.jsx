@@ -28,7 +28,7 @@ function Login() {
     try {
       const { data } = await API.post('/auth/login', { username, password });
       localStorage.setItem('token', data.token);
-      const roleMap = { 1: 'Administrador', 2: 'Administrador', 3: 'Veterinario', 4: 'Asistente', 5: 'Recepcionista' };
+      const roleMap = { 1: 'Administrador', 2: 'Veterinario', 3: 'Asistente' };
       const name = data.nombreCompleto || data.user?.nombre || username;
       const role = roleMap[data.idRol] || data.user?.rol || 'Veterinario';
       localStorage.setItem('userName', name);
