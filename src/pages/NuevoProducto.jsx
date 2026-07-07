@@ -1,17 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import NuevoProveedorModal from '../components/NuevoProveedorModal';
 import API from '../services/axiosConfig';
-
-var PROVEEDORES_INICIALES = [
-  { id: 1, nombre: 'Vet Pharma' },
-  { id: 2, nombre: 'Zoetis' },
-  { id: 3, nombre: 'Royal Canin' },
-  { id: 4, nombre: 'Bayer' },
-  { id: 5, nombre: 'Whiskas' },
-  { id: 6, nombre: 'Kong' },
-];
 
 var FORMATOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
 var MAX_SIZE = 5 * 1024 * 1024;
@@ -19,7 +10,10 @@ var MAX_SIZE = 5 * 1024 * 1024;
 function NuevoProducto() {
   const navigate = useNavigate();
   var fileInputRef = useRef(null);
-  var [proveedores, setProveedores] = useState(PROVEEDORES_INICIALES);
+  var [proveedores, setProveedores] = useState([]);
+  useEffect(function () {
+    API.get('/proveedores').then(function (res) { setProveedores(res.data); });
+  }, []);
   var [showModalProveedor, setShowModalProveedor] = useState(false);
   var [imagenPreview, setImagenPreview] = useState(null);
   var [imagenNombre, setImagenNombre] = useState('');
@@ -33,7 +27,6 @@ function NuevoProducto() {
   });
   const [descCount, setDescCount] = useState(0);
   const [notasCount, setNotasCount] = useState(0);
-  const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,37 +35,21 @@ function NuevoProducto() {
     if (name === 'notas') setNotasCount(value.length);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setSaving(true);
-    try {
-      await API.post('/productos', {
-        nombre: form.nombre,
-        categoria: form.categoria,
-        sku: form.sku,
-        tipo: form.tipo,
-        presentacion: form.presentacion,
-        unidad: form.unidad,
-        descripcion: form.descripcion,
-        proveedor: form.proveedor,
-        precioCompra: form.precioCompra ? Number(form.precioCompra) : null,
-        precioVenta: form.precioVenta ? Number(form.precioVenta) : null,
-        stockActual: Number(form.stockActual),
-        stockMinimo: Number(form.stockMinimo),
-        stockMaximo: form.stockMaximo ? Number(form.stockMaximo) : null,
-        ubicacion: form.ubicacion || null,
-        fechaVencimiento: form.fechaVencimiento || null,
-        lote: form.lote || null,
-        fabricante: form.fabricante || null,
-        almacenamiento: form.almacenamiento || null,
-      });
+    var payload = Object.assign({}, form, {
+      precioCompra: form.precioCompra ? Number(form.precioCompra) : null,
+      precioVenta: form.precioVenta ? Number(form.precioVenta) : null,
+      margen: form.margen ? Number(form.margen) : null,
+      stockActual: Number(form.stockActual),
+      stockMinimo: Number(form.stockMinimo),
+      stockMaximo: form.stockMaximo ? Number(form.stockMaximo) : null,
+      fechaVencimiento: form.fechaVencimiento || null,
+      imagen: imagenPreview || null,
+    });
+    API.post('/productos', payload).then(function () {
       navigate('/inventario');
-    } catch (err) {
-      console.error('Error al guardar producto:', err);
-      alert('Error al guardar el producto. Intente nuevamente.');
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   function handleProveedorCreado(nuevo) {
@@ -356,9 +333,9 @@ function NuevoProducto() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="flex-1 py-3 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50" style={{ backgroundColor: '#5F7B65' }}>
+            <button type="submit" className="flex-1 py-3 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer" style={{ backgroundColor: '#5F7B65' }}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-              {saving ? 'Guardando...' : 'Guardar Producto'}
+              Guardar Producto
             </button>
           </div>
         </div>

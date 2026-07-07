@@ -373,23 +373,22 @@ function Mascotas() {
   var [showModalFiltro, setShowModalFiltro] = useState(false);
   var [filtrosAvanzados, setFiltrosAvanzados] = useState({ fechaDesde: '', fechaHasta: '', especie: 'Todos', raza: '', estado: 'Todos' });
 
-  useEffect(function () {
-    async function loadData() {
-      try {
-        var [mascRes, cliRes] = await Promise.all([
-          API.get('/mascotas'),
-          API.get('/clientes'),
-        ]);
-        setMascotas(mascRes.data);
-        setClientes(cliRes.data);
-      } catch (err) {
-        console.error('Error cargando datos:', err);
-      } finally {
-        setLoading(false);
-      }
+  async function cargarMascotas() {
+    try {
+      var [mascRes, cliRes] = await Promise.all([
+        API.get('/mascotas'),
+        API.get('/clientes'),
+      ]);
+      setMascotas(mascRes.data);
+      setClientes(cliRes.data);
+    } catch (err) {
+      alert('Error al cargar datos: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
-    loadData();
-  }, []);
+  }
+
+  useEffect(function () { cargarMascotas(); }, []);
 
   function aplicarFiltrosAvanzados(lista) {
     var f = filtrosAvanzados;
@@ -416,43 +415,12 @@ function Mascotas() {
 
   useEffect(function () { setPage(1); }, [search, especieFilter, estadoFilter, filtrosAvanzados]);
 
-  async function handleGuardarMascota(id, datos) {
-    try {
-      var body = {
-        nombre: datos.nombre,
-        especie: datos.especie,
-        raza: datos.raza,
-        sexo: datos.sexo || null,
-        fechaNacimiento: datos.fechaNacimiento || null,
-        color: datos.color || null,
-        microchip: datos.microchip || null,
-        peso: datos.peso ? Number(datos.peso) : null,
-        tipoPelaje: datos.tipoPelaje || null,
-        tamano: datos.tamano || null,
-        esterilizado: datos.esterilizado === 'si' ? true : datos.esterilizado === 'no' ? false : null,
-        estado: datos.estado || 'Activo',
-        notas: datos.notas || null,
-        cliente: datos.clienteId ? { id: Number(datos.clienteId) } : null,
-        fotoUrl: datos.fotoUrl || null,
-      };
-      var res = await API.put('/mascotas/' + id, body);
-      setMascotas(mascotas.map(function (m) {
-        if (m.id !== id) return m;
-        var cliente = clientes.find(function (c) { return c.id === Number(datos.clienteId); });
-        return Object.assign({}, res.data, { cliente: cliente || m.cliente });
-      }));
-    } catch (err) {
-      console.error('Error al actualizar mascota:', err);
-    }
+  async function handleGuardarMascota() {
+    await cargarMascotas();
   }
 
-  async function handleEliminarMascota(id) {
-    try {
-      await API.delete('/mascotas/' + id);
-      setMascotas(mascotas.filter(function (m) { return m.id !== id; }));
-    } catch (err) {
-      console.error('Error al eliminar mascota:', err);
-    }
+  async function handleEliminarMascota() {
+    await cargarMascotas();
   }
 
   function exportarExcel() {
@@ -600,6 +568,9 @@ function Mascotas() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
+                            <button onClick={function () { navigate('/historial/' + m.id); }} className="p-1.5 rounded-lg hover:bg-emerald-50 text-emerald-500 hover:text-emerald-700 transition-colors cursor-pointer" title="Ver Historial Clínico">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                            </button>
                             <button onClick={function () { setShowModalDetalles(m); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver Detalles">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                             </button>

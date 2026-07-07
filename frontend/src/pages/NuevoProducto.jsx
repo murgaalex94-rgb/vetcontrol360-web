@@ -1,16 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import NuevoProveedorModal from '../components/NuevoProveedorModal';
-
-var PROVEEDORES_INICIALES = [
-  { id: 1, nombre: 'Vet Pharma' },
-  { id: 2, nombre: 'Zoetis' },
-  { id: 3, nombre: 'Royal Canin' },
-  { id: 4, nombre: 'Bayer' },
-  { id: 5, nombre: 'Whiskas' },
-  { id: 6, nombre: 'Kong' },
-];
+import API from '../services/axiosConfig';
 
 var FORMATOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
 var MAX_SIZE = 5 * 1024 * 1024;
@@ -18,7 +10,10 @@ var MAX_SIZE = 5 * 1024 * 1024;
 function NuevoProducto() {
   const navigate = useNavigate();
   var fileInputRef = useRef(null);
-  var [proveedores, setProveedores] = useState(PROVEEDORES_INICIALES);
+  var [proveedores, setProveedores] = useState([]);
+  useEffect(function () {
+    API.get('/proveedores').then(function (res) { setProveedores(res.data); });
+  }, []);
   var [showModalProveedor, setShowModalProveedor] = useState(false);
   var [imagenPreview, setImagenPreview] = useState(null);
   var [imagenNombre, setImagenNombre] = useState('');
@@ -42,7 +37,19 @@ function NuevoProducto() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Guardar producto:', form);
+    var payload = Object.assign({}, form, {
+      precioCompra: form.precioCompra ? Number(form.precioCompra) : null,
+      precioVenta: form.precioVenta ? Number(form.precioVenta) : null,
+      margen: form.margen ? Number(form.margen) : null,
+      stockActual: Number(form.stockActual),
+      stockMinimo: Number(form.stockMinimo),
+      stockMaximo: form.stockMaximo ? Number(form.stockMaximo) : null,
+      fechaVencimiento: form.fechaVencimiento || null,
+      imagen: imagenPreview || null,
+    });
+    API.post('/productos', payload).then(function () {
+      navigate('/inventario');
+    });
   };
 
   function handleProveedorCreado(nuevo) {
