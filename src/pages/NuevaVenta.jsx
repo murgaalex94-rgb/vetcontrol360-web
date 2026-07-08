@@ -48,7 +48,7 @@ export default function NuevaVenta() {
 
   useEffect(function () {
     API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
-    API.get('/api/clientes').then(function (r) { setClientes(r.data || []); }).catch(function () {});
+    API.get('/api/clientes').then(function (r) { console.log('[DIAG] /api/clientes devolvio:', r.data?.length, 'clientes', r.data); setClientes(r.data || []); }).catch(function (err) { console.error('[DIAG] Error al cargar clientes:', err); });
   }, []);
 
   useEffect(function () {
@@ -78,6 +78,7 @@ export default function NuevaVenta() {
       var nLower = nombre.toLowerCase();
       found = clientes.find(function (c) { return c.nombre && c.nombre.toLowerCase().includes(nLower); });
     }
+    console.log('[DIAG] resolverClienteId | doc:', doc, '| nombre:', nombre, '| clientes.length:', clientes.length, '| found:', found?.id, found?.nombre);
     setSelectedClienteId(found ? found.id : null);
   }
 
@@ -109,9 +110,12 @@ export default function NuevaVenta() {
     if (clienteId) params.push('clienteId=' + clienteId);
     if (query) params.push('nombre=' + encodeURIComponent(query));
     var url = '/api/mascotas' + (params.length ? '?' + params.join('&') : '');
+    console.log('[DIAG] cargarMascotas | clienteId:', clienteId, '| query:', query, '| URL:', url);
     API.get(url).then(function (r) {
+      console.log('[DIAG] cargarMascotas RESULTADO:', r.data?.length, 'mascotas', r.data);
       setMascotaResults(r.data || []);
-    }).catch(function () {
+    }).catch(function (err) {
+      console.error('[DIAG] cargarMascotas ERROR:', err);
       setMascotaResults([]);
     }).finally(function () {
       setMascotaLoading(false);
