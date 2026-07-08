@@ -93,9 +93,11 @@ export default function NuevaVenta() {
   }
 
   function handleCantidadChange(index, nuevoValor) {
+    console.log('[CANT] handleCantidadChange called | index:', index, '| nuevoValor:', nuevoValor, '| type:', typeof nuevoValor);
     var updated = items.slice();
     var valorNumerico = parseInt(nuevoValor) || 1;
     updated[index].cantidad = Math.max(1, valorNumerico);
+    console.log('[CANT] setting items[].cantidad to:', updated[index].cantidad);
     setItems(updated);
   }
 
@@ -362,7 +364,7 @@ export default function NuevaVenta() {
                         <input value={item.descripcion} onChange={function (e) { handleItemChange(i, 'descripcion', e.target.value); }} placeholder="Descripción" className={inputClass} />
                       </td>
                       <td className="px-3 py-2">
-                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { handleCantidadChange(i, e.target.value); }} className={"w-14 text-center " + inputClass} />
+                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { console.log('[CANT] onChange fired | e.target.value:', e.target.value); handleCantidadChange(i, e.target.value); }} className={"w-14 text-center " + inputClass} />
                       </td>
                       <td className="px-3 py-2">
                         <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={function (e) { handleItemChange(i, 'precioUnitario', parseFloat(e.target.value) || 0); }} className={"w-24 text-right " + inputClass} />
