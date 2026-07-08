@@ -7,7 +7,7 @@ export default function HistorialComprobantes() {
 
   function cargar() {
     setLoading(true);
-    API.get('/api/facturas/electronica/todos')
+    API.get('/facturas/electronica/todos')
       .then(function (r) { setComprobantes(r.data || []); })
       .catch(function () { setComprobantes([]); })
       .finally(function () { setLoading(false); });

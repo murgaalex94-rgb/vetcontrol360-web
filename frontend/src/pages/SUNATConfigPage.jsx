@@ -29,7 +29,7 @@ export default function SUNATConfigPage() {
   }, []);
 
   const fetchConfig = () => {
-    API.get("/api/empresa")
+    API.get("/empresa")
       .then(function (r) {
         var d = r.data;
         setConfig({
@@ -59,7 +59,7 @@ export default function SUNATConfigPage() {
 
   const fetchComprobantes = async () => {
     try {
-      const res = await API.get("/api/facturas/electronica/todos");
+      const res = await API.get("/facturas/electronica/todos");
       setComprobantes(res.data || []);
     } catch {
       console.log("No se pudieron cargar comprobantes");
@@ -73,7 +73,7 @@ export default function SUNATConfigPage() {
   const handleGuardar = function () {
     setGuardando(true);
     setMensaje("");
-    API.put("/api/empresa", config)
+    API.put("/empresa", config)
       .then(function () {
         setMensaje("Configuración guardada correctamente");
         setTimeout(function () { setMensaje(""); }, 3000);

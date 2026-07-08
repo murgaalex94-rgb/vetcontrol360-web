@@ -47,8 +47,8 @@ export default function NuevaVenta() {
   var searchTimer = useRef(null);
 
   useEffect(function () {
-    API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
-    API.get('/api/clientes').then(function (r) { console.log('[DIAG] /api/clientes devolvio:', r.data?.length, 'clientes', r.data); setClientes(r.data || []); }).catch(function (err) { console.error('[DIAG] Error al cargar clientes:', err); });
+    API.get('/empresa').then(function (r) { setEmpresa(r.data); }).catch(function (err) { console.error('[DIAG] Error al cargar empresa:', err); });
+    API.get('/clientes').then(function (r) { setClientes(r.data || []); }).catch(function (err) { console.error('[DIAG] Error al cargar clientes:', err); });
   }, []);
 
   useEffect(function () {
@@ -109,7 +109,7 @@ export default function NuevaVenta() {
     var params = [];
     if (clienteId) params.push('clienteId=' + clienteId);
     if (query) params.push('nombre=' + encodeURIComponent(query));
-    var url = '/api/mascotas' + (params.length ? '?' + params.join('&') : '');
+    var url = '/mascotas' + (params.length ? '?' + params.join('&') : '');
     console.log('[DIAG] cargarMascotas | clienteId:', clienteId, '| query:', query, '| URL:', url);
     API.get(url).then(function (r) {
       console.log('[DIAG] cargarMascotas RESULTADO:', r.data?.length, 'mascotas', r.data);
@@ -201,7 +201,7 @@ export default function NuevaVenta() {
       clienteDireccion: form.clienteDireccion
     };
 
-    API.post('/api/facturas', payload).then(function (res) {
+    API.post('/facturas', payload).then(function (res) {
       var factura = res.data;
       var envio = {
         facturaId: factura.id,
@@ -221,7 +221,7 @@ export default function NuevaVenta() {
           precioTotal: (parseFloat(it.cantidad) * parseFloat(it.precioUnitario)) - (parseFloat(it.descuento || 0) * parseFloat(it.cantidad))
         }; })
       };
-      return API.post('/api/facturas/' + factura.id + '/enviar-sunat', envio);
+      return API.post('/facturas/' + factura.id + '/enviar-sunat', envio);
     }).then(function () {
       navigate('/ventas/historial');
     }).catch(function (err) {
