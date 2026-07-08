@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import API from '../services/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import NuevoClienteModal from '../components/NuevoClienteModal';
+import NuevaMascotaModal from '../components/NuevaMascotaModal';
 
 var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
 var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm cursor-pointer";
@@ -38,6 +39,7 @@ export default function NuevaVenta() {
   var [mascotaResults, setMascotaResults] = useState([]);
   var [mascotaLoading, setMascotaLoading] = useState(false);
   var [clienteModal, setClienteModal] = useState(false);
+  var [mascotaModal, setMascotaModal] = useState(false);
   var [clientes, setClientes] = useState([]);
   var [numeroComprobante, setNumeroComprobante] = useState(generarNumero('BOLETA'));
   var previewRef = useRef(null);
@@ -75,8 +77,16 @@ export default function NuevaVenta() {
   }
 
   function getClienteIdFromForm() {
-    if (!form.clienteDoc) return null;
-    var found = clientes.find(function (c) { return c.dni === form.clienteDoc; });
+    var found = null;
+    if (form.clienteDoc) {
+      found = clientes.find(function (c) { return c.dni === form.clienteDoc; });
+    }
+    if (!found && form.clienteNombre) {
+      found = clientes.find(function (c) { return c.nombre && c.nombre.toLowerCase() === form.clienteNombre.toLowerCase(); });
+    }
+    if (!found && form.clienteDoc) {
+      found = clientes.find(function (c) { return c.dni && c.dni.replace(/\D/g, '') === form.clienteDoc.replace(/\D/g, ''); });
+    }
     return found ? found.id : null;
   }
 
@@ -85,7 +95,7 @@ export default function NuevaVenta() {
     var params = [];
     if (clienteId) params.push('clienteId=' + clienteId);
     if (query) params.push('nombre=' + encodeURIComponent(query));
-    var url = '/api/mascotas/search' + (params.length ? '?' + params.join('&') : '');
+    var url = '/api/mascotas' + (params.length ? '?' + params.join('&') : '');
     API.get(url).then(function (r) {
       setMascotaResults(r.data || []);
     }).catch(function () {
@@ -117,6 +127,14 @@ export default function NuevaVenta() {
     setMascotaOpen(false);
     setMascotaSearch('');
     setForm(function (f) { return { ...f, mascotaId: m ? String(m.id) : '', mascotaNombre: m ? m.nombre + (m.raza ? ' (' + m.raza + ')' : '') : '' }; });
+  }
+
+  function handleNuevaMascotaCreada(m) {
+    setMascotaModal(false);
+    if (m) {
+      selectMascota(m);
+      cargarMascotas(getClienteIdFromForm(), '');
+    }
   }
 
   function handleNuevoClienteCreado(cliente) {
@@ -490,6 +508,9 @@ export default function NuevaVenta() {
       {clienteModal && (
         <NuevoClienteModal onClose={function () { setClienteModal(false); }} onCreado={handleNuevoClienteCreado} />
       )}
+      {mascotaModal && (
+        <NuevaMascotaModal onClose={function () { setMascotaModal(false); }} onCreado={handleNuevaMascotaCreada} />
+      )}
 
       {mascotaOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={function () { setMascotaOpen(false); }}>
@@ -510,12 +531,14 @@ export default function NuevaVenta() {
                   <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
                   <span className="ml-2 text-sm text-gray-500 dark:text-[#909090]">Buscando...</span>
                 </div>
+              ) : (!form.clienteDoc && !form.clienteNombre) || (!getClienteIdFromForm() && !mascotaSearch && mascotaResults.length === 0) ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-gray-400 dark:text-[#808080]">Primero selecciona un cliente</p>
+                </div>
               ) : mascotaResults.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-sm text-gray-400 dark:text-[#808080] mb-3">
-                    {form.clienteDoc ? 'No se encontraron mascotas para este cliente. ¿Quieres registrar una nueva?' : 'No se encontraron mascotas'}
-                  </p>
-                  <button onClick={function () { navigate('/mascotas/nueva'); }} className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer">
+                  <p className="text-sm text-gray-400 dark:text-[#808080] mb-3">No se encontraron mascotas para este cliente. ¿Quieres registrar una nueva?</p>
+                  <button onClick={function () { setMascotaModal(true); }} className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer">
                     + Registrar nueva mascota
                   </button>
                 </div>
