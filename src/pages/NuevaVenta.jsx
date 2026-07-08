@@ -11,6 +11,7 @@ export default function NuevaVenta() {
   var [empresa, setEmpresa] = useState(null);
   var [enviando, setEnviando] = useState(false);
   var [error, setError] = useState('');
+  var [mascotaSel, setMascotaSel] = useState(null);
 
   useEffect(function () {
     API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
@@ -45,6 +46,7 @@ export default function NuevaVenta() {
   function handleMascotaSelect(e) {
     var id = e.target.value;
     var m = mascotas.find(function (x) { return x.id === parseInt(id); });
+    setMascotaSel(m || null);
     setForm(function (f) { return { ...f, mascotaId: id, mascotaNombre: m ? m.nombre + (m.raza ? ' (' + m.raza + ')' : '') : '' }; });
   }
 
@@ -119,11 +121,11 @@ export default function NuevaVenta() {
           <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Comprobante</label>
           <div className="flex gap-3">
             <button onClick={function () { setTipo('BOLETA'); }}
-              className={'px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ' + (tipo === 'BOLETA' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+              className={'px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ' + (tipo === 'BOLETA' ? 'bg-[#5F7B65] text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50')}>
               Boleta
             </button>
             <button onClick={function () { setTipo('FACTURA'); }}
-              className={'px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ' + (tipo === 'FACTURA' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+              className={'px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ' + (tipo === 'FACTURA' ? 'bg-[#5F7B65] text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50')}>
               Factura
             </button>
           </div>
@@ -134,40 +136,58 @@ export default function NuevaVenta() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Tipo Documento</label>
-              <select name="clienteTipoDoc" value={tipo === 'FACTURA' ? '6' : '1'} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 text-sm bg-gray-50" disabled>
+              <select name="clienteTipoDoc" value={tipo === 'FACTURA' ? '6' : '1'} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#5F7B65] text-sm bg-gray-50" disabled>
                 <option value="6">RUC</option>
                 <option value="1">DNI</option>
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">N° Documento</label>
-              <input name="clienteDoc" value={form.clienteDoc} onChange={handleFormChange} maxLength={tipo === 'FACTURA' ? 11 : 8} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 text-sm" />
+              <input name="clienteDoc" value={form.clienteDoc} onChange={handleFormChange} maxLength={tipo === 'FACTURA' ? 11 : 8} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#5F7B65] text-sm" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Nombre / Razón Social</label>
-              <input name="clienteNombre" value={form.clienteNombre} onChange={handleFormChange} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 text-sm" />
+              <input name="clienteNombre" value={form.clienteNombre} onChange={handleFormChange} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#5F7B65] text-sm" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
-            <input name="clienteDireccion" value={form.clienteDireccion} onChange={handleFormChange} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 text-sm" />
+            <input name="clienteDireccion" value={form.clienteDireccion} onChange={handleFormChange} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#5F7B65] text-sm" />
           </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-4">
           <h2 className="text-lg font-semibold text-gray-800">Mascota (opcional)</h2>
-          <select onChange={handleMascotaSelect} value={form.mascotaId} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 text-sm">
+          <select onChange={handleMascotaSelect} value={form.mascotaId} className="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#5F7B65] text-sm">
             <option value="">-- Seleccionar mascota --</option>
             {mascotas.map(function (m) {
               return <option key={m.id} value={m.id}>{m.nombre}{m.raza ? ' (' + m.raza + ')' : ''} - {m.cliente || ''}</option>;
             })}
           </select>
+          {mascotaSel ? (
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="w-12 h-12 rounded-full bg-[#5F7B65]/10 flex items-center justify-center text-[#5F7B65] shrink-0">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-800 text-sm">{mascotaSel.nombre}</p>
+                <p className="text-xs text-gray-500">{mascotaSel.raza || 'Sin raza'}{mascotaSel.cliente ? ' - Dueño: ' + mascotaSel.cliente : ''}</p>
+              </div>
+            </div>
+          ) : form.mascotaId && !mascotaSel ? null : (
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 shrink-0">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>
+              </div>
+              <p className="text-sm text-gray-400">Sin mascota seleccionada</p>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">Detalle de Venta</h2>
-            <button onClick={addItem} className="text-sm px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors cursor-pointer font-medium">+ Agregar Item</button>
+            <button onClick={addItem} className="text-sm px-3 py-1.5 bg-[#5F7B65]/10 text-[#5F7B65] rounded-lg hover:bg-[#5F7B65]/20 transition-colors cursor-pointer font-medium">+ Agregar Item</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -208,7 +228,7 @@ export default function NuevaVenta() {
 
         <div className="flex gap-3 justify-end pt-2">
           <button onClick={function () { navigate('/ventas/historial'); }} className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={handleEmitir} disabled={enviando} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer">
+          <button onClick={handleEmitir} disabled={enviando} className="px-6 py-2.5 bg-[#5F7B65] text-white rounded-lg hover:bg-[#4a634f] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer">
             {enviando ? 'Emitiendo...' : 'Emitir Comprobante'}
           </button>
         </div>
@@ -217,40 +237,57 @@ export default function NuevaVenta() {
       <div className="w-80 shrink-0">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sticky top-4">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">Vista Previa</h3>
-          {empresa && (
-            <div className="border border-gray-200 rounded-lg p-4 text-xs space-y-2">
-              <div className="text-center border-b border-gray-100 pb-2">
-                <p className="font-bold text-sm">{empresa.nombreComercial || empresa.razonSocial}</p>
-                <p className="text-gray-500">{empresa.ruc}</p>
-              </div>
-              <div className="text-center">
-                <span className={'inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ' + (tipo === 'FACTURA' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700')}>
-                  {tipo === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA ELECTRÓNICA'}
-                </span>
-              </div>
-              <div className="border-t border-gray-100 pt-2 space-y-1">
-                <p><span className="text-gray-500">Cliente:</span> {form.clienteNombre || '—'}</p>
-                <p><span className="text-gray-500">Doc:</span> {form.clienteDoc || '—'}</p>
-                {form.mascotaNombre && <p><span className="text-gray-500">Mascota:</span> {form.mascotaNombre}</p>}
-              </div>
-              <div className="border-t border-gray-100 pt-2 space-y-1">
-                {items.filter(function (it) { return it.descripcion; }).map(function (it, i) {
-                  var sub = parseFloat(it.cantidad || 0) * parseFloat(it.precioUnitario || 0);
-                  return (
-                    <div key={i} className="flex justify-between">
-                      <span className="truncate mr-2">{it.cantidad}x {it.descripcion}</span>
-                      <span className="font-medium shrink-0">S/ {sub.toFixed(2)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="border-t border-gray-100 pt-2 space-y-1 font-medium">
-                <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>S/ {total.toFixed(2)}</span></div>
-                <div className="flex justify-between text-gray-600"><span>IGV (18%)</span><span>S/ {igv.toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm font-bold border-t border-gray-200 pt-1"><span>TOTAL</span><span>S/ {totalConIgv.toFixed(2)}</span></div>
-              </div>
+          <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 text-center border-b border-gray-200">
+              <p className="font-bold text-sm text-gray-800">{empresa?.nombreComercial || empresa?.razonSocial || 'MI EMPRESA SAC'}</p>
+              <p className="text-[10px] text-gray-500">{empresa?.ruc || '20600085510'}</p>
             </div>
-          )}
+            <div className="px-4 py-2 text-center border-b border-gray-200 bg-[#5F7B65]/5">
+              <span className={'inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ' + (tipo === 'FACTURA' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700')}>
+                {tipo === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA ELECTRÓNICA'}
+              </span>
+            </div>
+            <div className="px-4 py-2 border-b border-gray-200 space-y-1 text-[11px]">
+              <div className="flex justify-between"><span className="text-gray-500">Cliente:</span><span className="font-medium text-right">{form.clienteNombre || '—'}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Doc:</span><span className="font-medium text-right">{form.clienteDoc || '—'}</span></div>
+              {form.clienteDireccion && <div className="flex justify-between"><span className="text-gray-500">Dir:</span><span className="text-right">{form.clienteDireccion}</span></div>}
+              {form.mascotaNombre && <div className="flex justify-between"><span className="text-gray-500">Mascota:</span><span className="text-right">{form.mascotaNombre}</span></div>}
+            </div>
+            <div className="px-4 py-2 border-b border-gray-200">
+              <table className="w-full text-[11px]">
+                <thead>
+                  <tr className="text-gray-500 border-b border-gray-100">
+                    <th className="text-left py-1 pr-1">Item</th>
+                    <th className="text-center py-1 px-1">Cant</th>
+                    <th className="text-right py-1 pl-1">Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.filter(function (it) { return it.descripcion; }).map(function (it, i) {
+                    var sub = parseFloat(it.cantidad || 0) * parseFloat(it.precioUnitario || 0);
+                    return (
+                      <tr key={i} className="border-b border-gray-50">
+                        <td className="py-1 pr-1 truncate max-w-[120px]">{it.descripcion}</td>
+                        <td className="py-1 px-1 text-center">{it.cantidad}</td>
+                        <td className="py-1 pl-1 text-right font-medium">S/ {sub.toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                  {items.filter(function (it) { return it.descripcion; }).length === 0 && (
+                    <tr><td colSpan="3" className="py-2 text-center text-gray-400">Sin items</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 py-2 space-y-1 text-[11px]">
+              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>S/ {total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-gray-600"><span>IGV (18%)</span><span>S/ {igv.toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm font-bold border-t border-gray-200 pt-1 text-gray-800"><span>TOTAL</span><span>S/ {totalConIgv.toFixed(2)}</span></div>
+            </div>
+            <div className="bg-gray-50 px-4 py-2 text-center border-t border-gray-200">
+              <p className="text-[8px] text-gray-400">Representación impresa de la {tipo === 'FACTURA' ? 'Factura' : 'Boleta'} Electrónica</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

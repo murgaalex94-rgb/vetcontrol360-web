@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import API from "../services/axiosConfig";
 
 const ROL_ADMIN = 1;
 const ROL_VETERINARIO = 2;
@@ -8,16 +9,19 @@ export default function SUNATConfigPage() {
   const idRol = user.idRol;
 
   const [config, setConfig] = useState({
-    modo: "demo",
     ruc: "",
     razonSocial: "",
-    usuarioSol: "MODDATOS",
-    claveSol: "MODDATOS",
-    urlEnvio: "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService",
+    nombreComercial: "",
+    direccion: "",
+    telefono: "",
+    email: "",
     certificadoPath: "",
+    certificadoPassword: "",
   });
 
   const [comprobantes, setComprobantes] = useState([]);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
     fetchConfig();
@@ -25,26 +29,61 @@ export default function SUNATConfigPage() {
   }, []);
 
   const fetchConfig = () => {
-    setConfig({
-      modo: import.meta.env.VITE_SUNAT_MODO || "demo",
-      ruc: import.meta.env.VITE_SUNAT_RUC || "20600085510",
-      razonSocial: import.meta.env.VITE_SUNAT_RAZON_SOCIAL || "MI EMPRESA SAC",
-      usuarioSol: import.meta.env.VITE_SUNAT_USUARIO_SOL || "MODDATOS",
-      claveSol: import.meta.env.VITE_SUNAT_CLAVE_SOL || "MODDATOS",
-      urlEnvio:
-        import.meta.env.VITE_SUNAT_URL_ENVIO ||
-        "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService",
-      certificadoPath: import.meta.env.VITE_SUNAT_CERT_PATH || "",
-    });
+    API.get("/api/empresa")
+      .then(function (r) {
+        var d = r.data;
+        setConfig({
+          ruc: d.ruc || "",
+          razonSocial: d.razonSocial || "",
+          nombreComercial: d.nombreComercial || "",
+          direccion: d.direccion || "",
+          telefono: d.telefono || "",
+          email: d.email || "",
+          certificadoPath: d.certificadoPath || "",
+          certificadoPassword: d.certificadoPassword || "",
+        });
+      })
+      .catch(function () {
+        setConfig({
+          ruc: import.meta.env.VITE_SUNAT_RUC || "20600085510",
+          razonSocial: import.meta.env.VITE_SUNAT_RAZON_SOCIAL || "MI EMPRESA SAC",
+          nombreComercial: "",
+          direccion: "",
+          telefono: "",
+          email: "",
+          certificadoPath: import.meta.env.VITE_SUNAT_CERT_PATH || "",
+          certificadoPassword: "",
+        });
+      });
   };
 
   const fetchComprobantes = async () => {
     try {
-      const res = await fetch("/api/facturas/electronica/todos");
-      if (res.ok) setComprobantes(await res.json());
+      const res = await API.get("/api/facturas/electronica/todos");
+      setComprobantes(res.data || []);
     } catch {
       console.log("No se pudieron cargar comprobantes");
     }
+  };
+
+  const handleChange = (e) => {
+    setConfig(function (prev) { return { ...prev, [e.target.name]: e.target.value }; });
+  };
+
+  const handleGuardar = function () {
+    setGuardando(true);
+    setMensaje("");
+    API.put("/api/empresa", config)
+      .then(function () {
+        setMensaje("Configuración guardada correctamente");
+        setTimeout(function () { setMensaje(""); }, 3000);
+      })
+      .catch(function (err) {
+        setMensaje("Error al guardar: " + (err.response?.data?.error || err.message));
+      })
+      .finally(function () {
+        setGuardando(false);
+      });
   };
 
   const estadoBadge = (estado) => {
@@ -80,60 +119,97 @@ export default function SUNATConfigPage() {
         Configuracion de Facturacion Electronica SUNAT
       </h1>
 
+      {mensaje && (
+        <div className={"p-3 rounded-lg text-sm mb-4 " + (mensaje.includes("Error") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700")}>
+          {mensaje}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">Modo</h2>
           <span
             className={`px-3 py-1 rounded-full text-sm font-bold ${
-              config.modo === "demo"
+              import.meta.env.VITE_SUNAT_MODO !== "produccion"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
             }`}
           >
-            {config.modo === "demo" ? "DEMO (Pruebas)" : "PRODUCCION"}
+            {import.meta.env.VITE_SUNAT_MODO !== "produccion" ? "DEMO (Pruebas)" : "PRODUCCION"}
           </span>
           <p className="text-sm text-gray-500 mt-2">
-            {config.modo === "demo"
+            {import.meta.env.VITE_SUNAT_MODO !== "produccion"
               ? "Usando endpoint de pruebas de SUNAT (e-beta). No se generan comprobantes reales."
               : "Enviando a SUNAT produccion."}
           </p>
+          <p className="text-xs text-gray-400 mt-1">Configurado via variable de entorno en Render.</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">Emisor</h2>
-          <p className="text-sm">
-            <span className="font-medium">RUC:</span> {config.ruc}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Razon Social:</span>{" "}
-            {config.razonSocial}
-          </p>
+          <div className="space-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600">RUC</label>
+              <input name="ruc" value={config.ruc} onChange={handleChange} maxLength="11" className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Razon Social</label>
+              <input name="razonSocial" value={config.razonSocial} onChange={handleChange} className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Nombre Comercial</label>
+              <input name="nombreComercial" value={config.nombreComercial} onChange={handleChange} className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Dirección</label>
+              <input name="direccion" value={config.direccion} onChange={handleChange} className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">Credenciales SOL</h2>
-          <p className="text-sm">
-            <span className="font-medium">Usuario:</span> {config.usuarioSol}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">URL Envio:</span>
-          </p>
-          <p className="text-xs text-gray-500 break-all">{config.urlEnvio}</p>
+          <div className="space-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Usuario SOL</label>
+              <input value={import.meta.env.VITE_SUNAT_USUARIO_SOL || "MODDATOS"} disabled className="w-full rounded border-gray-200 text-sm mt-0.5 bg-gray-50" />
+              <p className="text-[10px] text-gray-400 mt-0.5">Solo configurable via variable de entorno.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">URL Envio SUNAT</label>
+              <input value={import.meta.env.VITE_SUNAT_URL_ENVIO || "https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService"} disabled className="w-full rounded border-gray-200 text-sm mt-0.5 bg-gray-50" />
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">Certificado Digital</h2>
-          <p className="text-sm">
-            {config.certificadoPath
-              ? `Ruta: ${config.certificadoPath}`
-              : "No configurado. En modo demo se usa firma mock."}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {config.modo === "demo"
+          <div className="space-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Ruta del Certificado</label>
+              <input name="certificadoPath" value={config.certificadoPath} onChange={handleChange} placeholder="/app/certificates/cert.p12" className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600">Contraseña del Certificado</label>
+              <input name="certificadoPassword" type="password" value={config.certificadoPassword} onChange={handleChange} placeholder="********" className="w-full rounded border-gray-300 text-sm mt-0.5" />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {import.meta.env.VITE_SUNAT_MODO !== "produccion"
               ? "No se requiere certificado en modo demo."
               : "Coloca un certificado .p12/.pfx valido emitido por SUNAT."}
           </p>
         </div>
+      </div>
+
+      <div className="flex justify-end mb-8">
+        <button
+          onClick={handleGuardar}
+          disabled={guardando}
+          className="px-8 py-2.5 bg-[#5F7B65] text-white rounded-lg hover:bg-[#4a634f] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          {guardando ? "Guardando..." : "Guardar Configuración"}
+        </button>
       </div>
 
       <h2 className="text-xl font-bold mb-4">
