@@ -87,24 +87,16 @@ export default function NuevaVenta() {
   }
 
   function handleItemChange(i, field, value) {
-    setItems(function (prev) {
-      return prev.map(function (item, idx) {
-        if (idx !== i) return item;
-        var updated = { ...item, [field]: value };
-        return updated;
-      });
-    });
+    var updated = items.slice();
+    updated[i] = { ...updated[i], [field]: value };
+    setItems(updated);
   }
 
-  function handleCantidadChange(i, raw) {
-    var val = parseInt(raw, 10);
-    if (isNaN(val) || val < 1) val = 1;
-    setItems(function (prev) {
-      return prev.map(function (item, idx) {
-        if (idx !== i) return item;
-        return { ...item, cantidad: val };
-      });
-    });
+  function handleCantidadChange(index, nuevoValor) {
+    var updated = items.slice();
+    var valorNumerico = parseInt(nuevoValor, 10) || 0;
+    updated[index].cantidad = Math.max(1, valorNumerico);
+    setItems(updated);
   }
 
   function addItem(t) {
