@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../services/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
 export default function NuevaVenta() {
@@ -13,8 +13,8 @@ export default function NuevaVenta() {
   var [error, setError] = useState('');
 
   useEffect(function () {
-    axios.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
-    axios.get('/api/mascotas').then(function (r) { setMascotas(r.data || []); }).catch(function () {});
+    API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
+    API.get('/api/mascotas').then(function (r) { setMascotas(r.data || []); }).catch(function () {});
   }, []);
 
   function handleFormChange(e) {
@@ -81,7 +81,7 @@ export default function NuevaVenta() {
       clienteDireccion: form.clienteDireccion
     };
 
-    axios.post('/api/facturas', payload).then(function (res) {
+    API.post('/api/facturas', payload).then(function (res) {
       var factura = res.data;
       var envio = {
         facturaId: factura.id,
@@ -100,7 +100,7 @@ export default function NuevaVenta() {
           precioTotal: parseFloat(it.cantidad) * parseFloat(it.precioUnitario)
         }; })
       };
-      return axios.post('/api/facturas/' + factura.id + '/enviar-sunat', envio);
+      return API.post('/api/facturas/' + factura.id + '/enviar-sunat', envio);
     }).then(function () {
       navigate('/ventas/historial');
     }).catch(function (err) {

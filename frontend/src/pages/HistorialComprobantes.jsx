@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from '../services/axiosConfig';
 
 export default function HistorialComprobantes() {
   var [comprobantes, setComprobantes] = useState([]);
@@ -7,7 +7,7 @@ export default function HistorialComprobantes() {
 
   function cargar() {
     setLoading(true);
-    axios.get('/api/facturas/electronica/todos')
+    API.get('/api/facturas/electronica/todos')
       .then(function (r) { setComprobantes(r.data || []); })
       .catch(function () { setComprobantes([]); })
       .finally(function () { setLoading(false); });
