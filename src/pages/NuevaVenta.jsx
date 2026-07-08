@@ -41,6 +41,7 @@ export default function NuevaVenta() {
   var [clienteModal, setClienteModal] = useState(false);
   var [mascotaModal, setMascotaModal] = useState(false);
   var [clientes, setClientes] = useState([]);
+  var [selectedClienteId, setSelectedClienteId] = useState(null);
   var [numeroComprobante, setNumeroComprobante] = useState(generarNumero('BOLETA'));
   var previewRef = useRef(null);
   var searchTimer = useRef(null);
@@ -53,6 +54,32 @@ export default function NuevaVenta() {
   useEffect(function () {
     setNumeroComprobante(generarNumero(tipo));
   }, [tipo]);
+
+  useEffect(function () {
+    resolverClienteId();
+  }, [form.clienteDoc, form.clienteNombre, clientes]);
+
+  function resolverClienteId() {
+    var doc = (form.clienteDoc || '').trim();
+    var nombre = (form.clienteNombre || '').trim();
+    if (!doc && !nombre) {
+      setSelectedClienteId(null);
+      return;
+    }
+    var found = null;
+    if (doc) {
+      found = clientes.find(function (c) { return c.dni && c.dni === doc; });
+    }
+    if (!found && doc) {
+      var digits = doc.replace(/\D/g, '');
+      found = clientes.find(function (c) { return c.dni && c.dni.replace(/\D/g, '') === digits; });
+    }
+    if (!found && nombre) {
+      var nLower = nombre.toLowerCase();
+      found = clientes.find(function (c) { return c.nombre && c.nombre.toLowerCase().includes(nLower); });
+    }
+    setSelectedClienteId(found ? found.id : null);
+  }
 
   function handleFormChange(e) {
     setForm(function (f) { return { ...f, [e.target.name]: e.target.value }; });
@@ -76,20 +103,6 @@ export default function NuevaVenta() {
     setItems(function (prev) { return prev.filter(function (_, idx) { return idx !== i; }); });
   }
 
-  function getClienteIdFromForm() {
-    var found = null;
-    if (form.clienteDoc) {
-      found = clientes.find(function (c) { return c.dni === form.clienteDoc; });
-    }
-    if (!found && form.clienteNombre) {
-      found = clientes.find(function (c) { return c.nombre && c.nombre.toLowerCase() === form.clienteNombre.toLowerCase(); });
-    }
-    if (!found && form.clienteDoc) {
-      found = clientes.find(function (c) { return c.dni && c.dni.replace(/\D/g, '') === form.clienteDoc.replace(/\D/g, ''); });
-    }
-    return found ? found.id : null;
-  }
-
   function cargarMascotas(clienteId, query) {
     setMascotaLoading(true);
     var params = [];
@@ -108,8 +121,7 @@ export default function NuevaVenta() {
   function openMascotaModal() {
     setMascotaOpen(true);
     setMascotaSearch('');
-    var clienteId = getClienteIdFromForm();
-    cargarMascotas(clienteId, '');
+    cargarMascotas(selectedClienteId, '');
   }
 
   function handleMascotaSearchChange(e) {
@@ -117,8 +129,7 @@ export default function NuevaVenta() {
     setMascotaSearch(q);
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(function () {
-      var clienteId = getClienteIdFromForm();
-      cargarMascotas(clienteId, q);
+      cargarMascotas(selectedClienteId, q);
     }, 300);
   }
 
@@ -133,7 +144,7 @@ export default function NuevaVenta() {
     setMascotaModal(false);
     if (m) {
       selectMascota(m);
-      cargarMascotas(getClienteIdFromForm(), '');
+      cargarMascotas(selectedClienteId, '');
     }
   }
 
@@ -145,6 +156,7 @@ export default function NuevaVenta() {
         var exists = prev.some(function (c) { return c.id === cliente.id; });
         return exists ? prev : [cliente, ...prev];
       });
+      setSelectedClienteId(cliente.id);
     }
   }
 
@@ -531,7 +543,7 @@ export default function NuevaVenta() {
                   <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
                   <span className="ml-2 text-sm text-gray-500 dark:text-[#909090]">Buscando...</span>
                 </div>
-              ) : (!form.clienteDoc && !form.clienteNombre) || (!getClienteIdFromForm() && !mascotaSearch && mascotaResults.length === 0) ? (
+              ) : !selectedClienteId ? (
                 <div className="p-6 text-center">
                   <p className="text-sm text-gray-400 dark:text-[#808080]">Primero selecciona un cliente</p>
                 </div>
