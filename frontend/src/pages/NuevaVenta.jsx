@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import API from '../services/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
 var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
 var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm cursor-pointer";
+
+function formatMoney(val) {
+  return val > 0 ? 'S/ ' + val.toFixed(2) : '—';
+}
 
 export default function NuevaVenta() {
   var navigate = useNavigate();
@@ -15,10 +19,23 @@ export default function NuevaVenta() {
   var [enviando, setEnviando] = useState(false);
   var [error, setError] = useState('');
   var [mascotaSel, setMascotaSel] = useState(null);
+  var [mascotaOpen, setMascotaOpen] = useState(false);
+  var [mascotaSearch, setMascotaSearch] = useState('');
+  var mascotaRef = useRef(null);
 
   useEffect(function () {
     API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
     API.get('/api/mascotas').then(function (r) { setMascotas(r.data || []); }).catch(function () {});
+  }, []);
+
+  useEffect(function () {
+    function handleClickOut(e) {
+      if (mascotaRef.current && !mascotaRef.current.contains(e.target)) {
+        setMascotaOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOut);
+    return function () { document.removeEventListener('mousedown', handleClickOut); };
   }, []);
 
   function handleFormChange(e) {
@@ -46,12 +63,18 @@ export default function NuevaVenta() {
     setItems(function (prev) { return prev.filter(function (_, idx) { return idx !== i; }); });
   }
 
-  function handleMascotaSelect(e) {
-    var id = e.target.value;
-    var m = mascotas.find(function (x) { return x.id === parseInt(id); });
-    setMascotaSel(m || null);
-    setForm(function (f) { return { ...f, mascotaId: id, mascotaNombre: m ? m.nombre + (m.raza ? ' (' + m.raza + ')' : '') : '' }; });
+  function selectMascota(m) {
+    setMascotaSel(m);
+    setMascotaOpen(false);
+    setMascotaSearch('');
+    setForm(function (f) { return { ...f, mascotaId: m ? String(m.id) : '', mascotaNombre: m ? m.nombre + (m.raza ? ' (' + m.raza + ')' : '') : '' }; });
   }
+
+  var mascotasFiltradas = mascotas.filter(function (m) {
+    if (!mascotaSearch) return true;
+    var q = mascotaSearch.toLowerCase();
+    return m.nombre.toLowerCase().includes(q) || (m.raza && m.raza.toLowerCase().includes(q)) || (m.cliente && m.cliente.toLowerCase().includes(q));
+  });
 
   var total = items.reduce(function (sum, item) {
     return sum + (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0));
@@ -168,25 +191,52 @@ export default function NuevaVenta() {
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-6">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-[#E0E0E0]">Mascota (opcional)</h2>
-          <select onChange={handleMascotaSelect} value={form.mascotaId} className={selectClass}>
-            <option value="">-- Seleccionar mascota --</option>
-            {mascotas.map(function (m) {
-              return <option key={m.id} value={m.id}>{m.nombre}{m.raza ? ' (' + m.raza + ')' : ''} - {m.cliente || ''}</option>;
-            })}
-          </select>
-          {mascotaSel ? (
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#2C2C2C] rounded-lg border border-gray-200 dark:border-[#3A3A3A]">
-              <div className="w-10 h-10 rounded-full bg-[#5F7B65]/10 flex items-center justify-center text-[#5F7B65] shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>
+          <div className="relative" ref={mascotaRef}>
+            <button type="button" onClick={function () { setMascotaOpen(!mascotaOpen); setMascotaSearch(''); }}
+              className={"w-full flex items-center gap-3 px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-[#5F7B65] focus:border-[#5F7B65] outline-none bg-white dark:bg-[#2C2C2C] text-sm text-left cursor-pointer " + (mascotaOpen ? 'ring-2 ring-[#5F7B65] border-[#5F7B65]' : '')}>
+              {mascotaSel ? (
+                <>
+                  <div className="w-8 h-8 rounded-full bg-[#5F7B65] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {mascotaSel.nombre.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-[#E0E0E0] text-sm truncate">{mascotaSel.nombre}</p>
+                    <p className="text-xs text-gray-500 dark:text-[#909090] truncate">{mascotaSel.raza || 'Sin raza'}{mascotaSel.cliente ? ' - ' + mascotaSel.cliente : ''}</p>
+                  </div>
+                </>
+              ) : (
+                <span className="text-gray-400 dark:text-[#808080]">-- Seleccionar mascota --</span>
+              )}
+              <svg className={"w-4 h-4 text-gray-400 shrink-0 transition-transform " + (mascotaOpen ? 'rotate-180' : '')} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {mascotaOpen && (
+              <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#3A3A3A] rounded-lg shadow-lg overflow-hidden">
+                <div className="p-2 border-b border-gray-100 dark:border-[#333]">
+                  <input autoFocus value={mascotaSearch} onChange={function (e) { setMascotaSearch(e.target.value); }} placeholder="Buscar mascota..." className="w-full px-3 py-1.5 border border-gray-200 dark:border-[#404040] rounded-md text-sm focus:ring-2 focus:ring-[#5F7B65] outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {mascotasFiltradas.length === 0 ? (
+                    <p className="p-3 text-sm text-gray-400 dark:text-[#808080] text-center">No se encontraron mascotas</p>
+                  ) : (
+                    mascotasFiltradas.map(function (m) {
+                      return (
+                        <button key={m.id} type="button" onClick={function () { selectMascota(m); }}
+                          className={"w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer " + (mascotaSel && mascotaSel.id === m.id ? 'bg-gray-50 dark:bg-[#2C2C2C]' : '')}>
+                          <div className="w-8 h-8 rounded-full bg-[#5F7B65]/20 dark:bg-[#5F7B65]/30 flex items-center justify-center text-[#5F7B65] text-xs font-bold shrink-0">
+                            {m.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">{m.nombre}</p>
+                            <p className="text-xs text-gray-500 dark:text-[#909090] truncate">{m.raza || 'Sin raza'}{m.cliente ? ' - Dueño: ' + m.cliente : ''}</p>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-[#E0E0E0] text-sm">{mascotaSel.nombre}</p>
-                <p className="text-xs text-gray-500 dark:text-[#909090]">{mascotaSel.raza || 'Sin raza'}{mascotaSel.cliente ? ' - Dueño: ' + mascotaSel.cliente : ''}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 dark:text-[#808080]">-- Seleccionar mascota --</p>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-6">
@@ -221,7 +271,7 @@ export default function NuevaVenta() {
                       <td className="px-4 py-3">
                         <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={function (e) { handleItemChange(i, 'precioUnitario', parseFloat(e.target.value) || 0); }} className={"w-24 text-right " + inputClass} />
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">S/ {subtotal.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(subtotal)}</td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={function () { removeItem(i); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer">&times;</button>
                       </td>
@@ -276,7 +326,7 @@ export default function NuevaVenta() {
                       <tr key={i} className="border-b border-gray-50 dark:border-[#2A2A2A]">
                         <td className="py-1 pr-1 truncate max-w-[120px] text-gray-900 dark:text-[#E0E0E0]">{it.descripcion}</td>
                         <td className="py-1 px-1 text-center text-gray-700 dark:text-[#D0D0D0]">{it.cantidad}</td>
-                        <td className="py-1 pl-1 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">S/ {sub.toFixed(2)}</td>
+                        <td className="py-1 pl-1 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(sub)}</td>
                       </tr>
                     );
                   })}
@@ -287,9 +337,9 @@ export default function NuevaVenta() {
               </table>
             </div>
             <div className="px-4 py-2 space-y-1 text-[11px]">
-              <div className="flex justify-between text-gray-600 dark:text-[#A0A0A0]"><span>Subtotal</span><span>S/ {total.toFixed(2)}</span></div>
-              <div className="flex justify-between text-gray-600 dark:text-[#A0A0A0]"><span>IGV (18%)</span><span>S/ {igv.toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm font-bold border-t border-gray-200 dark:border-[#3A3A3A] pt-1 text-gray-900 dark:text-[#E0E0E0]"><span>TOTAL</span><span>S/ {totalConIgv.toFixed(2)}</span></div>
+              <div className="flex justify-between text-gray-600 dark:text-[#A0A0A0]"><span>Subtotal</span><span>{formatMoney(total)}</span></div>
+              <div className="flex justify-between text-gray-600 dark:text-[#A0A0A0]"><span>IGV (18%)</span><span>{formatMoney(igv)}</span></div>
+              <div className="flex justify-between text-sm font-bold border-t border-gray-200 dark:border-[#3A3A3A] pt-1 text-gray-900 dark:text-[#E0E0E0]"><span>TOTAL</span><span>{formatMoney(totalConIgv)}</span></div>
             </div>
             <div className="bg-gray-50 dark:bg-[#2C2C2C] px-4 py-2 text-center border-t border-gray-200 dark:border-[#3A3A3A]">
               <p className="text-[8px] text-gray-400 dark:text-[#808080]">Representación impresa de la {tipo === 'FACTURA' ? 'Factura' : 'Boleta'} Electrónica</p>
