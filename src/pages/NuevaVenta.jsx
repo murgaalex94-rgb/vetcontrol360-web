@@ -193,55 +193,53 @@ export default function NuevaVenta() {
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-[#E0E0E0] mb-4">Mascota</h2>
-          {mascotaSel ? (
-            <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-[#3A3A3A] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg font-bold shrink-0">
-                  {mascotaSel.nombre.charAt(0).toUpperCase()}
+          <div className="relative" ref={mascotaRef}>
+            {mascotaSel ? (
+              <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-[#3A3A3A] rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-[#3A3A3A] flex items-center justify-center text-gray-500 dark:text-[#A0A0A0] text-lg font-bold shrink-0">
+                    {mascotaSel.nombre.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-[#E0E0E0]">{mascotaSel.nombre}</p>
+                    <p className="text-sm text-gray-500 dark:text-[#909090]">{mascotaSel.raza || 'Sin raza'}{mascotaSel.cliente ? ' - ' + mascotaSel.cliente : ''}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-[#E0E0E0]">{mascotaSel.nombre}</p>
-                  <p className="text-sm text-gray-500 dark:text-[#909090]">{mascotaSel.especie || 'Mascota'}{mascotaSel.raza ? ' - ' + mascotaSel.raza : ''}</p>
+                <button type="button" onClick={function () { setMascotaOpen(!mascotaOpen); setMascotaSearch(''); }} className="px-4 py-2 border border-gray-300 dark:border-[#404040] rounded-lg text-sm text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cambiar Mascota</button>
+              </div>
+            ) : (
+              <button type="button" onClick={function () { setMascotaOpen(!mascotaOpen); setMascotaSearch(''); }} className="w-full p-4 border border-gray-200 dark:border-[#3A3A3A] rounded-lg text-center text-gray-400 dark:text-[#808080] text-sm bg-white dark:bg-[#1E1E1E] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+                Selecciona una mascota
+              </button>
+            )}
+            {mascotaOpen && (
+              <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#3A3A3A] rounded-lg shadow-lg overflow-hidden">
+                <div className="p-2 border-b border-gray-100 dark:border-[#333]">
+                  <input autoFocus value={mascotaSearch} onChange={function (e) { setMascotaSearch(e.target.value); }} placeholder="Buscar mascota..." className="w-full px-3 py-1.5 border border-gray-200 dark:border-[#404040] rounded-md text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {mascotasFiltradas.length === 0 ? (
+                    <p className="p-3 text-sm text-gray-400 dark:text-[#808080] text-center">No se encontraron mascotas</p>
+                  ) : (
+                    mascotasFiltradas.map(function (m) {
+                      return (
+                        <button key={m.id} type="button" onClick={function () { selectMascota(m); }}
+                          className={"w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer " + (mascotaSel && mascotaSel.id === m.id ? 'bg-gray-50 dark:bg-[#2C2C2C]' : '')}>
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#3A3A3A] flex items-center justify-center text-gray-500 dark:text-[#A0A0A0] text-xs font-bold shrink-0">
+                            {m.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">{m.nombre}</p>
+                            <p className="text-xs text-gray-500 dark:text-[#909090] truncate">{m.raza || 'Sin raza'}{m.cliente ? ' - Dueño: ' + m.cliente : ''}</p>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-              <button onClick={function () { setMascotaOpen(true); }} className="px-4 py-2 border border-gray-300 dark:border-[#404040] rounded-lg text-sm text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cambiar Mascota</button>
-            </div>
-          ) : (
-            <div className="relative" ref={mascotaRef}>
-              <button type="button" onClick={function () { setMascotaOpen(!mascotaOpen); setMascotaSearch(''); }}
-                className={"w-full flex items-center justify-between px-4 py-3 border border-gray-300 dark:border-[#404040] rounded-lg bg-white dark:bg-[#2C2C2C] text-sm text-left cursor-pointer " + (mascotaOpen ? 'ring-2 ring-emerald-500 border-emerald-500' : '')}>
-                <span className="text-gray-400 dark:text-[#808080]">Selecciona una mascota</span>
-                <svg className={"w-4 h-4 text-gray-400 transition-transform " + (mascotaOpen ? 'rotate-180' : '')} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {mascotaOpen && (
-                <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#3A3A3A] rounded-lg shadow-lg overflow-hidden">
-                  <div className="p-2 border-b border-gray-100 dark:border-[#333]">
-                    <input autoFocus value={mascotaSearch} onChange={function (e) { setMascotaSearch(e.target.value); }} placeholder="Buscar mascota..." className="w-full px-3 py-1.5 border border-gray-200 dark:border-[#404040] rounded-md text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {mascotasFiltradas.length === 0 ? (
-                      <p className="p-3 text-sm text-gray-400 dark:text-[#808080] text-center">No se encontraron mascotas</p>
-                    ) : (
-                      mascotasFiltradas.map(function (m) {
-                        return (
-                          <button key={m.id} type="button" onClick={function () { selectMascota(m); }}
-                            className={"w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer " + (mascotaSel && mascotaSel.id === m.id ? 'bg-gray-50 dark:bg-[#2C2C2C]' : '')}>
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs font-bold shrink-0">
-                              {m.nombre.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-[#E0E0E0] truncate">{m.nombre}</p>
-                              <p className="text-xs text-gray-500 dark:text-[#909090] truncate">{m.raza || 'Sin raza'}{m.cliente ? ' - Dueño: ' + m.cliente : ''}</p>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-[#1E1E1E] rounded-xl shadow-sm border border-gray-100 dark:border-[#333] p-6 space-y-4">
@@ -250,13 +248,13 @@ export default function NuevaVenta() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="bg-gray-50 dark:bg-[#2C2C2C] text-left">
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] w-24">Tipo</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0]">Descripción</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center w-16">Cant.</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-28">Precio Unit.</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-24">Descuento</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-24">Total</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center w-12"></th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] w-24">Tipo</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0]">Descripción</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center w-16">Cant.</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-28">Precio Unit.</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-24">Descuento</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] text-right w-24">Total</th>
+                  <th className="px-3 py-2.5 font-semibold text-gray-600 dark:text-[#A0A0A0] text-center w-12"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
@@ -264,27 +262,26 @@ export default function NuevaVenta() {
                   var itemTotal = (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0)) - (parseFloat(item.descuento || 0) * parseFloat(item.cantidad || 0));
                   return (
                     <tr key={i} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
-                      <td className="px-4 py-3">
-                        <select value={item.tipo} onChange={function (e) { handleItemChange(i, 'tipo', e.target.value); }} className={"text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer " + (item.tipo === 'servicio' ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300')}>
-                          <option value="servicio">Servicio</option>
-                          <option value="producto">Producto</option>
-                        </select>
+                      <td className="px-3 py-2">
+                        <span className={"inline-block text-xs font-semibold px-2.5 py-1 rounded-full " + (item.tipo === 'servicio' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300')}>
+                          {item.tipo === 'servicio' ? 'Servicio' : 'Producto'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <input value={item.descripcion} onChange={function (e) { handleItemChange(i, 'descripcion', e.target.value); }} placeholder="Descripción" className={inputClass} />
                       </td>
-                      <td className="px-4 py-3">
-                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { handleItemChange(i, 'cantidad', parseInt(e.target.value) || 0); }} className={"w-16 text-center " + inputClass} />
+                      <td className="px-3 py-2">
+                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { handleItemChange(i, 'cantidad', parseInt(e.target.value) || 0); }} className={"w-14 text-center " + inputClass} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={function (e) { handleItemChange(i, 'precioUnitario', parseFloat(e.target.value) || 0); }} className={"w-24 text-right " + inputClass} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <input type="number" min="0" step="0.01" value={item.descuento} onChange={function (e) { handleItemChange(i, 'descuento', parseFloat(e.target.value) || 0); }} className={"w-20 text-right " + inputClass} />
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(itemTotal)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button onClick={function () { removeItem(i); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer">&times;</button>
+                      <td className="px-3 py-2 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(itemTotal)}</td>
+                      <td className="px-3 py-2 text-center">
+                        <button onClick={function () { removeItem(i); }} className="p-1 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors cursor-pointer">&times;</button>
                       </td>
                     </tr>
                   );
@@ -302,18 +299,17 @@ export default function NuevaVenta() {
           </div>
           <div className="border-t border-gray-100 dark:border-[#333] pt-4 space-y-2">
             <div className="flex justify-end items-center gap-4 text-sm">
-              <span className="text-gray-600 dark:text-[#A0A0A0]">Subtotal:</span>
+              <span className="text-gray-500 dark:text-[#909090]">Subtotal:</span>
               <span className="w-28 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(subtotal)}</span>
             </div>
             <div className="flex justify-end items-center gap-4 text-sm">
-              <span className="text-gray-600 dark:text-[#A0A0A0]">Descuento Global:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">S/</span>
-                <input type="number" min="0" step="0.01" value={descuentoGlobal} onChange={function (e) { setDescuentoGlobal(parseFloat(e.target.value) || 0); }} className="w-24 text-right px-2 py-1 border border-gray-300 dark:border-[#404040] rounded-md text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+              <span className="text-gray-500 dark:text-[#909090]">Descuento Global:</span>
+              <div className="flex items-center">
+                <input type="number" min="0" step="0.01" value={descuentoGlobal} onChange={function (e) { setDescuentoGlobal(parseFloat(e.target.value) || 0); }} className="w-20 text-right px-2 py-1 border border-gray-300 dark:border-[#404040] rounded text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
               </div>
             </div>
             <div className="flex justify-end items-center gap-4 text-sm">
-              <span className="text-gray-600 dark:text-[#A0A0A0]">IGV (18%):</span>
+              <span className="text-gray-500 dark:text-[#909090]">IGV (18%):</span>
               <span className="w-28 text-right font-medium text-gray-900 dark:text-[#E0E0E0]">{formatMoney(igv)}</span>
             </div>
             <div className="flex justify-end items-center gap-4 text-lg">
