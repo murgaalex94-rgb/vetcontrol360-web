@@ -23,6 +23,10 @@ import PersonalPage from './pages/PersonalPage';
 import ProveedoresPage from './pages/ProveedoresPage';
 import ReportesPage from './pages/ReportesPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
+import SUNATConfigPage from './pages/SUNATConfigPage';
+import ConfiguracionEmpresa from './pages/ConfiguracionEmpresa';
+import NuevaVenta from './pages/NuevaVenta';
+import HistorialComprobantes from './pages/HistorialComprobantes';
 
 function PlaceholderPage({ titulo }) {
   return (
@@ -64,6 +68,10 @@ function App() {
           <Route path="/personal" element={<PersonalPage />} />
           <Route path="/reportes" element={<ReportesPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
+          <Route path="/sunat" element={<SUNATConfigPage />} />
+          <Route path="/configuracion-empresa" element={<ConfiguracionEmpresa />} />
+          <Route path="/ventas/nueva" element={<NuevaVenta />} />
+          <Route path="/ventas/historial" element={<HistorialComprobantes />} />
         </Route>
       </Routes>
     </Router>

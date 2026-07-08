@@ -22,6 +22,7 @@ import HistoriaClinicaPage from './pages/HistoriaClinicaPage';
 import PersonalPage from './pages/PersonalPage';
 import ProveedoresPage from './pages/ProveedoresPage';
 import ReportesPage from './pages/ReportesPage';
+import SUNATConfigPage from './pages/SUNATConfigPage';
 
 function PlaceholderPage({ titulo }) {
   return (
@@ -62,6 +63,7 @@ function App() {
           <Route path="/proveedores" element={<ProveedoresPage />} />
           <Route path="/personal" element={<PersonalPage />} />
           <Route path="/reportes" element={<ReportesPage />} />
+          <Route path="/sunat" element={<SUNATConfigPage />} />
         </Route>
       </Routes>
     </Router>

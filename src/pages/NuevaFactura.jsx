@@ -19,6 +19,7 @@ function NuevaFactura() {
   const [estadoPago, setEstadoPago] = useState('Pagada');
   const [observaciones, setObservaciones] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [enviarSunat, setEnviarSunat] = useState(false);
   const [items, setItems] = useState([
     { id: 1, descripcion: 'Consulta General', categoria: 'Servicios', cantidad: 1, precio: 80, descuento: 0 },
     { id: 2, descripcion: 'Vacuna Antirrábica', categoria: 'Medicamentos', cantidad: 1, precio: 60, descuento: 0 },
@@ -73,10 +74,49 @@ function NuevaFactura() {
       estado: estado,
       metodoPago: metodoPago,
     };
-    API.post('/facturas', payload).then(function () {
+    API.post('/facturas', payload).then(function (res) {
+      if (enviarSunat && clienteSel) {
+        var sunatPayload = {
+          serie: 'F001',
+          clienteDoc: clienteSel.dni || '00000000',
+          clienteTipoDoc: clienteSel.dni && clienteSel.dni.length === 11 ? '6' : '1',
+          clienteNombre: (clienteSel.nombre + ' ' + (clienteSel.apellidos || '')).trim(),
+          moneda: 'PEN',
+          items: items.map(function (item) {
+            return {
+              descripcion: item.descripcion,
+              cantidad: item.cantidad,
+              precioUnitario: item.precio,
+              precioTotal: item.cantidad * item.precio * (1 - item.descuento / 100),
+            };
+          }),
+        };
+        var facturaId = res.data && res.data.id ? res.data.id : null;
+        if (facturaId) {
+          API.post('/facturas/' + facturaId + '/enviar-sunat', sunatPayload).catch(function () {
+            console.log('Factura guardada pero fallo envio a SUNAT');
+          });
+        }
+      }
       navigate('/facturacion');
-    }).catch(function () {
-      alert('Error al guardar la factura');
+    }).catch(function (error) {
+      console.error('Error al guardar factura:', error);
+      var mensaje = 'Error al guardar la factura';
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+        if (error.response.status === 401 || error.response.status === 403) {
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        }
+        if (error.response.data && error.response.data.error) {
+          mensaje = error.response.data.error;
+        } else if (error.response.data && error.response.data.message) {
+          mensaje = error.response.data.message;
+        }
+      }
+      alert(mensaje);
     });
   }
 
@@ -291,6 +331,17 @@ function NuevaFactura() {
                 <span className="text-xl font-bold text-gray-900 dark:text-[#E0E0E0]">S/ {totalPagar.toFixed(2)}</span>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#1E1E1E] rounded-2xl border border-gray-200 dark:border-[#333] shadow-sm p-5">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={enviarSunat} onChange={function (e) { setEnviarSunat(e.target.checked); }}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+              <div>
+                <span className="text-sm font-semibold text-gray-800 dark:text-[#E0E0E0]">Enviar a SUNAT</span>
+                <p className="text-xs text-gray-500 dark:text-[#909090] mt-0.5">Genera y envía el comprobante electrónico a SUNAT automáticamente</p>
+              </div>
+            </label>
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
