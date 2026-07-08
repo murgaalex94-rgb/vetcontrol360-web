@@ -29,20 +29,23 @@ export default function NuevaVenta() {
   var [form, setForm] = useState({ clienteDoc: '', clienteNombre: '', clienteDireccion: '', mascotaId: '', mascotaNombre: '' });
   var [items, setItems] = useState([{ tipo: 'servicio', descripcion: '', cantidad: 1, precioUnitario: 0, descuento: 0 }]);
   var [descuentoGlobal, setDescuentoGlobal] = useState(0);
-  var [mascotas, setMascotas] = useState([]);
   var [empresa, setEmpresa] = useState(null);
   var [enviando, setEnviando] = useState(false);
   var [error, setError] = useState('');
   var [mascotaSel, setMascotaSel] = useState(null);
   var [mascotaOpen, setMascotaOpen] = useState(false);
   var [mascotaSearch, setMascotaSearch] = useState('');
+  var [mascotaResults, setMascotaResults] = useState([]);
+  var [mascotaLoading, setMascotaLoading] = useState(false);
   var [clienteModal, setClienteModal] = useState(false);
+  var [clientes, setClientes] = useState([]);
   var [numeroComprobante, setNumeroComprobante] = useState(generarNumero('BOLETA'));
   var previewRef = useRef(null);
+  var searchTimer = useRef(null);
 
   useEffect(function () {
     API.get('/api/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
-    API.get('/api/mascotas').then(function (r) { setMascotas(r.data || []); }).catch(function () {});
+    API.get('/api/clientes').then(function (r) { setClientes(r.data || []); }).catch(function () {});
   }, []);
 
   useEffect(function () {
@@ -71,6 +74,44 @@ export default function NuevaVenta() {
     setItems(function (prev) { return prev.filter(function (_, idx) { return idx !== i; }); });
   }
 
+  function getClienteIdFromForm() {
+    if (!form.clienteDoc) return null;
+    var found = clientes.find(function (c) { return c.dni === form.clienteDoc; });
+    return found ? found.id : null;
+  }
+
+  function cargarMascotas(clienteId, query) {
+    setMascotaLoading(true);
+    var params = [];
+    if (clienteId) params.push('clienteId=' + clienteId);
+    if (query) params.push('nombre=' + encodeURIComponent(query));
+    var url = '/api/mascotas/search' + (params.length ? '?' + params.join('&') : '');
+    API.get(url).then(function (r) {
+      setMascotaResults(r.data || []);
+    }).catch(function () {
+      setMascotaResults([]);
+    }).finally(function () {
+      setMascotaLoading(false);
+    });
+  }
+
+  function openMascotaModal() {
+    setMascotaOpen(true);
+    setMascotaSearch('');
+    var clienteId = getClienteIdFromForm();
+    cargarMascotas(clienteId, '');
+  }
+
+  function handleMascotaSearchChange(e) {
+    var q = e.target.value;
+    setMascotaSearch(q);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(function () {
+      var clienteId = getClienteIdFromForm();
+      cargarMascotas(clienteId, q);
+    }, 300);
+  }
+
   function selectMascota(m) {
     setMascotaSel(m);
     setMascotaOpen(false);
@@ -82,29 +123,12 @@ export default function NuevaVenta() {
     setClienteModal(false);
     if (cliente) {
       setForm(function (f) { return { ...f, clienteDoc: cliente.dni || '', clienteNombre: cliente.nombre || '', clienteDireccion: cliente.direccion || '' }; });
+      setClientes(function (prev) {
+        var exists = prev.some(function (c) { return c.id === cliente.id; });
+        return exists ? prev : [cliente, ...prev];
+      });
     }
   }
-
-  var clienteNombreLower = (form.clienteNombre || '').toLowerCase();
-  var clienteDocLower = (form.clienteDoc || '').toLowerCase();
-  var mascotasFiltradas = mascotas.filter(function (m) {
-    if (!mascotaSearch) {
-      if (clienteDocLower || clienteNombreLower) {
-        var c = m.cliente;
-        if (!c) return false;
-        var cNombre = (c.nombre || '').toLowerCase();
-        var cDoc = (c.dni || '').toLowerCase();
-        return cNombre.includes(clienteNombreLower) && cDoc.includes(clienteDocLower);
-      }
-      return true;
-    }
-    var q = mascotaSearch.toLowerCase();
-    if (m.nombre.toLowerCase().includes(q)) return true;
-    if (m.raza && m.raza.toLowerCase().includes(q)) return true;
-    if (m.cliente && m.cliente.nombre && m.cliente.nombre.toLowerCase().includes(q)) return true;
-    if (m.cliente && m.cliente.dni && m.cliente.dni.includes(q)) return true;
-    return false;
-  });
 
   var subtotal = items.reduce(function (sum, item) {
     return sum + (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0));
@@ -261,10 +285,10 @@ export default function NuevaVenta() {
                     </p>
                   </div>
                 </div>
-                <button type="button" onClick={function () { setMascotaOpen(true); setMascotaSearch(''); }} className="px-4 py-2 border border-gray-300 dark:border-[#404040] rounded-lg text-sm text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cambiar Mascota</button>
+                <button type="button" onClick={openMascotaModal} className="px-4 py-2 border border-gray-300 dark:border-[#404040] rounded-lg text-sm text-gray-700 dark:text-[#D0D0D0] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">Cambiar Mascota</button>
               </div>
             ) : (
-              <button type="button" onClick={function () { setMascotaOpen(true); setMascotaSearch(''); }} className="w-full p-4 border border-gray-200 dark:border-[#3A3A3A] rounded-lg text-center text-gray-400 dark:text-[#808080] text-sm bg-white dark:bg-[#1E1E1E] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
+              <button type="button" onClick={openMascotaModal} className="w-full p-4 border border-gray-200 dark:border-[#3A3A3A] rounded-lg text-center text-gray-400 dark:text-[#808080] text-sm bg-white dark:bg-[#1E1E1E] hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors cursor-pointer">
                 Selecciona una mascota
               </button>
             )}
@@ -476,17 +500,27 @@ export default function NuevaVenta() {
                 <button onClick={function () { setMascotaOpen(false); }} className="text-gray-400 dark:text-[#808080] hover:text-gray-600 dark:hover:text-[#A0A0A0] text-2xl leading-none p-1 cursor-pointer">&times;</button>
               </div>
               <div className="relative">
-                <input autoFocus value={mascotaSearch} onChange={function (e) { setMascotaSearch(e.target.value); }} placeholder="Buscar por nombre, raza o dueño..." className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
+                <input autoFocus value={mascotaSearch} onChange={handleMascotaSearchChange} placeholder="Buscar por nombre, raza o dueño..." className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0]" />
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-2">
-              {mascotasFiltradas.length === 0 ? (
-                <p className="p-4 text-sm text-gray-400 dark:text-[#808080] text-center">
-                  {mascotaSearch ? 'No se encontraron mascotas' : (form.clienteNombre ? 'Este cliente no tiene mascotas registradas' : 'Selecciona un cliente primero o busca todas las mascotas')}
-                </p>
+              {mascotaLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-2 text-sm text-gray-500 dark:text-[#909090]">Buscando...</span>
+                </div>
+              ) : mascotaResults.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-gray-400 dark:text-[#808080] mb-3">
+                    {form.clienteDoc ? 'No se encontraron mascotas para este cliente. ¿Quieres registrar una nueva?' : 'No se encontraron mascotas'}
+                  </p>
+                  <button onClick={function () { navigate('/mascotas/nueva'); }} className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer">
+                    + Registrar nueva mascota
+                  </button>
+                </div>
               ) : (
-                mascotasFiltradas.map(function (m) {
+                mascotaResults.map(function (m) {
                   return (
                     <button key={m.id} type="button" onClick={function () { selectMascota(m); }}
                       className={"w-full flex items-center gap-3 px-3 py-3 text-sm text-left hover:bg-gray-50 dark:hover:bg-[#2C2C2C] rounded-lg transition-colors cursor-pointer " + (mascotaSel && mascotaSel.id === m.id ? 'bg-gray-50 dark:bg-[#2C2C2C]' : '')}>
