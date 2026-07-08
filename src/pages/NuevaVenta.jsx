@@ -90,7 +90,19 @@ export default function NuevaVenta() {
     setItems(function (prev) {
       return prev.map(function (item, idx) {
         if (idx !== i) return item;
-        return { ...item, [field]: value };
+        var updated = { ...item, [field]: value };
+        return updated;
+      });
+    });
+  }
+
+  function handleCantidadChange(i, raw) {
+    var val = parseInt(raw, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    setItems(function (prev) {
+      return prev.map(function (item, idx) {
+        if (idx !== i) return item;
+        return { ...item, cantidad: val };
       });
     });
   }
@@ -358,7 +370,7 @@ export default function NuevaVenta() {
                         <input value={item.descripcion} onChange={function (e) { handleItemChange(i, 'descripcion', e.target.value); }} placeholder="Descripción" className={inputClass} />
                       </td>
                       <td className="px-3 py-2">
-                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { handleItemChange(i, 'cantidad', parseInt(e.target.value) || 0); }} className={"w-14 text-center " + inputClass} />
+                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { handleCantidadChange(i, e.target.value); }} className={"w-14 text-center " + inputClass} />
                       </td>
                       <td className="px-3 py-2">
                         <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={function (e) { handleItemChange(i, 'precioUnitario', parseFloat(e.target.value) || 0); }} className={"w-24 text-right " + inputClass} />
