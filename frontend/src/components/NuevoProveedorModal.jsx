@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import API from '../services/axiosConfig';
 
-function NuevoProveedorModal({ onClose, onCreado }) {
+function NuevoProveedorModal({ onClose, onCreado, onProveedorCreado }) {
   var [form, setForm] = useState({ nombre: '', ruc: '', rubro: 'Medicamentos', telefono: '', email: '', direccion: '', estado: 'Activo' });
 
   function handleChange(e) {
@@ -17,8 +17,9 @@ function NuevoProveedorModal({ onClose, onCreado }) {
       email: form.email,
       direccion: form.direccion,
       estado: form.estado,
-    }).then(function () {
+    }).then(function (res) {
       if (onCreado) onCreado();
+      if (onProveedorCreado) onProveedorCreado(res.data);
       onClose();
     }).catch(function () {
       alert('Error al crear el proveedor');
