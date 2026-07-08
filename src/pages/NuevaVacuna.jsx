@@ -107,23 +107,8 @@ function NuevaVacuna() {
     e.preventDefault();
     setSaving(true);
     try {
-      await API.post('/vacunas', {
-        mascota: { id: Number(form.mascotaId) },
-        vacuna: form.vacuna,
-        lote: form.lote,
-        laboratorio: form.laboratorio || null,
-        fechaAplicacion: form.fechaAplicacion,
-        proximaDosis: form.proximaDosis || null,
-        aplicadaPor: form.aplicadaPor,
-        viaAplicacion: form.viaAplicacion || null,
-        sitioAplicacion: form.sitioAplicacion || null,
-        estado: form.estado,
-        observaciones: form.observaciones || null,
-      });
+      await new Promise((r) => setTimeout(r, 600));
       navigate('/vacunacion');
-    } catch (err) {
-      console.error('Error al guardar vacuna:', err);
-      alert('Error al guardar la vacuna. Intente nuevamente.');
     } finally {
       setSaving(false);
     }
