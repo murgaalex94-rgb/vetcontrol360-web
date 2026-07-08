@@ -114,8 +114,8 @@ function NuevoClienteModal({ onClose, onCreado }) {
         referencia: form.referencia || null,
         notas: form.notas || null,
       };
-      await API.post('/clientes', payload);
-      onCreado();
+      var res = await API.post('/clientes', payload);
+      onCreado(res.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar');
     } finally {
