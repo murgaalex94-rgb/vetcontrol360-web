@@ -1,5 +1,5 @@
 ﻿import { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
 import * as XLSX from 'xlsx';
@@ -316,12 +316,13 @@ const ITEMS_PER_PAGE = 10;
 
 function GestionInventario() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const fileInputRef = useRef(null);
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('Todas');
-  const [filtroProveedor, setFiltroProveedor] = useState('Todos');
+  const [filtroProveedor, setFiltroProveedor] = useState(searchParams.get('proveedor') || 'Todos');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
   const [paginaActual, setPaginaActual] = useState(1);
   const [showModalFiltroAvanzado, setShowModalFiltroAvanzado] = useState(false);
@@ -633,7 +634,9 @@ function GestionInventario() {
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">{p.categoria}</span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 dark:text-[#A0A0A0]">{p.proveedor}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={function () { navigate('/proveedores?highlight=' + encodeURIComponent(p.proveedor)); }} className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline font-medium text-left cursor-pointer">{p.proveedor}</button>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`text-sm font-semibold ${p.stockActual === 0 ? 'text-red-600 dark:text-red-400' : p.stockActual < p.stockMinimo ? 'text-orange-600 dark:text-orange-400' : 'text-gray-800 dark:text-[#E0E0E0]'}`}>
                       {p.stockActual}

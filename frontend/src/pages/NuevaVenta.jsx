@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import NuevoClienteModal from '../components/NuevoClienteModal';
 import NuevaMascotaModal from '../components/NuevaMascotaModal';
 
-var inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
-var selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm cursor-pointer";
+const inputClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm";
+const selectClass = "w-full px-4 py-2.5 border border-gray-300 dark:border-[#404040] rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white dark:bg-[#2C2C2C] text-gray-900 dark:text-[#E0E0E0] text-sm cursor-pointer";
 
 function formatMoney(val) {
   return 'S/ ' + (val || 0).toFixed(2);
@@ -19,36 +19,38 @@ function formatDate(d) {
 }
 
 function generarNumero(tipo) {
-  var serie = tipo === 'FACTURA' ? 'F001' : 'B001';
-  var correlativo = String(Date.now()).slice(-6);
+  const serie = tipo === 'FACTURA' ? 'F001' : 'B001';
+  const correlativo = String(Date.now()).slice(-6);
   return serie + '-' + correlativo;
 }
 
 export default function NuevaVenta() {
-  var navigate = useNavigate();
-  var [tipo, setTipo] = useState('BOLETA');
-  var [form, setForm] = useState({ clienteDoc: '', clienteNombre: '', clienteDireccion: '', mascotaId: '', mascotaNombre: '' });
-  var [items, setItems] = useState([{ tipo: 'servicio', descripcion: '', cantidad: 1, precioUnitario: 0, descuento: 0 }]);
-  var [descuentoGlobal, setDescuentoGlobal] = useState(0);
-  var [empresa, setEmpresa] = useState(null);
-  var [enviando, setEnviando] = useState(false);
-  var [error, setError] = useState('');
-  var [mascotaSel, setMascotaSel] = useState(null);
-  var [mascotaOpen, setMascotaOpen] = useState(false);
-  var [mascotaSearch, setMascotaSearch] = useState('');
-  var [mascotaResults, setMascotaResults] = useState([]);
-  var [mascotaLoading, setMascotaLoading] = useState(false);
-  var [clienteModal, setClienteModal] = useState(false);
-  var [mascotaModal, setMascotaModal] = useState(false);
-  var [clientes, setClientes] = useState([]);
-  var [selectedClienteId, setSelectedClienteId] = useState(null);
-  var [numeroComprobante, setNumeroComprobante] = useState(generarNumero('BOLETA'));
-  var previewRef = useRef(null);
-  var searchTimer = useRef(null);
+  const navigate = useNavigate();
+  const [tipo, setTipo] = useState('BOLETA');
+  const [form, setForm] = useState({ clienteDoc: '', clienteNombre: '', clienteDireccion: '', mascotaId: '', mascotaNombre: '' });
+  const [items, setItems] = useState([
+    { tipo: 'servicio', descripcion: '', cantidad: 1, precioUnitario: 0, descuento: 0 }
+  ]);
+  const [descuentoGlobal, setDescuentoGlobal] = useState(0);
+  const [empresa, setEmpresa] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+  const [mascotaSel, setMascotaSel] = useState(null);
+  const [mascotaOpen, setMascotaOpen] = useState(false);
+  const [mascotaSearch, setMascotaSearch] = useState('');
+  const [mascotaResults, setMascotaResults] = useState([]);
+  const [mascotaLoading, setMascotaLoading] = useState(false);
+  const [clienteModal, setClienteModal] = useState(false);
+  const [mascotaModal, setMascotaModal] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [selectedClienteId, setSelectedClienteId] = useState(null);
+  const [numeroComprobante, setNumeroComprobante] = useState(generarNumero('BOLETA'));
+  const previewRef = useRef(null);
+  const searchTimer = useRef(null);
 
   useEffect(function () {
-    API.get('/empresa').then(function (r) { setEmpresa(r.data); }).catch(function (err) { console.error('[DIAG] Error al cargar empresa:', err); });
-    API.get('/clientes').then(function (r) { setClientes(r.data || []); }).catch(function (err) { console.error('[DIAG] Error al cargar clientes:', err); });
+    API.get('/empresa').then(function (r) { setEmpresa(r.data); }).catch(function () {});
+    API.get('/clientes').then(function (r) { setClientes(r.data || []); }).catch(function () {});
   }, []);
 
   useEffect(function () {
@@ -60,25 +62,24 @@ export default function NuevaVenta() {
   }, [form.clienteDoc, form.clienteNombre, clientes]);
 
   function resolverClienteId() {
-    var doc = (form.clienteDoc || '').trim();
-    var nombre = (form.clienteNombre || '').trim();
+    const doc = (form.clienteDoc || '').trim();
+    const nombre = (form.clienteNombre || '').trim();
     if (!doc && !nombre) {
       setSelectedClienteId(null);
       return;
     }
-    var found = null;
+    let found = null;
     if (doc) {
       found = clientes.find(function (c) { return c.dni && c.dni === doc; });
     }
     if (!found && doc) {
-      var digits = doc.replace(/\D/g, '');
+      const digits = doc.replace(/\D/g, '');
       found = clientes.find(function (c) { return c.dni && c.dni.replace(/\D/g, '') === digits; });
     }
     if (!found && nombre) {
-      var nLower = nombre.toLowerCase();
+      const nLower = nombre.toLowerCase();
       found = clientes.find(function (c) { return c.nombre && c.nombre.toLowerCase().includes(nLower); });
     }
-    console.log('[DIAG] resolverClienteId | doc:', doc, '| nombre:', nombre, '| clientes.length:', clientes.length, '| found:', found?.id, found?.nombre);
     setSelectedClienteId(found ? found.id : null);
   }
 
@@ -87,17 +88,15 @@ export default function NuevaVenta() {
   }
 
   function handleItemChange(i, field, value) {
-    var updated = items.slice();
+    const updated = items.slice();
     updated[i] = { ...updated[i], [field]: value };
     setItems(updated);
   }
 
   function handleCantidadChange(index, nuevoValor) {
-    console.log('[CANT] handleCantidadChange called | index:', index, '| nuevoValor:', nuevoValor, '| type:', typeof nuevoValor);
-    var updated = items.slice();
-    var valorNumerico = parseInt(nuevoValor) || 1;
+    const updated = [...items];
+    const valorNumerico = parseInt(nuevoValor) || 1;
     updated[index].cantidad = Math.max(1, valorNumerico);
-    console.log('[CANT] setting items[].cantidad to:', updated[index].cantidad);
     setItems(updated);
   }
 
@@ -112,16 +111,13 @@ export default function NuevaVenta() {
 
   function cargarMascotas(clienteId, query) {
     setMascotaLoading(true);
-    var params = [];
+    const params = [];
     if (clienteId) params.push('clienteId=' + clienteId);
     if (query) params.push('nombre=' + encodeURIComponent(query));
-    var url = '/mascotas' + (params.length ? '?' + params.join('&') : '');
-    console.log('[DIAG] cargarMascotas | clienteId:', clienteId, '| query:', query, '| URL:', url);
+    const url = '/mascotas' + (params.length ? '?' + params.join('&') : '');
     API.get(url).then(function (r) {
-      console.log('[DIAG] cargarMascotas RESULTADO:', r.data?.length, 'mascotas', r.data);
       setMascotaResults(r.data || []);
-    }).catch(function (err) {
-      console.error('[DIAG] cargarMascotas ERROR:', err);
+    }).catch(function () {
       setMascotaResults([]);
     }).finally(function () {
       setMascotaLoading(false);
@@ -135,7 +131,7 @@ export default function NuevaVenta() {
   }
 
   function handleMascotaSearchChange(e) {
-    var q = e.target.value;
+    const q = e.target.value;
     setMascotaSearch(q);
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(function () {
@@ -163,22 +159,22 @@ export default function NuevaVenta() {
     if (cliente) {
       setForm(function (f) { return { ...f, clienteDoc: cliente.dni || '', clienteNombre: cliente.nombre || '', clienteDireccion: cliente.direccion || '' }; });
       setClientes(function (prev) {
-        var exists = prev.some(function (c) { return c.id === cliente.id; });
+        const exists = prev.some(function (c) { return c.id === cliente.id; });
         return exists ? prev : [cliente, ...prev];
       });
       setSelectedClienteId(cliente.id);
     }
   }
 
-  var subtotal = items.reduce(function (sum, item) {
+  const subtotal = items.reduce(function (sum, item) {
     return sum + (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0));
   }, 0);
-  var descTotal = items.reduce(function (sum, item) {
+  const descTotal = items.reduce(function (sum, item) {
     return sum + (parseFloat(item.descuento || 0) * parseFloat(item.cantidad || 0));
   }, 0) + parseFloat(descuentoGlobal || 0);
-  var baseImponible = Math.max(0, subtotal - descTotal);
-  var igv = baseImponible * 0.18;
-  var total = baseImponible + igv;
+  const baseImponible = Math.max(0, subtotal - descTotal);
+  const igv = baseImponible * 0.18;
+  const total = baseImponible + igv;
 
   function handleEmitir() {
     if (!form.clienteDoc || !form.clienteNombre) {
@@ -192,8 +188,8 @@ export default function NuevaVenta() {
     setError('');
     setEnviando(true);
 
-    var numeroSerie = numeroComprobante;
-    var payload = {
+    const numeroSerie = numeroComprobante;
+    const payload = {
       numero: numeroSerie,
       fecha: new Date().toISOString().split('T')[0],
       cliente: form.clienteNombre,
@@ -208,8 +204,8 @@ export default function NuevaVenta() {
     };
 
     API.post('/facturas', payload).then(function (res) {
-      var factura = res.data;
-      var envio = {
+      const factura = res.data;
+      const envio = {
         facturaId: factura.id,
         tipoComprobante: tipo,
         serie: tipo === 'FACTURA' ? 'F001' : 'B001',
@@ -237,12 +233,12 @@ export default function NuevaVenta() {
   }
 
   function handlePrint() {
-    var pw = window.open('', '', 'width=600,height=800');
+    const pw = window.open('', '', 'width=600,height=800');
     if (!pw) { alert('Permite ventanas emergentes para imprimir.'); return; }
-    var previewEl = previewRef.current;
+    const previewEl = previewRef.current;
     if (!previewEl) return;
-    var content = previewEl.innerHTML;
-    var title = (tipo === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA ELECTRÓNICA');
+    const content = previewEl.innerHTML;
+    const title = (tipo === 'FACTURA' ? 'FACTURA ELECTRÓNICA' : 'BOLETA ELECTRÓNICA');
     pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>');
     pw.document.write('<script src="https://cdn.tailwindcss.com"></script>');
     pw.document.write('<style>@page { margin: 10mm; } body { padding: 0; margin: 0; font-family: Arial, sans-serif; } .only-print { max-width: 340px; margin: 0 auto; }</style>');
@@ -352,7 +348,7 @@ export default function NuevaVenta() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-[#333]">
                 {items.map(function (item, i) {
-                  var itemTotal = (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0)) - (parseFloat(item.descuento || 0) * parseFloat(item.cantidad || 0));
+                  const itemTotal = (parseFloat(item.cantidad || 0) * parseFloat(item.precioUnitario || 0)) - (parseFloat(item.descuento || 0) * parseFloat(item.cantidad || 0));
                   return (
                     <tr key={i} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
                       <td className="px-3 py-2">
@@ -364,7 +360,13 @@ export default function NuevaVenta() {
                         <input value={item.descripcion} onChange={function (e) { handleItemChange(i, 'descripcion', e.target.value); }} placeholder="Descripción" className={inputClass} />
                       </td>
                       <td className="px-3 py-2">
-                        <input type="number" min="1" value={item.cantidad} onChange={function (e) { console.log('[CANT] onChange fired | e.target.value:', e.target.value); handleCantidadChange(i, e.target.value); }} className={"w-14 text-center " + inputClass} />
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.cantidad}
+                          onChange={function (e) { handleCantidadChange(i, e.target.value); }}
+                          className={"w-14 text-center " + inputClass}
+                        />
                       </td>
                       <td className="px-3 py-2">
                         <input type="number" min="0" step="0.01" value={item.precioUnitario} onChange={function (e) { handleItemChange(i, 'precioUnitario', parseFloat(e.target.value) || 0); }} className={"w-24 text-right " + inputClass} />
@@ -491,7 +493,7 @@ export default function NuevaVenta() {
                 </thead>
                 <tbody>
                   {items.filter(function (it) { return it.descripcion; }).map(function (it, i) {
-                    var imp = (parseFloat(it.cantidad || 0) * parseFloat(it.precioUnitario || 0)) - (parseFloat(it.descuento || 0) * parseFloat(it.cantidad || 0));
+                    const imp = (parseFloat(it.cantidad || 0) * parseFloat(it.precioUnitario || 0)) - (parseFloat(it.descuento || 0) * parseFloat(it.cantidad || 0));
                     return (
                       <tr key={i} className="border-b border-gray-50 dark:border-[#2A2A2A]">
                         <td className="py-1 pr-1 text-gray-700 dark:text-[#D0D0D0]">{it.cantidad}</td>

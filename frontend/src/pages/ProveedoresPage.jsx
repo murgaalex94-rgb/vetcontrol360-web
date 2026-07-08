@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import API from '../services/axiosConfig';
 import MaterialDatePicker from '../components/MaterialDatePicker';
@@ -225,6 +226,9 @@ var userData = JSON.parse(localStorage.getItem('user') || '{}');
 var idRol = userData.idRol;
 
 function ProveedoresPage() {
+  var navigate = useNavigate();
+  var [searchParams] = useSearchParams();
+  var highlightRef = useRef(null);
   var [proveedores, setProveedores] = useState([]);
   var [busqueda, setBusqueda] = useState('');
   var [filtroEstado, setFiltroEstado] = useState('Todos');
@@ -236,17 +240,37 @@ function ProveedoresPage() {
   var [showModalDetalle, setShowModalDetalle] = useState(null);
   var [showModalEditar, setShowModalEditar] = useState(null);
   var [showModalEliminar, setShowModalEliminar] = useState(null);
+  var [highlightedId, setHighlightedId] = useState(null);
   var porPagina = 10;
 
   function cargarProveedores() {
     API.get('/proveedores').then(function (res) {
       setProveedores(res.data);
-    }).catch(function () {
+    }).catch(function (err) {
+      console.error('[Proveedores] Error al cargar:', err.response?.status, err.response?.data || err.message);
       setProveedores([]);
     });
   }
 
   useEffect(function () { cargarProveedores(); }, []);
+
+  useEffect(function () {
+    var highlight = searchParams.get('highlight');
+    if (highlight && proveedores.length > 0) {
+      var found = proveedores.find(function (p) { return p.nombre.toLowerCase() === highlight.toLowerCase(); });
+      if (found) {
+        setHighlightedId(found.id);
+        var pageIndex = proveedores.indexOf(found);
+        var pageNum = Math.floor(pageIndex / porPagina) + 1;
+        setPagina(pageNum);
+        setTimeout(function () {
+          if (highlightRef.current) {
+            highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  }, [searchParams, proveedores]);
 
   function handleProveedorCreado() {
     cargarProveedores();
@@ -363,8 +387,9 @@ function ProveedoresPage() {
         <div className="rounded-xl border border-gray-200 dark:border-[#333] bg-white dark:bg-[#1E1E1E] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Productos Suministrados</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">142</p>
+              <p className="text-sm text-gray-500 dark:text-[#909090] font-medium">Productos Asociados</p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{proveedores.reduce(function (sum, p) { return sum + (p.totalProductos || 0); }, 0)}</p>
+              <p className="text-xs text-gray-400 dark:text-[#808080]">En total a través de proveedores</p>
             </div>
             <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
@@ -418,8 +443,9 @@ function ProveedoresPage() {
                 paginados.map(function (prov) {
                   var esActivo = prov.estado === 'Activo';
                   var iniciales = prov.nombre.split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+                  var isHighlighted = highlightedId === prov.id;
                   return (
-                    <tr key={prov.id} className="hover:bg-gray-50 dark:hover:bg-[#2C2C2C] transition-colors">
+                    <tr key={prov.id} ref={isHighlighted ? highlightRef : null} className={'transition-colors ' + (isHighlighted ? 'bg-emerald-50 dark:bg-emerald-900/20 ring-2 ring-emerald-400 dark:ring-emerald-600' : 'hover:bg-gray-50 dark:hover:bg-[#2C2C2C]')}>
                       <td className="px-4 py-3 text-gray-500 dark:text-[#909090] font-mono text-xs">{prov.codigo}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -440,6 +466,9 @@ function ProveedoresPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          <button onClick={function () { navigate('/inventario?proveedor=' + encodeURIComponent(prov.nombre)); }} className="p-1.5 rounded-lg hover:bg-purple-50 text-purple-500 hover:text-purple-700 transition-colors cursor-pointer" title="Ver productos en inventario">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+                          </button>
                           <button onClick={function () { setShowModalDetalle(prov); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Ver">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                           </button>

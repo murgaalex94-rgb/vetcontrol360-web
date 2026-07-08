@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+const basename = window.location.hostname.includes('github.io') ? '/vetcontrol360-web' : '/';
 import { ThemeProvider } from './context/ThemeContext';
 import AppLayout from './components/AppLayout';
 import LandingPage from './pages/LandingPage';
@@ -43,7 +45,7 @@ function PlaceholderPage({ titulo }) {
 function App() {
   return (
     <ThemeProvider>
-    <Router>
+    <Router basename={basename}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
