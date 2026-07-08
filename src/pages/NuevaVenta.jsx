@@ -94,7 +94,7 @@ export default function NuevaVenta() {
 
   function handleCantidadChange(index, nuevoValor) {
     var updated = items.slice();
-    var valorNumerico = parseInt(nuevoValor, 10) || 0;
+    var valorNumerico = parseInt(nuevoValor) || 1;
     updated[index].cantidad = Math.max(1, valorNumerico);
     setItems(updated);
   }
